@@ -1,6 +1,6 @@
 extern crate hidapi;
 use crate::interface::{Buttons, JoyStick, Dpad, DualShock4};
-use hidapi::{HidApi, HidDevice, HidError};
+use hidapi::{HidApi, HidDevice};
 
 #[derive(Debug, PartialEq, Clone, Copy, Eq)]
 pub enum ControllerConnectionType
@@ -31,7 +31,7 @@ pub struct DualShock4Driver
 }
 
 impl DualShock4Driver {
-    pub fn new(mode_:ControllerConnectionType)->Result<DualShock4Driver, HidError>
+    pub fn new(mode_:ControllerConnectionType)->Option<DualShock4Driver>
     {
         let api = HidApi::new().unwrap();
 
@@ -39,11 +39,10 @@ impl DualShock4Driver {
             Ok(dev)=>{
                 let dsd = DualShock4Driver{device:dev,mode:mode_};
 
-                Ok(dsd)
-
+                Some(dsd)
             }
-            Err(e)=>{
-                Err(e)
+            Err(_e)=>{
+                None
             }
         }
     }

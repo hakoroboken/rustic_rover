@@ -11,6 +11,7 @@ pub enum AppState
 {
     Settings,
     NotModeSelected,
+    ControllerNotFound,
     ControllerStarted
 }
 
