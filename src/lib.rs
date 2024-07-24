@@ -3,12 +3,12 @@ use dualshock::ControllerConnectionType;
 pub mod interface;
 use interface::DualShock4;
 pub mod thread_connection;
-pub mod iced_app_utils;
+pub mod iced_utils;
 
 
 
 use iced;
-use iced_app_utils::{AppState, Message};
+use iced_utils::{AppState, Message};
 use iced::widget::{button, text, combo_box, column, slider};
 
 pub struct RusticRover
@@ -16,7 +16,7 @@ pub struct RusticRover
     dualshock4_connector:thread_connection::ThreadConnector<DualShock4>,
     ds4_input:DualShock4,
     power_rate:u16,
-    controller_connection_types_combo_box:iced_app_utils::ComboBox<ControllerConnectionType>,
+    controller_connection_types_combo_box:iced_utils::ComboBox<ControllerConnectionType>,
     app_state:AppState
 }
 
@@ -34,7 +34,7 @@ impl iced::Application for RusticRover {
             dualshock4_connector: ds4_conn,
             ds4_input: DualShock4::new(),
             power_rate:100,
-            controller_connection_types_combo_box:iced_app_utils::ComboBox::new(ControllerConnectionType::ALL.to_vec()),
+            controller_connection_types_combo_box:iced_utils::ComboBox::new(ControllerConnectionType::ALL.to_vec()),
             app_state:AppState::Settings
         };
 
