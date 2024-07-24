@@ -17,7 +17,7 @@ pub struct RusticRover
     ds4_input:DualShock4,
     power_rate:u16,
     controller_connection_types_combo_box:iced_utils::ComboBox<ControllerConnectionType>,
-    app_state:AppState
+    app_state:AppState,
 }
 
 impl iced::Application for RusticRover {
@@ -69,18 +69,25 @@ impl iced::Application for RusticRover {
                 self.controller_connection_types_combo_box.selected = Some(type_);
             }
             Message::ControllerStart=>{
-                let mut dr = dualshock::DualShock4Driver::new(self.controller_connection_types_combo_box.selected.unwrap()).unwrap();
+                if self.controller_connection_types_combo_box.selected == None
+                {
+                    self.app_state = AppState::NotModeSelected;
+                }
+                else 
+                {
+                    let mut dr = dualshock::DualShock4Driver::new(self.controller_connection_types_combo_box.selected.unwrap()).unwrap();
 
-                let t = self.dualshock4_connector.publisher.clone().take().unwrap();
+                    let t = self.dualshock4_connector.publisher.clone().take().unwrap();
 
-                std::thread::spawn(move ||{
-                    loop {
-                        let get = dr.task();
+                    std::thread::spawn(move ||{
+                        loop {
+                            let get = dr.task();
 
-                        t.clone().send(get).unwrap();
-                    }
-                });
-                self.app_state = AppState::ControllerStarted;
+                            t.clone().send(get).unwrap();
+                        }
+                    });
+                    self.app_state = AppState::ControllerStarted;
+                }
             }
             Message::PowerRate(get_rate)=>{
                 self.power_rate = get_rate;
@@ -91,7 +98,7 @@ impl iced::Application for RusticRover {
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message, Self::Theme, iced::Renderer> {
-        if self.app_state == AppState::Settings
+        if self.app_state == AppState::Settings || self.app_state == AppState::NotModeSelected
         {
             let title = text("RusticRover").size(200).horizontal_alignment(iced::alignment::Horizontal::Center);
             let combo_ = combo_box(
@@ -106,7 +113,20 @@ impl iced::Application for RusticRover {
 
             let btn = button("Start").on_press(Message::ControllerStart).width(iced::Length::Shrink).height(iced::Length::Shrink);
 
-            column![title, combo_, btn, img].align_items(iced::alignment::Alignment::Center).spacing(50).into()
+            let err_text = if self.app_state == AppState::Settings
+            {
+                text("").size(50)
+            }
+            else if self.app_state == AppState::NotModeSelected
+            {
+                text("Not Mode Selected!!").size(50)
+            }
+            else
+            {
+                text("App State Error").size(50)
+            };
+
+            column![title, combo_, btn, err_text,img].align_items(iced::alignment::Alignment::Center).spacing(50).into()
         }
         else if self.app_state == AppState::ControllerStarted
         {
@@ -137,7 +157,7 @@ impl iced::Application for RusticRover {
             column![tit, tex, sc].align_items(iced::Alignment::Start).spacing(20).into()
         }
         else {
-            text("Destruction APP!! ERROR").size(300).into()
+            text("App State Error").size(300).into()
         }
     }
 }

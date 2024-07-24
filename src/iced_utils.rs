@@ -10,6 +10,7 @@ use iced::widget::combo_box;
 pub enum AppState
 {
     Settings,
+    NotModeSelected,
     ControllerStarted
 }
 
