@@ -1,5 +1,5 @@
 pub mod dualshock;
-use dualshock::ControllerConnectionType;
+use dualshock::{ControllerConnectionType, DualShock4Driver};
 pub mod interface;
 use interface::DualShock4;
 pub mod thread_connection;
@@ -75,18 +75,23 @@ impl iced::Application for RusticRover {
                 }
                 else 
                 {
-                    let mut dr = dualshock::DualShock4Driver::new(self.controller_connection_types_combo_box.selected.unwrap()).unwrap();
+                    match DualShock4Driver::new(self.controller_connection_types_combo_box.selected.unwrap()) {
+                        Some(mut dr)=>{
+                            let t = self.dualshock4_connector.publisher.clone().take().unwrap();
 
-                    let t = self.dualshock4_connector.publisher.clone().take().unwrap();
+                            std::thread::spawn(move ||{
+                                loop {
+                                    let get = dr.task();
 
-                    std::thread::spawn(move ||{
-                        loop {
-                            let get = dr.task();
-
-                            t.clone().send(get).unwrap();
+                                    t.clone().send(get).unwrap();
+                                }
+                            });
+                            self.app_state = AppState::ControllerStarted;
                         }
-                    });
-                    self.app_state = AppState::ControllerStarted;
+                        None=>{
+                            self.app_state = AppState::ControllerNotFound
+                        }
+                    }
                 }
             }
             Message::PowerRate(get_rate)=>{
@@ -98,7 +103,7 @@ impl iced::Application for RusticRover {
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message, Self::Theme, iced::Renderer> {
-        if self.app_state == AppState::Settings || self.app_state == AppState::NotModeSelected
+        if self.app_state == AppState::Settings || self.app_state == AppState::NotModeSelected || self.app_state == AppState::ControllerNotFound
         {
             let title = text("RusticRover").size(200).horizontal_alignment(iced::alignment::Horizontal::Center);
             let combo_ = combo_box(
@@ -120,6 +125,10 @@ impl iced::Application for RusticRover {
             else if self.app_state == AppState::NotModeSelected
             {
                 text("Not Mode Selected!!").size(50)
+            }
+            else if self.app_state == AppState::ControllerNotFound
+            {
+                text("Controller is not connected!!").size(50)
             }
             else
             {
