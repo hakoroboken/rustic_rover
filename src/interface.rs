@@ -83,4 +83,9 @@ impl Packet {
     {
         Packet { x: 0, y: 0, ro: 0, m1: 0, m2: 0 }
     }
+
+    pub fn from_value(x_:i32, y_:i32, ro_:i32, m1_:i32, m2_:i32)->Packet
+    {
+        Packet { x: x_, y: y_, ro: ro_, m1: m1_, m2: m2_ }
+    }
 }
