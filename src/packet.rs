@@ -89,7 +89,12 @@ pub struct PacketCreator
     pub ro_cb:PlusMinus,
     pub m1_cb:PlusMinus,
     pub m2_cb:PlusMinus,
-    pub packet_:Option<Packet>
+    pub packet_:Option<Packet>,
+    pub x_pow_rate:u16,
+    pub y_pow_rate:u16,
+    pub ro_pow_rate:u16,
+    pub m1_pow_rate:u16,
+    pub m2_pow_rate:u16
 }
 
 impl PacketCreator {
@@ -101,7 +106,7 @@ impl PacketCreator {
         let m1_cb_ = PlusMinus::new();
         let m2_cb_ = PlusMinus::new();
 
-        PacketCreator { x_cb: x_cb_, y_cb: y_cb_, ro_cb: ro_cb_, m1_cb: m1_cb_, m2_cb: m2_cb_ , packet_:None}
+        PacketCreator { x_cb: x_cb_, y_cb: y_cb_, ro_cb: ro_cb_, m1_cb: m1_cb_, m2_cb: m2_cb_ , packet_:None, x_pow_rate:100, y_pow_rate:100, ro_pow_rate:100, m1_pow_rate:100, m2_pow_rate:100}
     }
 
     pub fn create_packet(&mut self, controller_input:DualShock4)
@@ -117,7 +122,12 @@ impl PacketCreator {
                                     Some(m1_)=>{
                                         match assign_to_controller(self.m2_cb.clone(), controller_input) {
                                             Some(m2_)=>{
-                                                self.packet_ = Some(Packet { x: (x_*10.0) as i32 + 10, y: (y_*10.0) as i32 + 10, ro: (ro_*10.0) as i32 + 10, m1: (m1_*10.0) as i32 + 10, m2: (m2_*10.0) as i32 + 10 })
+                                                self.packet_ = Some(Packet {
+                                                     x: (x_  *self.x_pow_rate as f32) as i32, 
+                                                     y: (y_  *self.y_pow_rate as f32) as i32, 
+                                                     ro: (ro_  *self.ro_pow_rate as f32) as i32, 
+                                                     m1: (m1_  *self.m1_pow_rate as f32) as i32, 
+                                                     m2: (m2_  *self.m2_pow_rate as f32) as i32})
                                             }
                                             None=>{
                                                 self.packet_ =None

@@ -22,7 +22,11 @@ pub enum AppState
 pub enum Message
 {
     ControllerThreadMessage(DualShock4),
-    PowerRate(u16),
+    PowerRateX(u16),
+    PowerRateY(u16),
+    PowerRateRotation(u16),
+    PowerRateM1(u16),
+    PowerRateM2(u16),
     ControllerType(ControllerConnectionType),
     PacketAssign1p(AssignController),
     PacketAssign1m(AssignController),
