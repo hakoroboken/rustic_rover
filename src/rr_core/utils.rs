@@ -18,15 +18,11 @@ impl<T: std::fmt::Display + std::clone::Clone> ComboBox<T> {
 
 pub fn setting_state_logger<'a>(app_state:AppState)->iced::widget::text::Text<'a,iced::Theme, iced::Renderer>
 {
-    let err_text = if app_state == AppState::Settings
+    let err_text = if app_state == AppState::NoReady
             {
                 text("").size(50)
             }
-            else if app_state == AppState::NotModeSelected
-            {
-                text("Not Mode Selected!!").size(50)
-            }
-            else if app_state == AppState::ControllerNotFound
+            else if app_state == AppState::ERROR
             {
                 text("Controller is not connected!!").size(50)
             }

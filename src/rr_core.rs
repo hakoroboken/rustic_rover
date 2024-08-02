@@ -3,19 +3,23 @@ mod interface;
 mod thread_connection;
 mod packet;
 mod utils;
+mod serial;
 
-use interface::{DualShock4, ControllerConnectionType, AppState};
+use interface::{AppState,Status, ControllerConnectionType, DualShock4, RRMessage};
 
 use iced::{self, Element};
-use iced::widget::{button, text, combo_box, column, row};
+use iced::widget::{button, text, combo_box, column, row, text_input};
+use serial::SerialManager;
 
 pub struct RusticRover
 {
-    dualshock4_connector:thread_connection::ThreadConnector<DualShock4>,
+    dualshock4_connector:thread_connection::AsyncThreadConnector<DualShock4>,
     ds4_input:DualShock4,
     controller_connection_types_combo_box:utils::ComboBox<ControllerConnectionType>,
     packet_creator:packet::PacketCreator,
-    app_state:AppState,
+    status:Status,
+    serial_manager:serial::SerialManager,
+    input_path:String
 }
 
 impl iced::Application for RusticRover {
@@ -25,7 +29,7 @@ impl iced::Application for RusticRover {
     type Flags = ();
 
     fn new(_flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
-        let ds4_conn = thread_connection::ThreadConnector::<DualShock4>::new();
+        let ds4_conn = thread_connection::AsyncThreadConnector::<DualShock4>::new();
 
         let app = RusticRover
         {
@@ -33,7 +37,9 @@ impl iced::Application for RusticRover {
             ds4_input: DualShock4::new(),
             controller_connection_types_combo_box:utils::ComboBox::new(ControllerConnectionType::ALL.to_vec()),
             packet_creator:packet::PacketCreator::new(),
-            app_state:AppState::Settings
+            status:Status::new(),
+            serial_manager:SerialManager::new(),
+            input_path:String::new()
         };
 
         (app, iced::Command::none())
@@ -64,6 +70,20 @@ impl iced::Application for RusticRover {
                 self.ds4_input = ds4;
                 
                 self.packet_creator.create_packet(ds4);
+
+                match self.packet_creator.packet_ {
+                    Some(p)=>{
+                        self.status.packet_state = AppState::OK;
+                        
+                        if self.status.serial_state == AppState::OK
+                        {
+                            let _ = self.serial_manager.conn.publisher.clone().take().unwrap().send(p);
+                        }
+                    }
+                    None=>{
+                        self.status.packet_state = AppState::NoReady;
+                    }
+                }
             }
             interface::RRMessage::ControllerType(type_)=>{
                 self.controller_connection_types_combo_box.selected = Some(type_);
@@ -71,7 +91,7 @@ impl iced::Application for RusticRover {
             interface::RRMessage::ControllerStart=>{
                 if self.controller_connection_types_combo_box.selected == None
                 {
-                    self.app_state = AppState::NotModeSelected;
+                    self.status.controller_state = AppState::NoReady;
                 }
                 else 
                 {
@@ -86,10 +106,10 @@ impl iced::Application for RusticRover {
                                     t.clone().send(get).unwrap();
                                 }
                             });
-                            self.app_state = AppState::ControllerStarted;
+                            self.status.controller_state = AppState::OK;
                         }
                         None=>{
-                            self.app_state = AppState::ControllerNotFound
+                            self.status.controller_state = AppState::ERROR
                         }
                     }
                 }
@@ -138,6 +158,42 @@ impl iced::Application for RusticRover {
             }
             interface::RRMessage::PacketAssign5m(a5m)=>{
                 self.packet_creator.m2_cb.minus.selected = Some(a5m)
+            },
+            interface::RRMessage::SerialPathInput(path)=>{
+                self.input_path = path
+            }
+            interface::RRMessage::SerialStart=>{
+                let mut packet_sub = self.serial_manager.conn.subscriber.take();
+                // let state_publisher = self.serial_manager.state_mailer.publisher.clone();
+                let port_name_ = self.input_path.clone();
+                
+                std::thread::spawn(||async move{
+                    let mut port =  serialport::new(port_name_.as_str(), 115200)
+                        .data_bits(serialport::DataBits::Eight)
+                        .stop_bits(serialport::StopBits::One)
+                        .timeout(std::time::Duration::from_millis(100))
+                        .open().unwrap();
+
+                    loop {
+                        let packet = packet_sub.as_mut().unwrap().recv().await.unwrap();
+
+                        let write_buf = format!("s{},{},{},{},{}e", 
+                            packet.x,
+                            packet.y,
+                            packet.ro,
+                            packet.m1,
+                            packet.m2);
+
+                        match port.write(write_buf.as_bytes()) {
+                            Ok(_s)=>{
+                            }
+                            Err(_e)=>{
+                            }
+                        }
+                    }
+                });
+
+                self.status.serial_state = AppState::OK;
             }
         }
 
@@ -145,11 +201,11 @@ impl iced::Application for RusticRover {
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message, Self::Theme, iced::Renderer> {
-        if self.app_state == AppState::Settings || self.app_state == AppState::NotModeSelected || self.app_state == AppState::ControllerNotFound
+        if self.status.controller_state == AppState::NoReady || self.status.controller_state == AppState::ERROR
         {
             self.title_view()
         }
-        else if self.app_state == AppState::ControllerStarted
+        else if self.status.controller_state == AppState::OK
         {
             let con_state = if self.ds4_input.state
             {
@@ -160,6 +216,8 @@ impl iced::Application for RusticRover {
                 "Not Connected"
             };
 
+            
+
             let lx = self.ds4_input.sticks.left_x;
             let ly = self.ds4_input.sticks.left_y;
             let rx = self.ds4_input.sticks.right_x;
@@ -167,10 +225,42 @@ impl iced::Application for RusticRover {
             let tex = text(
                 format!("Type:{}\nState:{}\nJoyLeftX:{}\nJoyLeftY:{}\nJoyRightX:{}",self.ds4_input.mode, con_state, lx, ly, rx)
             ).size(40);
+            
+            if self.status.packet_state == AppState::OK
+            {
+                if self.status.serial_state == AppState::NoReady
+                {
+                    let sp_input = text_input("Input Serial Path", self.input_path.as_str())
+                    .on_input(RRMessage::SerialPathInput)
+                    .on_submit(RRMessage::SerialStart);
 
-            let controller_clm = column![tit, tex].align_items(iced::Alignment::Start);
+                    let controller_clm = column![tit, tex, sp_input].align_items(iced::Alignment::Start);
 
-            row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
+                    row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
+                }
+                else if self.status.serial_state == AppState::ERROR{
+                    let serial_text = text("Serial Error!!!!");
+
+                    let controller_clm = column![tit, tex, serial_text].align_items(iced::Alignment::Start);
+
+                    row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
+                }else if self.status.serial_state == AppState::OK{
+                    let serial_text = text(format!("Serial Ok:{}", self.input_path));
+
+                    let controller_clm = column![tit, tex, serial_text].align_items(iced::Alignment::Start);
+
+                    row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
+                }
+                else
+                {
+                    text("App State Error").size(300).into()
+                }
+            }
+            else {
+                let controller_clm = column![tit, tex].align_items(iced::Alignment::Start);
+
+                row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
+            }
         }
         else {
             text("App State Error").size(300).into()
@@ -194,7 +284,7 @@ impl RusticRover {
 
         let btn = button("Start").on_press(interface::RRMessage::ControllerStart).width(iced::Length::Shrink).height(iced::Length::Shrink);
 
-        let err_text = utils::setting_state_logger(self.app_state);
+        let err_text = utils::setting_state_logger(self.status.controller_state);
 
         column![title, combo_, btn, err_text,img].align_items(iced::alignment::Alignment::Center).padding(10).spacing(50).into()
     }
