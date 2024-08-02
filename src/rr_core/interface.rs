@@ -4,12 +4,12 @@
 pub enum RRMessage
 {
     ControllerThreadMessage(DualShock4),
+    ControllerType(ControllerConnectionType),
     PowerRateX(u16),
     PowerRateY(u16),
     PowerRateRotation(u16),
     PowerRateM1(u16),
     PowerRateM2(u16),
-    ControllerType(ControllerConnectionType),
     PacketAssign1p(AssignController),
     PacketAssign1m(AssignController),
     PacketAssign2p(AssignController),
@@ -20,16 +20,31 @@ pub enum RRMessage
     PacketAssign4m(AssignController),
     PacketAssign5p(AssignController),
     PacketAssign5m(AssignController),
-    ControllerStart
+    ControllerStart,
+    SerialPathInput(String),
+    SerialStart,
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub struct Status
+{
+    pub controller_state:AppState,
+    pub packet_state:AppState,
+    pub serial_state:AppState
+}
+impl Status {
+    pub fn new()->Status
+    {
+        Status { controller_state: AppState::NoReady, packet_state: AppState::NoReady, serial_state: AppState::NoReady }
+    }
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum AppState
 {
-    Settings,
-    NotModeSelected,
-    ControllerNotFound,
-    ControllerStarted
+    NoReady,
+    OK,
+    ERROR,
 }
 
 /// It is used assign packet value from Game Controller
