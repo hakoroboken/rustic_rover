@@ -1,28 +1,6 @@
 extern crate hidapi;
-use crate::interface::{Buttons, JoyStick, Dpad, DualShock4};
 use hidapi::{HidApi, HidDevice};
-
-#[derive(Debug, PartialEq, Clone, Copy, Eq)]
-pub enum ControllerConnectionType
-{
-    BLE,
-    SERIAL
-}
-impl ControllerConnectionType {
-    pub const ALL:[ControllerConnectionType;2]= [ControllerConnectionType::BLE, ControllerConnectionType::SERIAL];
-}
-impl std::fmt::Display for ControllerConnectionType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                ControllerConnectionType::BLE=>"Bluetooth",
-                ControllerConnectionType::SERIAL=>"Serial"
-            }
-        )
-    }
-}
+use crate::rr_core::interface::{ControllerConnectionType, DualShock4, Dpad, JoyStick, Buttons};
 
 pub struct DualShock4Driver
 {
