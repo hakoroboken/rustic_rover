@@ -1,5 +1,5 @@
-use crate::interface::{Packet, DualShock4};
-use crate::iced_utils::ComboBox;
+use crate::core::interface::{Packet, DualShock4};
+use crate::core::iced_utils::ComboBox;
 
 #[derive(Debug, PartialEq, Clone, Copy, Eq)]
 pub enum AssignController {

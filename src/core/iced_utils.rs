@@ -1,6 +1,6 @@
-use crate::interface::DualShock4;
-use crate::dualshock::ControllerConnectionType;
-use crate::AssignController;
+use crate::core::interface::DualShock4;
+use crate::core::dualshock::ControllerConnectionType;
+use crate::core::AssignController;
 use iced::window::settings::PlatformSpecific;
 use iced::window::Settings as WindowSettings;
 use iced::Settings;

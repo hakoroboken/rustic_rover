@@ -1,5 +1,5 @@
 extern crate hidapi;
-use crate::interface::{Buttons, JoyStick, Dpad, DualShock4};
+use crate::core::interface::{Buttons, JoyStick, Dpad, DualShock4};
 use hidapi::{HidApi, HidDevice};
 
 #[derive(Debug, PartialEq, Clone, Copy, Eq)]

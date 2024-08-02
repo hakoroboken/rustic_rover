@@ -8,12 +8,7 @@ pub struct ThreadConnector<T>
 }
 
 impl<T> ThreadConnector<T> {
-    pub fn new(publisher_:mpsc::UnboundedSender<T>, subscriber_:mpsc::UnboundedReceiver<T>)->ThreadConnector<T>
-    {
-        ThreadConnector { publisher: RefCell::new(Some(publisher_)), subscriber: RefCell::new(Some(subscriber_)) }
-    }
-
-    pub fn init()->ThreadConnector<T>
+    pub fn new()->ThreadConnector<T>
     {
         let (t,r) = mpsc::unbounded_channel::<T>();
 

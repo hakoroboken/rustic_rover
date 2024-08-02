@@ -1,4 +1,4 @@
-use crate::dualshock::ControllerConnectionType;
+use crate::core::dualshock::ControllerConnectionType;
 
 #[derive(Debug, Clone, Copy)]
 pub struct DualShock4
@@ -76,16 +76,4 @@ pub struct Packet
     pub ro:i32,
     pub m1:i32,
     pub m2:i32,
-}
-
-impl Packet {
-    pub fn new()->Packet
-    {
-        Packet { x: 0, y: 0, ro: 0, m1: 0, m2: 0 }
-    }
-
-    pub fn from_value(x_:i32, y_:i32, ro_:i32, m1_:i32, m2_:i32)->Packet
-    {
-        Packet { x: x_, y: y_, ro: ro_, m1: m1_, m2: m2_ }
-    }
 }
