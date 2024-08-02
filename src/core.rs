@@ -3,21 +3,21 @@ use dualshock::{ControllerConnectionType, DualShock4Driver};
 mod interface;
 use interface::DualShock4;
 mod thread_connection;
-pub mod iced_utils;
+pub mod utils;
 mod packet;
 use packet::{AssignController, PacketCreator};
 
 
 
-use iced;
-use iced_utils::{AppState, Message};
+use iced::{self, Element};
+use utils::{AppState, Message};
 use iced::widget::{button, text, combo_box, column, slider, row};
 
 pub struct RusticRover
 {
     dualshock4_connector:thread_connection::ThreadConnector<DualShock4>,
     ds4_input:DualShock4,
-    controller_connection_types_combo_box:iced_utils::ComboBox<ControllerConnectionType>,
+    controller_connection_types_combo_box:utils::ComboBox<ControllerConnectionType>,
     packet_creator:PacketCreator,
     app_state:AppState,
 }
@@ -35,7 +35,7 @@ impl iced::Application for RusticRover {
         {
             dualshock4_connector: ds4_conn,
             ds4_input: DualShock4::new(),
-            controller_connection_types_combo_box:iced_utils::ComboBox::new(ControllerConnectionType::ALL.to_vec()),
+            controller_connection_types_combo_box:utils::ComboBox::new(ControllerConnectionType::ALL.to_vec()),
             packet_creator:PacketCreator::new(),
             app_state:AppState::Settings
         };
@@ -151,22 +151,7 @@ impl iced::Application for RusticRover {
     fn view(&self) -> iced::Element<'_, Self::Message, Self::Theme, iced::Renderer> {
         if self.app_state == AppState::Settings || self.app_state == AppState::NotModeSelected || self.app_state == AppState::ControllerNotFound
         {
-            let title = text("RusticRover").size(200).horizontal_alignment(iced::alignment::Horizontal::Center);
-            let combo_ = combo_box(
-                &self.controller_connection_types_combo_box.all, 
-                "Select Controller Connection Method", 
-                self.controller_connection_types_combo_box.selected.as_ref(), 
-            Message::ControllerType);
-
-            let path = "./rustic_rover.png";
-
-            let img = iced::widget::image::Image::new(iced::widget::image::Handle::from_path(path)).width(iced::Length::Shrink).height(iced::Length::Shrink);
-
-            let btn = button("Start").on_press(Message::ControllerStart).width(iced::Length::Shrink).height(iced::Length::Shrink);
-
-            let err_text = iced_utils::setting_state_logger(self.app_state);
-
-            column![title, combo_, btn, err_text,img].align_items(iced::alignment::Alignment::Center).padding(10).spacing(50).into()
+            self.title_view()
         }
         else if self.app_state == AppState::ControllerStarted
         {
@@ -304,5 +289,27 @@ impl iced::Application for RusticRover {
         else {
             text("App State Error").size(300).into()
         }
+    }
+}
+
+impl RusticRover {
+    fn title_view(&self)->Element<'_, Message, iced::Theme, iced::Renderer>
+    {
+        let title = text("RusticRover").size(200).horizontal_alignment(iced::alignment::Horizontal::Center);
+        let combo_ = combo_box(
+            &self.controller_connection_types_combo_box.all, 
+            "Select Controller Connection Method", 
+            self.controller_connection_types_combo_box.selected.as_ref(), 
+        Message::ControllerType);
+
+        let path = "./rustic_rover.png";
+
+        let img = iced::widget::image::Image::new(iced::widget::image::Handle::from_path(path)).width(iced::Length::Shrink).height(iced::Length::Shrink);
+
+        let btn = button("Start").on_press(Message::ControllerStart).width(iced::Length::Shrink).height(iced::Length::Shrink);
+
+        let err_text = utils::setting_state_logger(self.app_state);
+
+        column![title, combo_, btn, err_text,img].align_items(iced::alignment::Alignment::Center).padding(10).spacing(50).into()
     }
 }
