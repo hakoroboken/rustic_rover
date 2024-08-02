@@ -1,16 +1,12 @@
 mod dualshock;
-use dualshock::{ControllerConnectionType, DualShock4Driver};
 mod interface;
-use interface::DualShock4;
 mod thread_connection;
-pub mod utils;
 mod packet;
-use packet::{AssignController, PacketCreator};
+mod utils;
 
-
+use interface::{DualShock4, ControllerConnectionType, AppState};
 
 use iced::{self, Element};
-use utils::{AppState, Message};
 use iced::widget::{button, text, combo_box, column, slider, row};
 
 pub struct RusticRover
@@ -18,13 +14,13 @@ pub struct RusticRover
     dualshock4_connector:thread_connection::ThreadConnector<DualShock4>,
     ds4_input:DualShock4,
     controller_connection_types_combo_box:utils::ComboBox<ControllerConnectionType>,
-    packet_creator:PacketCreator,
+    packet_creator:packet::PacketCreator,
     app_state:AppState,
 }
 
 impl iced::Application for RusticRover {
     type Executor = iced::executor::Default;
-    type Message = Message;
+    type Message = interface::RRMessage;
     type Theme = iced::Theme;
     type Flags = ();
 
@@ -36,7 +32,7 @@ impl iced::Application for RusticRover {
             dualshock4_connector: ds4_conn,
             ds4_input: DualShock4::new(),
             controller_connection_types_combo_box:utils::ComboBox::new(ControllerConnectionType::ALL.to_vec()),
-            packet_creator:PacketCreator::new(),
+            packet_creator:packet::PacketCreator::new(),
             app_state:AppState::Settings
         };
 
@@ -58,28 +54,28 @@ impl iced::Application for RusticRover {
             move |mut subscriber|async move{
                 let get = subscriber.as_mut().unwrap().recv().await.unwrap();
 
-                (Message::ControllerThreadMessage(get), subscriber)
+                (interface::RRMessage::ControllerThreadMessage(get), subscriber)
             })
     }
 
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
         match message {
-            Message::ControllerThreadMessage(ds4)=>{
+            interface::RRMessage::ControllerThreadMessage(ds4)=>{
                 self.ds4_input = ds4;
                 
                 self.packet_creator.create_packet(ds4);
             }
-            Message::ControllerType(type_)=>{
+            interface::RRMessage::ControllerType(type_)=>{
                 self.controller_connection_types_combo_box.selected = Some(type_);
             }
-            Message::ControllerStart=>{
+            interface::RRMessage::ControllerStart=>{
                 if self.controller_connection_types_combo_box.selected == None
                 {
                     self.app_state = AppState::NotModeSelected;
                 }
                 else 
                 {
-                    match DualShock4Driver::new(self.controller_connection_types_combo_box.selected.unwrap()) {
+                    match dualshock::DualShock4Driver::new(self.controller_connection_types_combo_box.selected.unwrap()) {
                         Some(mut dr)=>{
                             let t = self.dualshock4_connector.publisher.clone().take().unwrap();
 
@@ -98,49 +94,49 @@ impl iced::Application for RusticRover {
                     }
                 }
             }
-            Message::PowerRateX(get_rate)=>{
+            interface::RRMessage::PowerRateX(get_rate)=>{
                 self.packet_creator.x_pow_rate = get_rate
             }
-            Message::PowerRateY(get_rate)=>{
+            interface::RRMessage::PowerRateY(get_rate)=>{
                 self.packet_creator.y_pow_rate = get_rate
             }
-            Message::PowerRateRotation(get_rate)=>{
+            interface::RRMessage::PowerRateRotation(get_rate)=>{
                 self.packet_creator.ro_pow_rate = get_rate;
             }
-            Message::PowerRateM1(get_rate)=>{
+            interface::RRMessage::PowerRateM1(get_rate)=>{
                 self.packet_creator.m1_pow_rate = get_rate;
             }
-            Message::PowerRateM2(get_rate)=>{
+            interface::RRMessage::PowerRateM2(get_rate)=>{
                 self.packet_creator.m2_pow_rate = get_rate;
             }
-            Message::PacketAssign1p(a1p)=>{
+            interface::RRMessage::PacketAssign1p(a1p)=>{
                 self.packet_creator.x_cb.plus.selected = Some(a1p)
             }
-            Message::PacketAssign1m(a1m)=>{
+            interface::RRMessage::PacketAssign1m(a1m)=>{
                 self.packet_creator.x_cb.minus.selected = Some(a1m)
             }
-            Message::PacketAssign2p(a2p)=>{
+            interface::RRMessage::PacketAssign2p(a2p)=>{
                 self.packet_creator.y_cb.plus.selected = Some(a2p)
             }
-            Message::PacketAssign2m(a2m)=>{
+            interface::RRMessage::PacketAssign2m(a2m)=>{
                 self.packet_creator.y_cb.minus.selected = Some(a2m)
             }
-            Message::PacketAssign3p(a3p)=>{
+            interface::RRMessage::PacketAssign3p(a3p)=>{
                 self.packet_creator.ro_cb.plus.selected = Some(a3p)
             }
-            Message::PacketAssign3m(a3m)=>{
+            interface::RRMessage::PacketAssign3m(a3m)=>{
                 self.packet_creator.ro_cb.minus.selected = Some(a3m)
             }
-            Message::PacketAssign4p(a4p)=>{
+            interface::RRMessage::PacketAssign4p(a4p)=>{
                 self.packet_creator.m1_cb.plus.selected = Some(a4p)
             }
-            Message::PacketAssign4m(a4m)=>{
+            interface::RRMessage::PacketAssign4m(a4m)=>{
                 self.packet_creator.m1_cb.minus.selected = Some(a4m)
             }
-            Message::PacketAssign5p(a5p)=>{
+            interface::RRMessage::PacketAssign5p(a5p)=>{
                 self.packet_creator.m2_cb.plus.selected = Some(a5p)
             }
-            Message::PacketAssign5m(a5m)=>{
+            interface::RRMessage::PacketAssign5m(a5m)=>{
                 self.packet_creator.m2_cb.minus.selected = Some(a5m)
             }
         }
@@ -158,19 +154,19 @@ impl iced::Application for RusticRover {
             let y_sc = slider(
                 0..=100, 
                 self.packet_creator.y_pow_rate, 
-            Message::PowerRateY).width(500);
+            interface::RRMessage::PowerRateY).width(500);
             let ro_sc = slider(
                 0..=100, 
                 self.packet_creator.ro_pow_rate, 
-            Message::PowerRateRotation).width(500);
+            interface::RRMessage::PowerRateRotation).width(500);
             let m1_sc = slider(
                 0..=100, 
                 self.packet_creator.m1_pow_rate, 
-            Message::PowerRateM1).width(500);
+            interface::RRMessage::PowerRateM1).width(500);
             let m2_sc = slider(
                 0..=100, 
                 self.packet_creator.m2_pow_rate, 
-            Message::PowerRateM2).width(500);
+            interface::RRMessage::PowerRateM2).width(500);
 
             let con_state = if self.ds4_input.state
             {
@@ -185,17 +181,17 @@ impl iced::Application for RusticRover {
             let x_sc = slider(
                 0..=100, 
                 self.packet_creator.x_pow_rate, 
-            Message::PowerRateX).width(500);
+            interface::RRMessage::PowerRateX).width(500);
             let combo_xp = combo_box(
                 &self.packet_creator.x_cb.plus.all, 
                 "Selecct assign of x plus value", 
                 self.packet_creator.x_cb.plus.selected.as_ref(), 
-                Message::PacketAssign1p);
+                interface::RRMessage::PacketAssign1p);
             let combo_xm = combo_box(
                 &self.packet_creator.x_cb.minus.all, 
                 "Selecct assign of x minus value", 
                 self.packet_creator.x_cb.minus.selected.as_ref(), 
-                Message::PacketAssign1m);
+                interface::RRMessage::PacketAssign1m);
             let row_tex_and_sc_x = row![x_text, x_sc];
             let row_x = row![combo_xp, combo_xm].spacing(30);
             
@@ -204,12 +200,12 @@ impl iced::Application for RusticRover {
                 &self.packet_creator.y_cb.plus.all, 
                 "Selecct assign of y plus value", 
                 self.packet_creator.y_cb.plus.selected.as_ref(), 
-                Message::PacketAssign2p);
+                interface::RRMessage::PacketAssign2p);
             let combo_ym = combo_box(
                 &self.packet_creator.y_cb.minus.all, 
                 "Selecct assign of y minus value", 
                 self.packet_creator.y_cb.minus.selected.as_ref(), 
-                Message::PacketAssign2m);
+                interface::RRMessage::PacketAssign2m);
             let row_tex_and_sc_y = row![y_text, y_sc];
             let row_y = row![combo_yp, combo_ym].spacing(30);
 
@@ -218,12 +214,12 @@ impl iced::Application for RusticRover {
                 &self.packet_creator.ro_cb.plus.all, 
                 "Selecct assign of rotation plus value", 
                 self.packet_creator.ro_cb.plus.selected.as_ref(), 
-                Message::PacketAssign3p);
+                interface::RRMessage::PacketAssign3p);
             let combo_rom = combo_box(
                 &self.packet_creator.ro_cb.minus.all, 
                 "Selecct assign of rotation minus value", 
                 self.packet_creator.ro_cb.minus.selected.as_ref(), 
-                Message::PacketAssign3m);
+                interface::RRMessage::PacketAssign3m);
                 let row_tex_and_sc_ro = row![ro_text, ro_sc];
             let row_ro = row![combo_rop, combo_rom].spacing(30);
 
@@ -232,12 +228,12 @@ impl iced::Application for RusticRover {
                 &self.packet_creator.m1_cb.plus.all, 
                 "Selecct assign of machine1 plus value", 
                 self.packet_creator.m1_cb.plus.selected.as_ref(), 
-                Message::PacketAssign4p);
+                interface::RRMessage::PacketAssign4p);
             let combo_m1m = combo_box(
                 &self.packet_creator.m1_cb.minus.all, 
                 "Selecct assign of machine1 minus value", 
                 self.packet_creator.m1_cb.minus.selected.as_ref(), 
-                Message::PacketAssign4m);
+                interface::RRMessage::PacketAssign4m);
                 let row_tex_and_sc_m1 = row![m1_text, m1_sc];
             let row_m1 = row![combo_m1p, combo_m1m].spacing(30);
 
@@ -246,12 +242,12 @@ impl iced::Application for RusticRover {
                 &self.packet_creator.m2_cb.plus.all, 
                 "Selecct assign of machine2 plus value", 
                 self.packet_creator.m2_cb.plus.selected.as_ref(), 
-                Message::PacketAssign5p);
+                interface::RRMessage::PacketAssign5p);
             let combo_m2m = combo_box(
                 &self.packet_creator.m2_cb.minus.all, 
                 "Selecct assign of machine2 minus value", 
                 self.packet_creator.m2_cb.minus.selected.as_ref(), 
-                Message::PacketAssign5m);
+                interface::RRMessage::PacketAssign5m);
                 let row_tex_and_sc_m2 = row![m2_text, m2_sc];
             let row_m2 = row![combo_m2p, combo_m2m].spacing(30);
 
@@ -293,20 +289,20 @@ impl iced::Application for RusticRover {
 }
 
 impl RusticRover {
-    fn title_view(&self)->Element<'_, Message, iced::Theme, iced::Renderer>
+    fn title_view(&self)->Element<'_, interface::RRMessage, iced::Theme, iced::Renderer>
     {
         let title = text("RusticRover").size(200).horizontal_alignment(iced::alignment::Horizontal::Center);
         let combo_ = combo_box(
             &self.controller_connection_types_combo_box.all, 
             "Select Controller Connection Method", 
             self.controller_connection_types_combo_box.selected.as_ref(), 
-        Message::ControllerType);
+        interface::RRMessage::ControllerType);
 
         let path = "./rustic_rover.png";
 
         let img = iced::widget::image::Image::new(iced::widget::image::Handle::from_path(path)).width(iced::Length::Shrink).height(iced::Length::Shrink);
 
-        let btn = button("Start").on_press(Message::ControllerStart).width(iced::Length::Shrink).height(iced::Length::Shrink);
+        let btn = button("Start").on_press(interface::RRMessage::ControllerStart).width(iced::Length::Shrink).height(iced::Length::Shrink);
 
         let err_text = utils::setting_state_logger(self.app_state);
 
