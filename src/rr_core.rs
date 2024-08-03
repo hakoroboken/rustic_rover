@@ -5,7 +5,7 @@ mod packet;
 mod utils;
 mod serial;
 
-use interface::{AppState,Status, ControllerConnectionType, DualShock4, RRMessage};
+use interface::{AppState, ControllerConnectionType, DualShock4, Packet, RRMessage, Status};
 
 use iced::{self, Element};
 use iced::widget::{button, text, combo_box, column, row, text_input};
@@ -77,7 +77,7 @@ impl iced::Application for RusticRover {
                         
                         if self.status.serial_state == AppState::OK
                         {
-                            let _ = self.serial_manager.conn.publisher.clone().take().unwrap().send(p);
+                            self.serial_manager.conn.publisher.send(p).unwrap();
                         }
                     }
                     None=>{
@@ -163,37 +163,52 @@ impl iced::Application for RusticRover {
                 self.input_path = path
             }
             interface::RRMessage::SerialStart=>{
-                let mut packet_sub = self.serial_manager.conn.subscriber.take();
+                let con_p = thread_connection::ThreadConnector::<Packet>::new();
+                self.serial_manager.conn.publisher = con_p.publisher.clone();
                 // let state_publisher = self.serial_manager.state_mailer.publisher.clone();
                 let port_name_ = self.input_path.clone();
+
+                self.status.serial_state = AppState::OK;
                 
-                std::thread::spawn(||async move{
-                    let mut port =  serialport::new(port_name_.as_str(), 115200)
+                std::thread::spawn(move ||{
+                    let mut port_ = serialport::new(port_name_.clone().as_str(), 115200)
                         .data_bits(serialport::DataBits::Eight)
                         .stop_bits(serialport::StopBits::One)
                         .timeout(std::time::Duration::from_millis(100))
                         .open().unwrap();
-
                     loop {
-                        let packet = packet_sub.as_mut().unwrap().recv().await.unwrap();
-
+                        let p = con_p.subscriber.recv().unwrap();
+                        
                         let write_buf = format!("s{},{},{},{},{}e", 
-                            packet.x,
-                            packet.y,
-                            packet.ro,
-                            packet.m1,
-                            packet.m2);
+                                p.x/10 as i32+10,
+                                p.y/10 as i32+10,
+                                p.ro/10 as i32+10,
+                                p.m1/10 as i32+10,
+                                p.m2/10 as i32+10);
 
-                        match port.write(write_buf.as_bytes()) {
-                            Ok(_s)=>{
+                        match port_.write(write_buf.as_bytes()) {
+                            Ok(_)=>{
                             }
-                            Err(_e)=>{
+                            Err(_)=>{
+
                             }
                         }
                     }
                 });
+                    // match serialport::new(port_name_.as_str(), 115200)
+                    //     .data_bits(serialport::DataBits::Eight)
+                    //     .stop_bits(serialport::StopBits::One)
+                    //     .timeout(std::time::Duration::from_millis(100))
+                    //     .open()
+                    // {
+                    //     Ok(p)=>{
+                    //         self.serial_manager.port_ = p
+                    //     }
+                    //     Err(_)=>{
 
-                self.status.serial_state = AppState::OK;
+                    //     }
+                    // }
+                
             }
         }
 
