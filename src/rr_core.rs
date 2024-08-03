@@ -165,7 +165,6 @@ impl iced::Application for RusticRover {
             interface::RRMessage::SerialStart=>{
                 let con_p = thread_connection::ThreadConnector::<Packet>::new();
                 self.serial_manager.conn.publisher = con_p.publisher.clone();
-                // let state_publisher = self.serial_manager.state_mailer.publisher.clone();
                 let port_name_ = self.input_path.clone();
 
                 self.status.serial_state = AppState::OK;
@@ -195,20 +194,6 @@ impl iced::Application for RusticRover {
                         }
                     }
                 });
-                    // match serialport::new(port_name_.as_str(), 115200)
-                    //     .data_bits(serialport::DataBits::Eight)
-                    //     .stop_bits(serialport::StopBits::One)
-                    //     .timeout(std::time::Duration::from_millis(100))
-                    //     .open()
-                    // {
-                    //     Ok(p)=>{
-                    //         self.serial_manager.port_ = p
-                    //     }
-                    //     Err(_)=>{
-
-                    //     }
-                    // }
-                
             }
         }
 
