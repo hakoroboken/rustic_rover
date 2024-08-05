@@ -21,7 +21,8 @@ pub enum RRMessage
     PacketAssign5p(AssignController),
     PacketAssign5m(AssignController),
     ControllerStart,
-    SerialPathInput(String),
+    PortList(String),
+    SerialSearch,
     SerialStart,
 }
 

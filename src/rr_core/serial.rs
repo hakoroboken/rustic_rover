@@ -1,21 +1,41 @@
 use std::sync::mpsc::Receiver;
-
 use crate::rr_core::interface::Packet;
 use crate::rr_core::thread_connection::ThreadConnector;
+use crate::rr_core::utils::ComboBox;
 
 pub struct SerialManager
 {
     pub conn:ThreadConnector<Packet>,
+    pub path_list:Option<ComboBox<String>>,
 }
 
 impl SerialManager {
     pub fn new()->SerialManager
     {
-        SerialManager { conn: ThreadConnector::<Packet>::new()}
+        SerialManager { conn: ThreadConnector::<Packet>::new(), path_list : None}
+    }
+    pub fn search_port(&mut self)
+    {
+        match serialport::available_ports()
+        {
+            Ok(vec)=>{
+                let mut path_list_ = Vec::<String>::new();
+
+                for i in 0..vec.len()
+                {
+                    path_list_.push(vec.get(i).unwrap().port_name.clone())
+                }
+
+                self.path_list = Some(ComboBox::new(path_list_));
+            }
+            Err(_e)=>{
+                self.path_list = None
+            }
+        }
     }
 }
 
-pub fn task(port_name_:String, packet_subscriber:Receiver<Packet>)
+pub fn serial_task(port_name_:String, packet_subscriber:Receiver<Packet>)
 {
     let mut port_ = serialport::new(port_name_.clone().as_str(), 115200)
             .data_bits(serialport::DataBits::Eight)

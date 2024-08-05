@@ -8,7 +8,7 @@ mod serial;
 use interface::{AppState, ControllerConnectionType, DualShock4, Packet, RRMessage, Status};
 
 use iced::{self, Element};
-use iced::widget::{button, text, combo_box, column, row, text_input};
+use iced::widget::{button, text, combo_box, column, row};
 use serial::SerialManager;
 
 pub struct RusticRover
@@ -159,17 +159,27 @@ impl iced::Application for RusticRover {
             interface::RRMessage::PacketAssign5m(a5m)=>{
                 self.packet_creator.m2_cb.minus.selected = Some(a5m)
             },
-            interface::RRMessage::SerialPathInput(path)=>{
-                self.input_path = path
+            interface::RRMessage::SerialSearch=>{
+                self.serial_manager.search_port();
             }
             interface::RRMessage::SerialStart=>{
-                let con_p = thread_connection::ThreadConnector::<Packet>::new();
-                self.serial_manager.conn.publisher = con_p.publisher.clone();
-                let port_name_ = self.input_path.clone();
+                match self.serial_manager.path_list {
+                    Some(_)=>{
+                        let con_p = thread_connection::ThreadConnector::<Packet>::new();
+                        self.serial_manager.conn.publisher = con_p.publisher.clone();
+                        let port_name_ = self.input_path.clone();
 
-                self.status.serial_state = AppState::OK;
+                        self.status.serial_state = AppState::OK;
                 
-                std::thread::spawn(move || serial::task(port_name_, con_p.subscriber));
+                std::thread::spawn(move || serial::serial_task(port_name_, con_p.subscriber));
+                    }
+                    None=>{
+
+                    }
+                }    
+            }
+            interface::RRMessage::PortList(port_name)=>{
+                self.input_path = port_name;
             }
         }
 
@@ -183,60 +193,7 @@ impl iced::Application for RusticRover {
         }
         else if self.status.controller_state == AppState::OK
         {
-            let con_state = if self.ds4_input.state
-            {
-                "Connected!!"
-            }
-            else
-            {
-                "Not Connected"
-            };
-
-            
-
-            let lx = self.ds4_input.sticks.left_x;
-            let ly = self.ds4_input.sticks.left_y;
-            let rx = self.ds4_input.sticks.right_x;
-            let tit = text("Controller Info").size(70);
-            let tex = text(
-                format!("Type:{}\nState:{}\nJoyLeftX:{}\nJoyLeftY:{}\nJoyRightX:{}",self.ds4_input.mode, con_state, lx, ly, rx)
-            ).size(40);
-            
-            if self.status.packet_state == AppState::OK
-            {
-                if self.status.serial_state == AppState::NoReady
-                {
-                    let sp_input = text_input("Input Serial Path", self.input_path.as_str())
-                    .on_input(RRMessage::SerialPathInput)
-                    .on_submit(RRMessage::SerialStart);
-
-                    let controller_clm = column![tit, tex, sp_input].align_items(iced::Alignment::Start);
-
-                    row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
-                }
-                else if self.status.serial_state == AppState::ERROR{
-                    let serial_text = text("Serial Error!!!!");
-
-                    let controller_clm = column![tit, tex, serial_text].align_items(iced::Alignment::Start);
-
-                    row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
-                }else if self.status.serial_state == AppState::OK{
-                    let serial_text = text(format!("Serial Ok:{}", self.input_path));
-
-                    let controller_clm = column![tit, tex, serial_text].align_items(iced::Alignment::Start);
-
-                    row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
-                }
-                else
-                {
-                    text("App State Error").size(300).into()
-                }
-            }
-            else {
-                let controller_clm = column![tit, tex].align_items(iced::Alignment::Start);
-
-                row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
-            }
+            self.main_view()
         }
         else {
             text("App State Error").size(300).into()
@@ -263,5 +220,78 @@ impl RusticRover {
         let err_text = utils::setting_state_logger(self.status.controller_state);
 
         column![title, combo_, btn, err_text,img].align_items(iced::alignment::Alignment::Center).padding(10).spacing(50).into()
+    }
+    fn main_view(&self)->Element<'_, interface::RRMessage, iced::Theme, iced::Renderer>
+    {
+        let con_state = if self.ds4_input.state
+            {
+                "Connected!!"
+            }
+            else
+            {
+                "Not Connected"
+            };
+
+            
+
+            let lx = self.ds4_input.sticks.left_x;
+            let ly = self.ds4_input.sticks.left_y;
+            let rx = self.ds4_input.sticks.right_x;
+            let tit = text("Controller Info").size(70);
+            let tex = text(
+                format!("Type:{}\nState:{}\nJoyLeftX:{}\nJoyLeftY:{}\nJoyRightX:{}",self.ds4_input.mode, con_state, lx, ly, rx)
+            ).size(40);
+            
+            if self.status.packet_state == AppState::OK
+            {
+                if self.status.serial_state == AppState::NoReady
+                {
+                    match &self.serial_manager.path_list {
+                        Some(get_list)=>{
+                            let combo_yp = combo_box(
+                                &get_list.all, 
+                                "Select Serial Port", 
+                                Some(&self.input_path), 
+                                RRMessage::PortList);
+                            let start_b = button("Start Serial").on_press(RRMessage::SerialStart);
+                            let b = button("Search SerialPort").on_press(RRMessage::SerialSearch);
+
+                            let controller_clm = column![tit, tex, combo_yp, start_b,b].align_items(iced::Alignment::Start);
+
+                            row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
+                        }
+                        None=>{
+                            let tex = text("Press Button and search serialport").size(30);
+                            let b = button("Search SerialPort").on_press(RRMessage::SerialSearch);
+
+                            let controller_clm = column![tit, tex, b].align_items(iced::Alignment::Start);
+
+                            row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
+                        }
+                    }
+                }
+                else if self.status.serial_state == AppState::ERROR{
+                    let serial_text = text("Serial Error!!!!");
+
+                    let controller_clm = column![tit, tex, serial_text].align_items(iced::Alignment::Start);
+
+                    row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
+                }else if self.status.serial_state == AppState::OK{
+                    let serial_text = text(format!("Serial Ok:{}", self.input_path));
+
+                    let controller_clm = column![tit, tex, serial_text].align_items(iced::Alignment::Start);
+
+                    row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
+                }
+                else
+                {
+                    text("App State Error").size(300).into()
+                }
+            }
+            else {
+                let controller_clm = column![tit, tex].align_items(iced::Alignment::Start);
+
+                row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
+            }
     }
 }
