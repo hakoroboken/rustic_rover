@@ -4,11 +4,13 @@ mod thread_connection;
 mod packet;
 mod utils;
 mod serial;
+mod save_data;
 
 use interface::{AppState, ControllerConnectionType, DualShock4, Packet, RRMessage, Status};
 
 use iced::{self, Element};
 use iced::widget::{button, text, combo_box, column, row};
+use save_data::SaveDataManager;
 use serial::SerialManager;
 
 pub struct RusticRover
@@ -19,7 +21,9 @@ pub struct RusticRover
     packet_creator:packet::PacketCreator,
     status:Status,
     serial_manager:serial::SerialManager,
-    input_path:String
+    input_path:String,
+    sd_manager:save_data::SaveDataManager,
+    selected_file_name:String,
 }
 
 impl iced::Application for RusticRover {
@@ -39,7 +43,9 @@ impl iced::Application for RusticRover {
             packet_creator:packet::PacketCreator::new(),
             status:Status::new(),
             serial_manager:SerialManager::new(),
-            input_path:String::new()
+            input_path:String::new(),
+            sd_manager:SaveDataManager::new(),
+            selected_file_name:String::new()
         };
 
         (app, iced::Command::none())
@@ -107,6 +113,7 @@ impl iced::Application for RusticRover {
                                 }
                             });
                             self.status.controller_state = AppState::OK;
+                            self.sd_manager.search_data_files();
                         }
                         None=>{
                             self.status.controller_state = AppState::ERROR
@@ -181,6 +188,22 @@ impl iced::Application for RusticRover {
             interface::RRMessage::PortList(port_name)=>{
                 self.input_path = port_name;
             }
+            interface::RRMessage::FileSelect(selected)=>{
+                self.selected_file_name = selected;
+
+                self.sd_manager.load_from_file(self.selected_file_name.clone());
+
+                self.packet_creator.x_cb.plus.selected = self.sd_manager.xp_assign;
+                self.packet_creator.x_cb.minus.selected = self.sd_manager.xm_assign;
+                self.packet_creator.y_cb.plus.selected = self.sd_manager.yp_assign;
+                self.packet_creator.y_cb.minus.selected = self.sd_manager.ym_assign;
+                self.packet_creator.ro_cb.plus.selected = self.sd_manager.rop_assign;
+                self.packet_creator.ro_cb.minus.selected = self.sd_manager.rom_assign;
+                self.packet_creator.m1_cb.plus.selected = self.sd_manager.m1p_assign;
+                self.packet_creator.m1_cb.minus.selected = self.sd_manager.m1m_assign;
+                self.packet_creator.m2_cb.plus.selected = self.sd_manager.m2p_assign;
+                self.packet_creator.m2_cb.minus.selected = self.sd_manager.m2m_assign;
+            }
         }
 
         iced::Command::none()
@@ -254,19 +277,30 @@ impl RusticRover {
                                 Some(&self.input_path), 
                                 RRMessage::PortList);
                             let start_b = button("Start Serial").on_press(RRMessage::SerialStart);
-                            let b = button("Search SerialPort").on_press(RRMessage::SerialSearch);
+                            let b = button("Rescan SerialPort").on_press(RRMessage::SerialSearch);
 
-                            let controller_clm = column![tit, tex, combo_yp, start_b,b].align_items(iced::Alignment::Start);
+                            let controller_clm = column![tit, tex].align_items(iced::Alignment::Start);
+                            let serial_clm = column![b, combo_yp, start_b];
+                            let f_v = self.sd_manager.menu_view(self.selected_file_name.clone());
 
-                            row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
+
+                            let row1 = row![controller_clm, self.packet_creator.packet_view()].spacing(50);
+                            let row2 = row![serial_clm, f_v].spacing(50);
+
+                            column![row1, row2].spacing(50).into()
                         }
                         None=>{
-                            let tex = text("Press Button and search serialport").size(30);
-                            let b = button("Search SerialPort").on_press(RRMessage::SerialSearch);
+                            let serial_text = text("Press Button and search serialport").size(30);
+                            let b = button("Scan SerialPort").on_press(RRMessage::SerialSearch);
 
-                            let controller_clm = column![tit, tex, b].align_items(iced::Alignment::Start);
+                            let controller_clm = column![tit, tex].align_items(iced::Alignment::Start);
+                            let serial_clm = column![serial_text, b].spacing(50);
+                            let f_v = self.sd_manager.menu_view(self.selected_file_name.clone());
 
-                            row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
+                            let r1 = row![controller_clm, self.packet_creator.packet_view()].spacing(50);
+                            let r2 = row![serial_clm, f_v].spacing(50);
+
+                            column![r1, r2].spacing(50).into()
                         }
                     }
                 }
@@ -277,11 +311,15 @@ impl RusticRover {
 
                     row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
                 }else if self.status.serial_state == AppState::OK{
-                    let serial_text = text(format!("Serial Ok:{}", self.input_path));
+                    let serial_text = text(format!("Serial Ok:  {}", self.input_path)).size(50);
+                    let f_v = self.sd_manager.menu_view(self.selected_file_name.clone());
 
-                    let controller_clm = column![tit, tex, serial_text].align_items(iced::Alignment::Start);
+                    let controller_clm = column![tit, tex].align_items(iced::Alignment::Start);
 
-                    row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
+                    let r1 = row![controller_clm, self.packet_creator.packet_view()].spacing(50);
+                    let r2 = row![serial_text, f_v].spacing(50);
+
+                    column![r1, r2].spacing(50).into()
                 }
                 else
                 {
@@ -290,8 +328,11 @@ impl RusticRover {
             }
             else {
                 let controller_clm = column![tit, tex].align_items(iced::Alignment::Start);
+                let f_v = self.sd_manager.menu_view(self.selected_file_name.clone());
 
-                row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
+                let r = row![controller_clm, self.packet_creator.packet_view()].spacing(50);
+
+                column![r, f_v].spacing(50).into()
             }
     }
 }
