@@ -24,6 +24,7 @@ pub enum RRMessage
     PortList(String),
     SerialSearch,
     SerialStart,
+    FileSelect(String)
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]

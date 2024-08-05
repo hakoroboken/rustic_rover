@@ -1,0 +1,17 @@
+/**:
+  x:
+    plus: "Left_Stick_X"
+    minus: "Left_Stick_X"
+  y:
+    plus: "Left_Stick_Y"
+    minus: "Left_Stick_Y"
+  rotation:
+    plus: "Right_Stick_X"
+    minus: "Right_Stick_X"
+  m1:
+    plus: "Up_Key"
+    minus: "Down_Key"
+  m2:
+    plus: "R1_Button"
+    minus: "L1_Button"
+  
