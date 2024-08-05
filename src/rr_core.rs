@@ -4,6 +4,7 @@ mod thread_connection;
 mod packet;
 mod utils;
 mod serial;
+mod save_data;
 
 use interface::{AppState, ControllerConnectionType, DualShock4, Packet, RRMessage, Status};
 
@@ -254,15 +255,15 @@ impl RusticRover {
                                 Some(&self.input_path), 
                                 RRMessage::PortList);
                             let start_b = button("Start Serial").on_press(RRMessage::SerialStart);
-                            let b = button("Search SerialPort").on_press(RRMessage::SerialSearch);
+                            let b = button("Rescan SerialPort").on_press(RRMessage::SerialSearch);
 
-                            let controller_clm = column![tit, tex, combo_yp, start_b,b].align_items(iced::Alignment::Start);
+                            let controller_clm = column![tit, tex, b, combo_yp, start_b].align_items(iced::Alignment::Start);
 
                             row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
                         }
                         None=>{
                             let tex = text("Press Button and search serialport").size(30);
-                            let b = button("Search SerialPort").on_press(RRMessage::SerialSearch);
+                            let b = button("Scan SerialPort").on_press(RRMessage::SerialSearch);
 
                             let controller_clm = column![tit, tex, b].align_items(iced::Alignment::Start);
 
