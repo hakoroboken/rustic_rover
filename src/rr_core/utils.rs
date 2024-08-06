@@ -1,4 +1,5 @@
-use crate::rr_core::interface::AppState;
+use crate::rr_core::interface::{AppState, RRMessage};
+use iced::widget::button;
 use iced::widget::text;
 use iced::widget::combo_box;
 
@@ -32,4 +33,23 @@ pub fn setting_state_logger<'a>(app_state:AppState)->iced::widget::text::Text<'a
             };
 
     err_text
+}
+
+pub fn path_to_image(path:&str, size:u16)->iced::widget::Image<iced::widget::image::Handle>
+{
+    iced::widget::image::Image::new(iced::widget::image::Handle::from_path(path)).width(size).height(size)
+}
+
+pub fn state_to_image(state:AppState)->iced::widget::Image<iced::widget::image::Handle>
+{
+    match state {
+        AppState::OK=>iced::widget::image::Image::new(iced::widget::image::Handle::from_path("./img/ok.png")).width(200).height(200),
+        AppState::NoReady=>iced::widget::image::Image::new(iced::widget::image::Handle::from_path("./img/no_ready.png")).width(200).height(200),
+        AppState::ERROR=>iced::widget::image::Image::new(iced::widget::image::Handle::from_path("./img/error.png")).width(200).height(200)
+    }
+}
+
+pub fn normal_size_button(text:&str, target:RRMessage)->iced::widget::Button<RRMessage>
+{
+    button(text).width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(target)
 }
