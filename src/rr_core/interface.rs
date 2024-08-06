@@ -24,22 +24,23 @@ pub enum RRMessage
     PortList(String),
     SerialSearch,
     SerialStart,
-    FileSelect(String)
+    FileSelect(String),
+    CycleHome,
+    CycleController,
+    CycleSerial,
+    CyclePacket,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub struct Status
+pub enum LifeCycle
 {
-    pub controller_state:AppState,
-    pub packet_state:AppState,
-    pub serial_state:AppState
+    Setting,
+    Home,
+    ControllerInfo,
+    PacketInfo,
+    SerialInfo
 }
-impl Status {
-    pub fn new()->Status
-    {
-        Status { controller_state: AppState::NoReady, packet_state: AppState::NoReady, serial_state: AppState::NoReady }
-    }
-}
+
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum AppState

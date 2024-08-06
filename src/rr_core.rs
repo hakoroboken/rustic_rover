@@ -6,12 +6,13 @@ mod utils;
 mod serial;
 mod save_data;
 
-use interface::{AppState, ControllerConnectionType, DualShock4, Packet, RRMessage, Status};
+use interface::{AppState, ControllerConnectionType, DualShock4, Packet, RRMessage, LifeCycle};
 
 use iced::{self, Element};
 use iced::widget::{button, text, combo_box, column, row};
 use save_data::SaveDataManager;
 use serial::SerialManager;
+use utils::path_to_image;
 
 pub struct RusticRover
 {
@@ -19,7 +20,10 @@ pub struct RusticRover
     ds4_input:DualShock4,
     controller_connection_types_combo_box:utils::ComboBox<ControllerConnectionType>,
     packet_creator:packet::PacketCreator,
-    status:Status,
+    controller_state:AppState,
+    serial_state:AppState,
+    packet_state:AppState,
+    life_cycle:LifeCycle,
     serial_manager:serial::SerialManager,
     input_path:String,
     sd_manager:save_data::SaveDataManager,
@@ -41,7 +45,10 @@ impl iced::Application for RusticRover {
             ds4_input: DualShock4::new(),
             controller_connection_types_combo_box:utils::ComboBox::new(ControllerConnectionType::ALL.to_vec()),
             packet_creator:packet::PacketCreator::new(),
-            status:Status::new(),
+            controller_state:AppState::NoReady,
+            serial_state:AppState::NoReady,
+            packet_state:AppState::NoReady,
+            life_cycle:LifeCycle::Setting,
             serial_manager:SerialManager::new(),
             input_path:String::new(),
             sd_manager:SaveDataManager::new(),
@@ -79,15 +86,15 @@ impl iced::Application for RusticRover {
 
                 match self.packet_creator.packet_ {
                     Some(p)=>{
-                        self.status.packet_state = AppState::OK;
+                        self.packet_state = AppState::OK;
                         
-                        if self.status.serial_state == AppState::OK
+                        if self.serial_state == AppState::OK
                         {
                             self.serial_manager.conn.publisher.send(p).unwrap();
                         }
                     }
                     None=>{
-                        self.status.packet_state = AppState::NoReady;
+                        self.packet_state = AppState::NoReady;
                     }
                 }
             }
@@ -97,7 +104,7 @@ impl iced::Application for RusticRover {
             interface::RRMessage::ControllerStart=>{
                 if self.controller_connection_types_combo_box.selected == None
                 {
-                    self.status.controller_state = AppState::NoReady;
+                    self.controller_state = AppState::NoReady;
                 }
                 else 
                 {
@@ -112,11 +119,12 @@ impl iced::Application for RusticRover {
                                     t.clone().send(get).unwrap();
                                 }
                             });
-                            self.status.controller_state = AppState::OK;
+                            self.controller_state = AppState::OK;
+                            self.life_cycle = LifeCycle::Home;
                             self.sd_manager.search_data_files();
                         }
                         None=>{
-                            self.status.controller_state = AppState::ERROR
+                            self.controller_state = AppState::ERROR
                         }
                     }
                 }
@@ -176,7 +184,7 @@ impl iced::Application for RusticRover {
                         self.serial_manager.conn.publisher = con_p.publisher.clone();
                         let port_name_ = self.input_path.clone();
 
-                        self.status.serial_state = AppState::OK;
+                        self.serial_state = AppState::OK;
                 
                 std::thread::spawn(move || serial::serial_task(port_name_, con_p.subscriber));
                     }
@@ -204,22 +212,50 @@ impl iced::Application for RusticRover {
                 self.packet_creator.m2_cb.plus.selected = self.sd_manager.m2p_assign;
                 self.packet_creator.m2_cb.minus.selected = self.sd_manager.m2m_assign;
             }
+            interface::RRMessage::CycleHome=>{
+                self.life_cycle = LifeCycle::Home;
+            }
+            interface::RRMessage::CycleController=>{
+                self.life_cycle = LifeCycle::ControllerInfo
+            }
+            interface::RRMessage::CyclePacket=>{
+                self.life_cycle = LifeCycle::PacketInfo
+            }
+            interface::RRMessage::CycleSerial=>{
+                self.life_cycle = LifeCycle::SerialInfo
+            }
         }
 
         iced::Command::none()
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message, Self::Theme, iced::Renderer> {
-        if self.status.controller_state == AppState::NoReady || self.status.controller_state == AppState::ERROR
+        if self.life_cycle == LifeCycle::Setting
         {
             self.title_view()
         }
-        else if self.status.controller_state == AppState::OK
+        else if self.life_cycle == LifeCycle::Home
         {
-            self.main_view()
+            let icon = path_to_image("./rustic_rover.png", 600);
+            
+            column![icon,self.home_view()].align_items(iced::Alignment::Center).padding(10).into()
+        }
+        else if self.life_cycle == LifeCycle::ControllerInfo
+        {   
+            column![self.controller_view(), self.home_view()].align_items(iced::Alignment::Center).padding(10).spacing(50).into()
+        }
+        else if self.life_cycle == LifeCycle::PacketInfo
+        {
+            let f_v = self.sd_manager.menu_view(self.selected_file_name.clone());
+            
+            column![self.packet_creator.packet_view(), f_v, self.home_view()].align_items(iced::Alignment::Center).padding(10).spacing(50).into()
+        }
+        else if self.life_cycle == LifeCycle::SerialInfo
+        {
+            column![self.serial_view(), self.home_view()].align_items(iced::Alignment::Center).padding(10).spacing(50).into()
         }
         else {
-            text("App State Error").size(300).into()
+            text("LifeCycleError!!").size(300).into()
         }
     }
 }
@@ -236,103 +272,74 @@ impl RusticRover {
 
         let path = "./rustic_rover.png";
 
-        let img = iced::widget::image::Image::new(iced::widget::image::Handle::from_path(path)).width(iced::Length::Shrink).height(iced::Length::Shrink);
+        let img = utils::path_to_image(path, 1000);
 
         let btn = button("Start").on_press(interface::RRMessage::ControllerStart).width(iced::Length::Shrink).height(iced::Length::Shrink);
 
-        let err_text = utils::setting_state_logger(self.status.controller_state);
+        let err_text = utils::setting_state_logger(self.controller_state);
 
         column![title, combo_, btn, err_text,img].align_items(iced::alignment::Alignment::Center).padding(10).spacing(50).into()
     }
-    fn main_view(&self)->Element<'_, interface::RRMessage, iced::Theme, iced::Renderer>
+    fn home_view(&self)->Element<'_, interface::RRMessage, iced::Theme, iced::Renderer>
+    {
+        let home_btn = utils::normal_size_button("Home", RRMessage::CycleHome).width(100);
+        
+        let con_btn = utils::normal_size_button("ControllerInfo", RRMessage::CycleController);
+        let con_state = utils::state_to_image(self.controller_state);
+        let con_clm = column![con_btn, con_state].align_items(iced::Alignment::Center);
+
+        let serial_btn = utils::normal_size_button("SerialInfo", RRMessage::CycleSerial);
+        let serial_state = utils::state_to_image(self.serial_state);
+        let serial_clm = column![serial_btn, serial_state].align_items(iced::Alignment::Center);
+
+        let packet_btn = utils::normal_size_button("PacketInfo", RRMessage::CyclePacket);
+        let packet_state = utils::state_to_image(self.packet_state);
+        let packet_clm = column![packet_btn, packet_state].align_items(iced::Alignment::Center);
+
+        row![home_btn, con_clm, packet_clm, serial_clm].spacing(50).padding(10).align_items(iced::Alignment::Center).into()
+    }
+    fn controller_view(&self)->Element<'_, interface::RRMessage, iced::Theme, iced::Renderer>
     {
         let con_state = if self.ds4_input.state
-            {
-                "Connected!!"
+        {
+            "Connected!!"
+        }
+        else
+        {
+            "Not Connected"
+        };
+        let tit = text("Controller Info").size(100);
+        let state_tex = text(format!("Type:{}\nState:{}\n",self.ds4_input.mode, con_state)).size(50);
+        let joy_tex = text(format!("JoyStick\nleft_x:{}\nleft_y:{}\nright_x:{}\nright_y:{}", self.ds4_input.sticks.left_x,self.ds4_input.sticks.left_y,self.ds4_input.sticks.right_x,self.ds4_input.sticks.right_y)).size(50);
+        let dpad_tex = text(format!("DPad\nup:{}\ndown:{}\nright:{}\nleft:{}", self.ds4_input.dpad.up_key,self.ds4_input.dpad.down_key,self.ds4_input.dpad.right_key,self.ds4_input.dpad.left_key)).size(50);
+        let btn_tex = text(format!("Buttons\ncircle:{},cross:{}\ncube:{},triangle:{}\nR1:{},R2:{}\nL1:{},L2:{}", 
+            self.ds4_input.btns.circle,self.ds4_input.btns.cross,
+            self.ds4_input.btns.cube,self.ds4_input.btns.triangle,
+            self.ds4_input.btns.r1,self.ds4_input.btns.r2,
+             self.ds4_input.btns.l1,self.ds4_input.btns.l2)).size(50);
+
+        let info_row = row![state_tex, joy_tex, dpad_tex, btn_tex].padding(10).spacing(50);
+        column![tit, info_row].padding(10).into()
+    }
+    fn serial_view(&self)->Element<'_, interface::RRMessage, iced::Theme, iced::Renderer>
+    {
+        match &self.serial_manager.path_list {
+            Some(get_list)=>{
+                let combo_yp = combo_box(
+                    &get_list.all, 
+                    "Select Serial Port", 
+                    Some(&self.input_path), 
+                    RRMessage::PortList);
+                let start_b = button("Start Serial").on_press(RRMessage::SerialStart);
+                let b = button("Rescan SerialPort").on_press(RRMessage::SerialSearch);
+
+                column![b, combo_yp, start_b].padding(10).spacing(50).into()
             }
-            else
-            {
-                "Not Connected"
-            };
-
-            
-
-            let lx = self.ds4_input.sticks.left_x;
-            let ly = self.ds4_input.sticks.left_y;
-            let rx = self.ds4_input.sticks.right_x;
-            let tit = text("Controller Info").size(70);
-            let tex = text(
-                format!("Type:{}\nState:{}\nJoyLeftX:{}\nJoyLeftY:{}\nJoyRightX:{}",self.ds4_input.mode, con_state, lx, ly, rx)
-            ).size(40);
-            
-            if self.status.packet_state == AppState::OK
-            {
-                if self.status.serial_state == AppState::NoReady
-                {
-                    match &self.serial_manager.path_list {
-                        Some(get_list)=>{
-                            let combo_yp = combo_box(
-                                &get_list.all, 
-                                "Select Serial Port", 
-                                Some(&self.input_path), 
-                                RRMessage::PortList);
-                            let start_b = button("Start Serial").on_press(RRMessage::SerialStart);
-                            let b = button("Rescan SerialPort").on_press(RRMessage::SerialSearch);
-
-                            let controller_clm = column![tit, tex].align_items(iced::Alignment::Start);
-                            let serial_clm = column![b, combo_yp, start_b];
-                            let f_v = self.sd_manager.menu_view(self.selected_file_name.clone());
-
-
-                            let row1 = row![controller_clm, self.packet_creator.packet_view()].spacing(50);
-                            let row2 = row![serial_clm, f_v].spacing(50);
-
-                            column![row1, row2].spacing(50).into()
-                        }
-                        None=>{
-                            let serial_text = text("Press Button and search serialport").size(30);
-                            let b = button("Scan SerialPort").on_press(RRMessage::SerialSearch);
-
-                            let controller_clm = column![tit, tex].align_items(iced::Alignment::Start);
-                            let serial_clm = column![serial_text, b].spacing(50);
-                            let f_v = self.sd_manager.menu_view(self.selected_file_name.clone());
-
-                            let r1 = row![controller_clm, self.packet_creator.packet_view()].spacing(50);
-                            let r2 = row![serial_clm, f_v].spacing(50);
-
-                            column![r1, r2].spacing(50).into()
-                        }
-                    }
-                }
-                else if self.status.serial_state == AppState::ERROR{
-                    let serial_text = text("Serial Error!!!!");
-
-                    let controller_clm = column![tit, tex, serial_text].align_items(iced::Alignment::Start);
-
-                    row![controller_clm, self.packet_creator.packet_view()].spacing(50).into()
-                }else if self.status.serial_state == AppState::OK{
-                    let serial_text = text(format!("Serial Ok:  {}", self.input_path)).size(50);
-                    let f_v = self.sd_manager.menu_view(self.selected_file_name.clone());
-
-                    let controller_clm = column![tit, tex].align_items(iced::Alignment::Start);
-
-                    let r1 = row![controller_clm, self.packet_creator.packet_view()].spacing(50);
-                    let r2 = row![serial_text, f_v].spacing(50);
-
-                    column![r1, r2].spacing(50).into()
-                }
-                else
-                {
-                    text("App State Error").size(300).into()
-                }
+            None=>{
+                let serial_text = text("Press Button and search serialport").size(30);
+                let b = button("Scan SerialPort").on_press(RRMessage::SerialSearch);
+                column![serial_text, b].padding(10).spacing(50).into()
             }
-            else {
-                let controller_clm = column![tit, tex].align_items(iced::Alignment::Start);
-                let f_v = self.sd_manager.menu_view(self.selected_file_name.clone());
-
-                let r = row![controller_clm, self.packet_creator.packet_view()].spacing(50);
-
-                column![r, f_v].spacing(50).into()
-            }
+        }
     }
 }
