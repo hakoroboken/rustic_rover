@@ -310,9 +310,9 @@ impl RusticRover {
         };
         let tit = text("Controller Info").size(100);
         let state_tex = text(format!("Type:{}\nState:{}\n",self.ds4_input.mode, con_state)).size(50);
-        let joy_tex = text(format!("JoyStick\nleft_x:{}\nleft_y:{}\nright_x:{}\nright_y:{}", self.ds4_input.sticks.left_x,self.ds4_input.sticks.left_y,self.ds4_input.sticks.right_x,self.ds4_input.sticks.right_y)).size(50);
-        let dpad_tex = text(format!("DPad\nup:{}\ndown:{}\nright:{}\nleft:{}", self.ds4_input.dpad.up_key,self.ds4_input.dpad.down_key,self.ds4_input.dpad.right_key,self.ds4_input.dpad.left_key)).size(50);
-        let btn_tex = text(format!("Buttons\ncircle:{},cross:{}\ncube:{},triangle:{}\nR1:{},R2:{}\nL1:{},L2:{}", 
+        let joy_tex = text(format!("JoyStick\nleft_x:{:.5}\nleft_y:{:.5}\nright_x:{:.5}\nright_y:{:.5}", self.ds4_input.sticks.left_x,self.ds4_input.sticks.left_y,self.ds4_input.sticks.right_x,self.ds4_input.sticks.right_y)).size(50);
+        let dpad_tex = text(format!("DPad\nup:{:5}\ndown:{:5}\nright:{:5}\nleft:{:5}", self.ds4_input.dpad.up_key,self.ds4_input.dpad.down_key,self.ds4_input.dpad.right_key,self.ds4_input.dpad.left_key)).size(50);
+        let btn_tex = text(format!("Buttons\ncircle:{:5},cross:{:5}\ncube:{:5},triangle:{:5}\nR1:{},R2:{}\nL1:{},L2:{}", 
             self.ds4_input.btns.circle,self.ds4_input.btns.cross,
             self.ds4_input.btns.cube,self.ds4_input.btns.triangle,
             self.ds4_input.btns.r1,self.ds4_input.btns.r2,
