@@ -2,15 +2,20 @@
   x:
     plus: "Right_Key"
     minus: "Left_Key"
+    rate: 50
   y:
     plus: "Up_Key"
     minus: "Down_Key"
+    rate: 50
   rotation:
     plus: "Right_Stick_X"
     minus: "Right_Stick_X"
+    rate: 50
   m1:
     plus: "Circle_Button"
     minus: "Cross_Button"
+    rate: 75
   m2:
     plus: "R1_Button"
     minus: "L1_Button"
+    rate: 75
