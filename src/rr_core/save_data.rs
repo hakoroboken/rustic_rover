@@ -17,6 +17,11 @@ pub struct SaveDataManager
     pub m1m_assign:Option<AssignController>,
     pub m2p_assign:Option<AssignController>,
     pub m2m_assign:Option<AssignController>,
+    pub x_rate:Option<u16>,
+    pub y_rate:Option<u16>,
+    pub ro_rate:Option<u16>,
+    pub m1_rate:Option<u16>,
+    pub m2_rate:Option<u16>,
     pub file_list:Option<ComboBox<String>>
 }
 
@@ -33,7 +38,12 @@ impl SaveDataManager {
             m1p_assign: None, 
             m1m_assign: None, 
             m2p_assign: None, 
-            m2m_assign: None, 
+            m2m_assign: None,
+            x_rate:None,
+            y_rate:None,
+            ro_rate:None,
+            m1_rate:None,
+            m2_rate:None,
             file_list: None }
     }
     pub fn search_data_files(&mut self)
@@ -74,18 +84,19 @@ impl SaveDataManager {
 
                         self.xp_assign = str_to_assign(doc["/**"]["x"]["plus"].as_str().unwrap());
                         self.xm_assign = str_to_assign(doc["/**"]["x"]["minus"].as_str().unwrap());
+                        self.x_rate = Some(doc["/**"]["x"]["rate"].as_i64().unwrap() as u16);
                         self.yp_assign = str_to_assign(doc["/**"]["y"]["plus"].as_str().unwrap());
                         self.ym_assign = str_to_assign(doc["/**"]["y"]["minus"].as_str().unwrap());
+                        self.y_rate = Some(doc["/**"]["y"]["rate"].as_i64().unwrap() as u16);
                         self.rop_assign = str_to_assign(doc["/**"]["rotation"]["plus"].as_str().unwrap());
                         self.rom_assign = str_to_assign(doc["/**"]["rotation"]["minus"].as_str().unwrap());
+                        self.ro_rate = Some(doc["/**"]["rotation"]["rate"].as_i64().unwrap() as u16);
                         self.m1p_assign = str_to_assign(doc["/**"]["m1"]["plus"].as_str().unwrap());
                         self.m1m_assign = str_to_assign(doc["/**"]["m1"]["minus"].as_str().unwrap());
+                        self.m1_rate = Some(doc["/**"]["m1"]["rate"].as_i64().unwrap() as u16);
                         self.m2p_assign = str_to_assign(doc["/**"]["m2"]["plus"].as_str().unwrap());
                         self.m2m_assign = str_to_assign(doc["/**"]["m2"]["minus"].as_str().unwrap());
-                        if self.xp_assign == None
-                        {
-                            print!("SS")
-                        }
+                        self.m2_rate = Some(doc["/**"]["m2"]["rate"].as_i64().unwrap() as u16);
                     }
                     Err(_e)=>{
 

@@ -63,7 +63,7 @@ impl iced::Application for RusticRover {
     }
 
     fn theme(&self) -> Self::Theme {
-        iced::Theme::Light
+        iced::Theme::KanagawaWave
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
@@ -203,14 +203,19 @@ impl iced::Application for RusticRover {
 
                 self.packet_creator.x_cb.plus.selected = self.sd_manager.xp_assign;
                 self.packet_creator.x_cb.minus.selected = self.sd_manager.xm_assign;
+                self.packet_creator.x_pow_rate = self.sd_manager.x_rate.unwrap();
                 self.packet_creator.y_cb.plus.selected = self.sd_manager.yp_assign;
                 self.packet_creator.y_cb.minus.selected = self.sd_manager.ym_assign;
+                self.packet_creator.y_pow_rate = self.sd_manager.y_rate.unwrap();
                 self.packet_creator.ro_cb.plus.selected = self.sd_manager.rop_assign;
                 self.packet_creator.ro_cb.minus.selected = self.sd_manager.rom_assign;
+                self.packet_creator.ro_pow_rate = self.sd_manager.ro_rate.unwrap();
                 self.packet_creator.m1_cb.plus.selected = self.sd_manager.m1p_assign;
                 self.packet_creator.m1_cb.minus.selected = self.sd_manager.m1m_assign;
+                self.packet_creator.m1_pow_rate = self.sd_manager.m1_rate.unwrap();
                 self.packet_creator.m2_cb.plus.selected = self.sd_manager.m2p_assign;
                 self.packet_creator.m2_cb.minus.selected = self.sd_manager.m2m_assign;
+                self.packet_creator.m2_pow_rate = self.sd_manager.m2_rate.unwrap();
             }
             interface::RRMessage::CycleHome=>{
                 self.life_cycle = LifeCycle::Home;
@@ -238,7 +243,7 @@ impl iced::Application for RusticRover {
         {
             let icon = path_to_image("./rustic_rover.png", 600);
             
-            column![icon,self.home_view()].align_items(iced::Alignment::Center).padding(10).into()
+            column![icon,self.home_view()].align_items(iced::Alignment::Center).align_items(iced::alignment::Horizontal::Center.into()).padding(10).into()
         }
         else if self.life_cycle == LifeCycle::ControllerInfo
         {   
@@ -252,7 +257,7 @@ impl iced::Application for RusticRover {
         }
         else if self.life_cycle == LifeCycle::SerialInfo
         {
-            column![self.serial_view(), self.home_view()].align_items(iced::Alignment::Center).padding(10).spacing(50).into()
+            column![self.serial_view(), self.home_view()].align_items(iced::alignment::Horizontal::Center.into()).padding(10).spacing(50).into()
         }
         else {
             text("LifeCycleError!!").size(300).into()
@@ -279,6 +284,7 @@ impl RusticRover {
         let err_text = utils::setting_state_logger(self.controller_state);
 
         column![title, combo_, btn, err_text,img].align_items(iced::alignment::Alignment::Center).padding(10).spacing(50).into()
+
     }
     fn home_view(&self)->Element<'_, interface::RRMessage, iced::Theme, iced::Renderer>
     {
@@ -296,7 +302,7 @@ impl RusticRover {
         let packet_state = utils::state_to_image(self.packet_state);
         let packet_clm = column![packet_btn, packet_state].align_items(iced::Alignment::Center);
 
-        row![home_btn, con_clm, packet_clm, serial_clm].spacing(50).padding(10).align_items(iced::Alignment::Center).into()
+        row![home_btn, con_clm, packet_clm, serial_clm].spacing(50).padding(10).align_items(iced::Alignment::End).into()
     }
     fn controller_view(&self)->Element<'_, interface::RRMessage, iced::Theme, iced::Renderer>
     {
@@ -310,7 +316,7 @@ impl RusticRover {
         };
         let tit = text("Controller Info").size(100);
         let state_tex = text(format!("Type:{}\nState:{}\n",self.ds4_input.mode, con_state)).size(50);
-        let joy_tex = text(format!("JoyStick\nleft_x:{:.5}\nleft_y:{:.5}\nright_x:{:.5}\nright_y:{:.5}", self.ds4_input.sticks.left_x,self.ds4_input.sticks.left_y,self.ds4_input.sticks.right_x,self.ds4_input.sticks.right_y)).size(50);
+        let joy_tex = text(format!("JoyStick\nleft_x:{:2.5}\nleft_y:{:2.5}\nright_x:{:2.5}\nright_y:{:2.5}", self.ds4_input.sticks.left_x,self.ds4_input.sticks.left_y,self.ds4_input.sticks.right_x,self.ds4_input.sticks.right_y)).size(50);
         let dpad_tex = text(format!("DPad\nup:{:5}\ndown:{:5}\nright:{:5}\nleft:{:5}", self.ds4_input.dpad.up_key,self.ds4_input.dpad.down_key,self.ds4_input.dpad.right_key,self.ds4_input.dpad.left_key)).size(50);
         let btn_tex = text(format!("Buttons\ncircle:{:5},cross:{:5}\ncube:{:5},triangle:{:5}\nR1:{},R2:{}\nL1:{},L2:{}", 
             self.ds4_input.btns.circle,self.ds4_input.btns.cross,
@@ -330,15 +336,15 @@ impl RusticRover {
                     "Select Serial Port", 
                     Some(&self.input_path), 
                     RRMessage::PortList);
-                let start_b = button("Start Serial").on_press(RRMessage::SerialStart);
-                let b = button("Rescan SerialPort").on_press(RRMessage::SerialSearch);
+                let start_b = utils::normal_size_button("Start Serial", RRMessage::SerialStart);
+                let b = utils::normal_size_button("Rescan Serial", RRMessage::SerialSearch);
 
-                column![b, combo_yp, start_b].padding(10).spacing(50).into()
+                column![b, combo_yp, start_b].align_items(iced::alignment::Alignment::Center).padding(10).spacing(50).into()
             }
             None=>{
                 let serial_text = text("Press Button and search serialport").size(30);
-                let b = button("Scan SerialPort").on_press(RRMessage::SerialSearch);
-                column![serial_text, b].padding(10).spacing(50).into()
+                let b = utils::normal_size_button("Scan Serial", RRMessage::SerialSearch);
+                column![serial_text, b].align_items(iced::alignment::Alignment::Center).padding(10).spacing(50).into()
             }
         }
     }
