@@ -42,10 +42,20 @@ pub fn serial_task(port_name_:String, packet_subscriber:Receiver<Packet>)
             .stop_bits(serialport::StopBits::One)
             .timeout(std::time::Duration::from_millis(100))
             .open().unwrap();
+
+    let mut ab = "a";
         loop {
             let p = packet_subscriber.recv().unwrap();
+
             
-            let write_buf = format!("s{},{},{},{},{}e", 
+            if ab == "a"
+            {
+                ab = "b";
+            }
+            else {
+                ab = "a"
+            }
+            let write_buf = format!("{}{},{},{},{},{}e", ab,
                     p.x/10 as i32+10,
                     p.y/10 as i32+10,
                     p.ro/10 as i32+10,
