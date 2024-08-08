@@ -15,7 +15,7 @@ impl DualShock4Driver {
 
         let product = match mode_ {
             ControllerConnectionType::BLE=>{
-                0x05C4
+                0x09CC
             }
             ControllerConnectionType::SERIAL=>{
                 0x09CC
