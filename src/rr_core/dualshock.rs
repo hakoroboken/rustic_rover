@@ -13,7 +13,16 @@ impl DualShock4Driver {
     {
         let api = HidApi::new().unwrap();
 
-        match api.open(1356, 2508) {
+        let product = match mode_ {
+            ControllerConnectionType::BLE=>{
+                0x05C4
+            }
+            ControllerConnectionType::SERIAL=>{
+                0x09CC
+            }
+        };
+
+        match api.open(0x054C, product) {
             Ok(dev)=>{
                 let dsd = DualShock4Driver{device:dev,mode:mode_};
 
