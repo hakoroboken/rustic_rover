@@ -139,6 +139,20 @@ impl std::fmt::Display for ControllerConnectionType {
     }
 }
 
+#[derive(Debug,Clone,Copy)]
+pub struct RGB
+{
+    pub red:u8,
+    pub blue:u8,
+    pub grenn:u8,
+}
+impl RGB {
+    pub fn new()->RGB
+    {
+        RGB { red: 0, blue: 255, grenn: 0 }
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct DualShock4
 {

@@ -1,11 +1,12 @@
 extern crate hidapi;
 use hidapi::{HidApi, HidDevice};
-use crate::rr_core::interface::{ControllerConnectionType, DualShock4, Dpad, JoyStick, Buttons};
+use crate::rr_core::interface::{RGB ,ControllerConnectionType, DualShock4, Dpad, JoyStick, Buttons};
 
 pub struct DualShock4Driver
 {
     device:HidDevice,
-    mode:ControllerConnectionType
+    mode:ControllerConnectionType,
+    pub rgb:RGB
 }
 
 impl DualShock4Driver {
@@ -24,7 +25,9 @@ impl DualShock4Driver {
 
         match api.open(0x054C, product) {
             Ok(dev)=>{
-                let dsd = DualShock4Driver{device:dev,mode:mode_};
+                let dsd = DualShock4Driver{
+                    device:dev,mode:mode_, 
+                    rgb:RGB::new()};
 
                 Some(dsd)
             }
@@ -60,6 +63,30 @@ impl DualShock4Driver {
                     DualShock4 {mode:self.mode,state:false, sticks:JoyStick::new(), btns:Buttons::new(), dpad:Dpad::new()}
                 }
             }
+    }
+    pub fn color_change(&mut self)
+    {
+        if self.rgb.red == 0 && self.rgb.blue == 0 && self.rgb.grenn == 0
+        {
+            self.rgb.blue = 255;
+        }
+
+        let mut buf = [0u8; 32];
+        buf[0] = 0x05;
+        buf[1] = 0xFF;
+        buf[2] = 0x04;
+        buf[6] = self.rgb.red;
+        buf[7] = self.rgb.grenn;
+        buf[8] = self.rgb.blue;
+
+        match self.device.write(&buf) {
+            Ok(_d)=>{
+
+            }
+            Err(_e)=>{
+
+            }
+        }
     }
 }
 
@@ -173,6 +200,7 @@ fn convert(buf:&[u8], mode:ControllerConnectionType)->(JoyStick, Buttons, Dpad)
             8=>btns.r2 = true,
             64=>btns.left_push = true,
             128=>btns.right_push = true,
+            192=>{btns.left_push = true; btns.right_push=true}
             _=>(),
         }
         (joy, btns, dpad)

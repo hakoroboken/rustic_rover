@@ -107,16 +107,41 @@ impl iced::Application for RusticRover {
                     self.controller_state = AppState::NoReady;
                 }
                 else 
-                {
+                {   
                     match dualshock::DualShock4Driver::new(self.controller_connection_types_combo_box.selected.unwrap()) {
                         Some(mut dr)=>{
                             let t = self.dualshock4_connector.publisher.clone().take().unwrap();
 
-                            std::thread::spawn(move ||{
+                            std::thread::spawn(move ||{ 
                                 loop {
                                     let get = dr.task();
-
+                                    if get.btns.left_push
+                                    {
+                                        dr.rgb.red += 1;
+                                        if dr.rgb.red > 254
+                                        {
+                                            dr.rgb.red = 0
+                                        }
+                                    }
+                                    else if get.btns.right_push
+                                    {
+                                        dr.rgb.grenn += 1;
+                                        if dr.rgb.grenn > 254
+                                        {
+                                            dr.rgb.grenn = 0
+                                        }
+                                    }
+                                    else if get.btns.right_push && get.btns.left_push
+                                    {
+                                        dr.rgb.blue += 1;
+                                        if dr.rgb.blue > 254
+                                        {
+                                            dr.rgb.blue = 0
+                                        }
+                                    }
+                                    
                                     t.clone().send(get).unwrap();
+                                    dr.color_change();
                                 }
                             });
                             self.controller_state = AppState::OK;
@@ -314,6 +339,7 @@ impl RusticRover {
         {
             "Not Connected"
         };
+
         let tit = text("Controller Info").size(100);
         let state_tex = text(format!("Type:{}\nState:{}\n",self.ds4_input.mode, con_state)).size(50);
         let joy_tex = text(format!("JoyStick\nleft_x:{:2.5}\nleft_y:{:2.5}\nright_x:{:2.5}\nright_y:{:2.5}", self.ds4_input.sticks.left_x,self.ds4_input.sticks.left_y,self.ds4_input.sticks.right_x,self.ds4_input.sticks.right_y)).size(50);
