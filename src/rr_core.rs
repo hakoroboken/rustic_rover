@@ -186,7 +186,7 @@ impl iced::Application for RusticRover {
 
                         self.serial_state = AppState::OK;
                 
-                std::thread::spawn(move || serial::serial_task(port_name_, con_p.subscriber));
+                        std::thread::spawn(move || serial::serial_task(port_name_, con_p.subscriber));
                     }
                     None=>{
 
