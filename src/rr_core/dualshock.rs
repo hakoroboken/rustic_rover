@@ -1,18 +1,28 @@
 extern crate hidapi;
 use hidapi::{HidApi, HidDevice, DeviceInfo};
-use tokio::sync::mpsc::UnboundedSender;
 use crate::rr_core::interface::{RGB ,ControllerConnectionType, DualShock4, Dpad, JoyStick, Buttons};
-
+use crate::rr_core::thread_connection;
 pub struct DualShock4DriverManager
 {
-    device_list:Vec<DeviceInfo>,
-    api:HidApi
+    pub first_connector:thread_connection::AsyncThreadConnector<DualShock4>,
+    pub connectors:Vec<thread_connection::ThreadConnector<DualShock4>>,
+    pub controller_num:usize,
+    pub device_list:Vec<DeviceInfo>,
+    api:HidApi,
+    pub get_value:Vec<DualShock4>,
 }
 
 impl DualShock4DriverManager {
     pub fn new()->DualShock4DriverManager
     {
-        DualShock4DriverManager { device_list: Vec::<DeviceInfo>::new(), api: HidApi::new().unwrap() }
+        let mut ds4_conn_vec = Vec::<thread_connection::ThreadConnector<DualShock4>>::new();
+        let ds4_conn = thread_connection::AsyncThreadConnector::<DualShock4>::new();
+        let sync_conn = thread_connection::ThreadConnector::<DualShock4>::new();
+        ds4_conn_vec.push(sync_conn);
+        let mut in_v = Vec::<DualShock4>::new();
+        let ds4 = DualShock4::new();
+        in_v.push(ds4);
+        DualShock4DriverManager {first_connector:ds4_conn, connectors:ds4_conn_vec, controller_num:0, device_list: Vec::<DeviceInfo>::new(), api: HidApi::new().unwrap() ,get_value:in_v}
     }
 
     pub fn scan_device(&mut self)
@@ -27,10 +37,69 @@ impl DualShock4DriverManager {
             }
         }
 
+        for d_i in dev_vec.clone()
+        {
+            println!("{:?}", d_i);
+        }
+
         self.device_list = dev_vec;
     }
 
-    pub fn spawn_driver(&mut self, mode_:ControllerConnectionType, publisher_:UnboundedSender<DualShock4>)
+    pub fn spawn_driver(&mut self, mode_:ControllerConnectionType)
+    {
+        let publisher_ = self.first_connector.publisher.clone().take().unwrap();
+        match self.device_list.first()
+        {
+            Some(dr)=>{
+                match dr.open_device(&self.api) {
+                    Ok(device_)=>{
+                        let mut dsdr = DualShock4Driver{device:device_,mode:mode_, rgb:RGB::new()};
+
+                        std::thread::spawn(move ||
+                            loop {
+                                let get = dsdr.task();
+                                if get.btns.left_push
+                                {
+                                    dsdr.rgb.red += 1;
+                                    if dsdr.rgb.red > 254
+                                    {
+                                        dsdr.rgb.red = 0
+                                    }
+                                }
+                                else if get.btns.right_push
+                                {
+                                    dsdr.rgb.grenn += 1;
+                                    if dsdr.rgb.grenn > 254
+                                    {
+                                        dsdr.rgb.grenn = 0
+                                    }
+                                }
+                                else if get.btns.right_push && get.btns.left_push
+                                {
+                                    dsdr.rgb.blue += 1;
+                                    if dsdr.rgb.blue > 254
+                                    {
+                                        dsdr.rgb.blue = 0
+                                    }
+                                }
+                                
+                                let _ = publisher_.clone().send(get);
+                                dsdr.color_change();
+                        });
+                        self.device_list.remove(0);
+                    }
+                    Err(_e)=>{
+
+                    }
+                }
+            }
+            None=>{
+
+            }
+        }
+    }
+
+    pub fn add_driver(&mut self, mode_:ControllerConnectionType, publisher_:std::sync::mpsc::Sender<DualShock4>)
     {
         match self.device_list.first()
         {

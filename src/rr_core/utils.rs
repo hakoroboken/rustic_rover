@@ -53,3 +53,4 @@ pub fn normal_size_button(text:&str, target:RRMessage)->iced::widget::Button<RRM
 {
     button(text).width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(target)
 }
+

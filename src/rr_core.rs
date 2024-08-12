@@ -10,7 +10,7 @@ use dualshock::DualShock4DriverManager;
 use interface::{AppState, ControllerConnectionType, DualShock4, Packet, RRMessage, LifeCycle};
 
 use iced::{self, Element};
-use iced::widget::{button, text, combo_box, column, row};
+use iced::widget::{button, column, combo_box, row, text};
 use save_data::SaveDataManager;
 use serial::SerialManager;
 use utils::path_to_image;
@@ -18,8 +18,6 @@ use utils::path_to_image;
 pub struct RusticRover
 {
     game_controller_manager:dualshock::DualShock4DriverManager,
-    dualshock4_connector:thread_connection::AsyncThreadConnector<DualShock4>,
-    ds4_input:DualShock4,
     controller_connection_types_combo_box:utils::ComboBox<ControllerConnectionType>,
     packet_creator:packet::PacketCreator,
     controller_state:AppState,
@@ -39,13 +37,9 @@ impl iced::Application for RusticRover {
     type Flags = ();
 
     fn new(_flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
-        let ds4_conn = thread_connection::AsyncThreadConnector::<DualShock4>::new();
-
         let app = RusticRover
         {
             game_controller_manager:DualShock4DriverManager::new(),
-            dualshock4_connector: ds4_conn,
-            ds4_input: DualShock4::new(),
             controller_connection_types_combo_box:utils::ComboBox::new(ControllerConnectionType::ALL.to_vec()),
             packet_creator:packet::PacketCreator::new(),
             controller_state:AppState::NoReady,
@@ -72,7 +66,7 @@ impl iced::Application for RusticRover {
     fn subscription(&self) -> iced::Subscription<Self::Message> {
         iced::subscription::unfold(
             "subscribe_controller_input", 
-            self.dualshock4_connector.subscriber.take(), 
+            self.game_controller_manager.first_connector.subscriber.take(), 
             move |mut subscriber|async move{
                 let get = subscriber.as_mut().unwrap().recv().await.unwrap();
 
@@ -83,7 +77,11 @@ impl iced::Application for RusticRover {
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
         match message {
             interface::RRMessage::ControllerThreadMessage(ds4)=>{
-                self.ds4_input = ds4;
+                self.game_controller_manager.get_value[0] = ds4;
+                for i in 1..self.game_controller_manager.controller_num
+                {
+                    self.game_controller_manager.get_value[i] = self.game_controller_manager.connectors[i].subscriber.recv().unwrap();
+                }
                 
                 self.packet_creator.create_packet(ds4);
 
@@ -110,19 +108,53 @@ impl iced::Application for RusticRover {
                     self.controller_state = AppState::NoReady;
                 }
                 else 
-                {   
-                    match self.controller_connection_types_combo_box.selected {
-                        Some(type_)=>{
-                            self.game_controller_manager.spawn_driver(type_, self.dualshock4_connector.publisher.clone().take().unwrap())
-                        }
-                        None=>{
-                            self.controller_state = AppState::ERROR;
+                {
+                    self.game_controller_manager.scan_device();
+                    if !self.game_controller_manager.device_list.is_empty()
+                    {
+                        match self.controller_connection_types_combo_box.selected {
+                            Some(type_)=>{
+                                self.game_controller_manager.spawn_driver(type_);
+                                self.game_controller_manager.controller_num += 1;
+                                self.controller_state = AppState::OK;
+                                self.life_cycle = LifeCycle::Home;
+                            }
+                            None=>{
+                                self.controller_state = AppState::ERROR;
+                            }
                         }
                     }
 
-                    self.controller_state = AppState::OK;
-                            self.life_cycle = LifeCycle::Home;
-                            self.sd_manager.search_data_files();
+                    
+                    self.sd_manager.search_data_files();
+                }
+            }
+            interface::RRMessage::AddController=>{
+                if self.game_controller_manager.controller_num < 3
+                {
+                    if !self.game_controller_manager.device_list.is_empty()
+                    {
+                        match self.controller_connection_types_combo_box.selected {
+                            Some(type_)=>{
+                                let new_connector = thread_connection::ThreadConnector::<DualShock4>::new();
+                                self.game_controller_manager.connectors.push(new_connector);
+                                let index = self.game_controller_manager.controller_num;
+                                self.game_controller_manager.add_driver(
+                                    type_, 
+                                    self.game_controller_manager.connectors.get(index).unwrap().publisher.clone());
+
+                                self.game_controller_manager.controller_num += 1;
+                                self.game_controller_manager.get_value.push(DualShock4::new());
+                                self.controller_state = AppState::OK;
+                            }
+                            None=>{
+                                self.controller_state = AppState::ERROR;
+                            }
+                        }
+                    }
+                    else {
+                        self.controller_state = AppState::ERROR;
+                    }
                 }
             }
             interface::RRMessage::PowerRateX(get_rate)=>{
@@ -242,8 +274,14 @@ impl iced::Application for RusticRover {
             column![icon,self.home_view()].align_items(iced::Alignment::Center).align_items(iced::alignment::Horizontal::Center.into()).padding(10).into()
         }
         else if self.life_cycle == LifeCycle::ControllerInfo
-        {   
-            column![self.controller_view(), self.home_view()].align_items(iced::Alignment::Center).padding(10).spacing(50).into()
+        {
+            let add_con = utils::normal_size_button("AddController", RRMessage::AddController);
+            let combo_ = combo_box(
+                &self.controller_connection_types_combo_box.all, 
+                "Select Controller Connection Method", 
+                self.controller_connection_types_combo_box.selected.as_ref(), 
+            interface::RRMessage::ControllerType);
+            column![self.controller_view(), self.home_view(), combo_, add_con].align_items(iced::Alignment::Center).padding(10).spacing(50).into()
         }
         else if self.life_cycle == LifeCycle::PacketInfo
         {
@@ -302,27 +340,30 @@ impl RusticRover {
     }
     fn controller_view(&self)->Element<'_, interface::RRMessage, iced::Theme, iced::Renderer>
     {
-        let con_state = if self.ds4_input.state
-        {
-            "Connected!!"
-        }
-        else
-        {
-            "Not Connected"
-        };
-
         let tit = text("Controller Info").size(100);
-        let state_tex = text(format!("Type:{}\nState:{}\n",self.ds4_input.mode, con_state)).size(50);
-        let joy_tex = text(format!("JoyStick\nleft_x:{:2.5}\nleft_y:{:2.5}\nright_x:{:2.5}\nright_y:{:2.5}", self.ds4_input.sticks.left_x,self.ds4_input.sticks.left_y,self.ds4_input.sticks.right_x,self.ds4_input.sticks.right_y)).size(50);
-        let dpad_tex = text(format!("DPad\nup:{:5}\ndown:{:5}\nright:{:5}\nleft:{:5}", self.ds4_input.dpad.up_key,self.ds4_input.dpad.down_key,self.ds4_input.dpad.right_key,self.ds4_input.dpad.left_key)).size(50);
-        let btn_tex = text(format!("Buttons\ncircle:{:5},cross:{:5}\ncube:{:5},triangle:{:5}\nR1:{},R2:{}\nL1:{},L2:{}", 
-            self.ds4_input.btns.circle,self.ds4_input.btns.cross,
-            self.ds4_input.btns.cube,self.ds4_input.btns.triangle,
-            self.ds4_input.btns.r1,self.ds4_input.btns.r2,
-             self.ds4_input.btns.l1,self.ds4_input.btns.l2)).size(50);
+        
+        match self.game_controller_manager.controller_num {
+            1=>{
+                let con_1 = input_to_controller_view(self.game_controller_manager.get_value[0]);
+                column![tit, con_1].padding(10).into()
+            }
+            2=>{
+                let con_1 = input_to_controller_view(self.game_controller_manager.get_value[0]);
+                let con_2 = input_to_controller_view(self.game_controller_manager.get_value[1]);
 
-        let info_row = row![state_tex, joy_tex, dpad_tex, btn_tex].padding(10).spacing(50);
-        column![tit, info_row].padding(10).into()
+                column![tit, con_1, con_2].padding(10).into()
+            }
+            3=>{
+                let con_1 = input_to_controller_view(self.game_controller_manager.get_value[0]);
+                let con_2 = input_to_controller_view(self.game_controller_manager.get_value[1]);
+                let con_3 = input_to_controller_view(self.game_controller_manager.get_value[2]);
+
+                column![tit, con_1, con_2, con_3].padding(10).into()
+            }
+            _=>{
+                text("GameControllerManager Error!!").size(300).into()
+            }
+        }
     }
     fn serial_view(&self)->Element<'_, interface::RRMessage, iced::Theme, iced::Renderer>
     {
@@ -345,4 +386,34 @@ impl RusticRover {
             }
         }
     }
+}
+
+fn input_to_controller_view<'a>(input:DualShock4)->Element<'a, interface::RRMessage, iced::Theme, iced::Renderer>
+{
+    let con_state = if input.state
+            {
+                "Connected!!"
+            }
+            else
+            {
+                "Not Connected"
+            };
+            let state_tex = text(format!("Type:{}\nState:{}\n",input.mode, con_state)).size(25);
+            let joy_tex = text(format!("JoyStick\nleft_x:{:2.5}\nleft_y:{:2.5}\nright_x:{:2.5}\nright_y:{:2.5}", 
+                input.sticks.left_x,
+                input.sticks.left_y,
+                input.sticks.right_x,
+                input.sticks.right_y)).size(25);
+            let dpad_tex = text(format!("DPad\nup:{:5}\ndown:{:5}\nright:{:5}\nleft:{:5}", 
+                input.dpad.up_key,
+                input.dpad.down_key,
+                input.dpad.right_key,
+                input.dpad.left_key)).size(25);
+            let btn_tex = text(format!("Buttons\ncircle:{:5},cross:{:5}\ncube:{:5},triangle:{:5}\nR1:{},R2:{}\nL1:{},L2:{}", 
+                input.btns.circle,input.btns.cross,
+                input.btns.cube,input.btns.triangle,
+                input.btns.r1,input.btns.r2,
+                input.btns.l1,input.btns.l2)).size(25);
+
+            row![state_tex, joy_tex, dpad_tex, btn_tex].padding(10).spacing(30).into()
 }
