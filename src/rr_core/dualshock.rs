@@ -1,6 +1,88 @@
 extern crate hidapi;
-use hidapi::{HidApi, HidDevice};
+use hidapi::{HidApi, HidDevice, DeviceInfo};
+use tokio::sync::mpsc::UnboundedSender;
 use crate::rr_core::interface::{RGB ,ControllerConnectionType, DualShock4, Dpad, JoyStick, Buttons};
+
+pub struct DualShock4DriverManager
+{
+    device_list:Vec<DeviceInfo>,
+    api:HidApi
+}
+
+impl DualShock4DriverManager {
+    pub fn new()->DualShock4DriverManager
+    {
+        DualShock4DriverManager { device_list: Vec::<DeviceInfo>::new(), api: HidApi::new().unwrap() }
+    }
+
+    pub fn scan_device(&mut self)
+    {
+        let mut dev_vec = Vec::<DeviceInfo>::new();
+        for i in self.api.device_list()
+        {
+            if i.vendor_id() == 1356 && i.product_id() == 2508
+            {
+                let s = i.clone();
+                dev_vec.push(s);
+            }
+        }
+
+        self.device_list = dev_vec;
+    }
+
+    pub fn spawn_driver(&mut self, mode_:ControllerConnectionType, publisher_:UnboundedSender<DualShock4>)
+    {
+        match self.device_list.first()
+        {
+            Some(dr)=>{
+                match dr.open_device(&self.api) {
+                    Ok(device_)=>{
+                        let mut dsdr = DualShock4Driver{device:device_,mode:mode_, rgb:RGB::new()};
+
+                        std::thread::spawn(move ||
+                            loop {
+                                let get = dsdr.task();
+                                if get.btns.left_push
+                                {
+                                    dsdr.rgb.red += 1;
+                                    if dsdr.rgb.red > 254
+                                    {
+                                        dsdr.rgb.red = 0
+                                    }
+                                }
+                                else if get.btns.right_push
+                                {
+                                    dsdr.rgb.grenn += 1;
+                                    if dsdr.rgb.grenn > 254
+                                    {
+                                        dsdr.rgb.grenn = 0
+                                    }
+                                }
+                                else if get.btns.right_push && get.btns.left_push
+                                {
+                                    dsdr.rgb.blue += 1;
+                                    if dsdr.rgb.blue > 254
+                                    {
+                                        dsdr.rgb.blue = 0
+                                    }
+                                }
+                                
+                                let _ = publisher_.clone().send(get);
+                                dsdr.color_change();
+                        });
+                        self.device_list.remove(0);
+                    }
+                    Err(_e)=>{
+
+                    }
+                }
+            }
+            None=>{
+
+            }
+        }
+    }
+}
 
 pub struct DualShock4Driver
 {
@@ -10,32 +92,6 @@ pub struct DualShock4Driver
 }
 
 impl DualShock4Driver {
-    pub fn new(mode_:ControllerConnectionType)->Option<DualShock4Driver>
-    {
-        let api = HidApi::new().unwrap();
-
-        let product = match mode_ {
-            ControllerConnectionType::BLE=>{
-                0x09CC
-            }
-            ControllerConnectionType::SERIAL=>{
-                0x09CC
-            }
-        };
-
-        match api.open(0x054C, product) {
-            Ok(dev)=>{
-                let dsd = DualShock4Driver{
-                    device:dev,mode:mode_, 
-                    rgb:RGB::new()};
-
-                Some(dsd)
-            }
-            Err(_e)=>{
-                None
-            }
-        }
-    }
     pub fn task(&mut self)->DualShock4
     {
             let mut buf = [0_u8;256];

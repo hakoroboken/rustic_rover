@@ -6,6 +6,7 @@ mod utils;
 mod serial;
 mod save_data;
 
+use dualshock::DualShock4DriverManager;
 use interface::{AppState, ControllerConnectionType, DualShock4, Packet, RRMessage, LifeCycle};
 
 use iced::{self, Element};
@@ -16,6 +17,7 @@ use utils::path_to_image;
 
 pub struct RusticRover
 {
+    game_controller_manager:dualshock::DualShock4DriverManager,
     dualshock4_connector:thread_connection::AsyncThreadConnector<DualShock4>,
     ds4_input:DualShock4,
     controller_connection_types_combo_box:utils::ComboBox<ControllerConnectionType>,
@@ -41,6 +43,7 @@ impl iced::Application for RusticRover {
 
         let app = RusticRover
         {
+            game_controller_manager:DualShock4DriverManager::new(),
             dualshock4_connector: ds4_conn,
             ds4_input: DualShock4::new(),
             controller_connection_types_combo_box:utils::ComboBox::new(ControllerConnectionType::ALL.to_vec()),
@@ -63,7 +66,7 @@ impl iced::Application for RusticRover {
     }
 
     fn theme(&self) -> Self::Theme {
-        iced::Theme::KanagawaWave
+        iced::Theme::Light
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
@@ -108,50 +111,18 @@ impl iced::Application for RusticRover {
                 }
                 else 
                 {   
-                    match dualshock::DualShock4Driver::new(self.controller_connection_types_combo_box.selected.unwrap()) {
-                        Some(mut dr)=>{
-                            let t = self.dualshock4_connector.publisher.clone().take().unwrap();
-
-                            std::thread::spawn(move ||{ 
-                                loop {
-                                    let get = dr.task();
-                                    if get.btns.left_push
-                                    {
-                                        dr.rgb.red += 1;
-                                        if dr.rgb.red > 254
-                                        {
-                                            dr.rgb.red = 0
-                                        }
-                                    }
-                                    else if get.btns.right_push
-                                    {
-                                        dr.rgb.grenn += 1;
-                                        if dr.rgb.grenn > 254
-                                        {
-                                            dr.rgb.grenn = 0
-                                        }
-                                    }
-                                    else if get.btns.right_push && get.btns.left_push
-                                    {
-                                        dr.rgb.blue += 1;
-                                        if dr.rgb.blue > 254
-                                        {
-                                            dr.rgb.blue = 0
-                                        }
-                                    }
-                                    
-                                    t.clone().send(get).unwrap();
-                                    dr.color_change();
-                                }
-                            });
-                            self.controller_state = AppState::OK;
-                            self.life_cycle = LifeCycle::Home;
-                            self.sd_manager.search_data_files();
+                    match self.controller_connection_types_combo_box.selected {
+                        Some(type_)=>{
+                            self.game_controller_manager.spawn_driver(type_, self.dualshock4_connector.publisher.clone().take().unwrap())
                         }
                         None=>{
-                            self.controller_state = AppState::ERROR
+                            self.controller_state = AppState::ERROR;
                         }
                     }
+
+                    self.controller_state = AppState::OK;
+                            self.life_cycle = LifeCycle::Home;
+                            self.sd_manager.search_data_files();
                 }
             }
             interface::RRMessage::PowerRateX(get_rate)=>{
