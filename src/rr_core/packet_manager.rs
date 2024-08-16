@@ -1,9 +1,9 @@
-use crate::rr_core::interface::{Packet, DualShock4, AssignController};
+use crate::rr_core::interface::{Packet, DualShock4, AssignController, PacketMessage, AppState};
 use crate::rr_core::utils::ComboBox;
 
 use iced::widget::{text, slider, column, row, combo_box};
+use iced_aw::TabLabel;
 
-use crate::rr_core::interface::PacketMessage;
 use crate::rr_core::save_data_manager;
 
 pub struct PacketManager
@@ -21,9 +21,18 @@ pub struct PacketManager
     pub m2_pow_rate:u16,
     pub sdm:save_data_manager::SaveDataManager,
     selected_file_name:String,
+    pub state:AppState
 }
 
 impl PacketManager {
+    fn title(&self)->String
+    {
+        String::from("Packet Manager")
+    }
+    fn tab_label(&self)->TabLabel
+    {
+        TabLabel::IconText('P', self.title())
+    }
     pub fn update(&mut self, message:PacketMessage)
     {
         match message {
@@ -74,6 +83,23 @@ impl PacketManager {
             }
             PacketMessage::FileSelect(name)=>{
                 self.selected_file_name = name;
+
+                self.sdm.load_from_file(self.selected_file_name.clone());
+                self.x_cb.plus.selected = self.sdm.xp_assign;
+                self.x_cb.minus.selected = self.sdm.xm_assign;
+                self.x_pow_rate = self.sdm.x_rate.unwrap();
+                self.y_cb.plus.selected = self.sdm.yp_assign;
+                self.y_cb.minus.selected = self.sdm.ym_assign;
+                self.y_pow_rate = self.sdm.y_rate.unwrap();
+                self.ro_cb.plus.selected = self.sdm.rop_assign;
+                self.ro_cb.minus.selected = self.sdm.rom_assign;
+                self.ro_pow_rate = self.sdm.ro_rate.unwrap();
+                self.m1_cb.plus.selected = self.sdm.m1p_assign;
+                self.m1_cb.minus.selected = self.sdm.m1m_assign;
+                self.m1_pow_rate = self.sdm.m1_rate.unwrap();
+                self.m2_cb.plus.selected = self.sdm.m2p_assign;
+                self.m2_cb.minus.selected = self.sdm.m2m_assign;
+                self.m2_pow_rate = self.sdm.m2_rate.unwrap();
             }
         }
     }
@@ -219,7 +245,8 @@ impl PacketManager {
             m1_pow_rate:100, 
             m2_pow_rate:100,
             sdm:save_data_manager::SaveDataManager::new(),
-            selected_file_name:String::new()
+            selected_file_name:String::new(),
+            state:AppState::NoReady,
         }
     }
 

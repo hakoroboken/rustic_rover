@@ -6,13 +6,19 @@ pub enum RRMessage
     ControllerThreadMessage(DualShock4),
     Controller(ControllerMessage),
     Packet(PacketMessage),
-    PortList(String),
-    SerialSearch,
-    SerialStart,
+    Serial(SerialMessage),
     CycleHome,
     CycleController,
     CycleSerial,
     CyclePacket,
+}
+
+#[derive(Debug, Clone)]
+pub enum SerialMessage
+{
+    SerialScan,
+    SerialStart,
+    PortSelected(String)
 }
 
 #[derive(Debug,Clone)]
