@@ -3,22 +3,7 @@ use crate::rr_core::utils::ComboBox;
 
 use iced::widget::{text, slider, column, row, combo_box};
 
-use super::interface::RRMessage;
-
-#[derive(Clone)]
-pub struct PlusMinus
-{
-    pub plus:ComboBox<AssignController>,
-    pub minus:ComboBox<AssignController>,
-}
-impl PlusMinus {
-    pub fn new()->PlusMinus
-    {
-        PlusMinus { plus: ComboBox::new(AssignController::ALL.to_vec()), minus: ComboBox::new(AssignController::ALL.to_vec()) }
-    }
-}
-
-
+use super::interface::PacketMessage;
 
 pub struct PacketCreator
 {
@@ -34,6 +19,60 @@ pub struct PacketCreator
     pub m1_pow_rate:u16,
     pub m2_pow_rate:u16
 }
+
+impl PacketCreator {
+    pub fn update(&mut self, message:PacketMessage)
+    {
+        match message {
+            PacketMessage::Assign1p(a1p)=>{
+                self.x_cb.plus.selected = Some(a1p)
+            }
+            PacketMessage::Assign1m(a1m)=>{
+                self.x_cb.minus.selected = Some(a1m)
+            }
+            PacketMessage::Assign2p(a2p)=>{
+                self.y_cb.plus.selected = Some(a2p)
+            }
+            PacketMessage::Assign2m(a2m)=>{
+                self.y_cb.minus.selected = Some(a2m)
+            }
+            PacketMessage::Assign3p(a3p)=>{
+                self.ro_cb.plus.selected = Some(a3p)
+            }
+            PacketMessage::Assign3m(a3m)=>{
+                self.ro_cb.minus.selected = Some(a3m)
+            }
+            PacketMessage::Assign4p(a4p)=>{
+                self.m1_cb.plus.selected = Some(a4p)
+            }
+            PacketMessage::Assign4m(a4m)=>{
+                self.m1_cb.minus.selected = Some(a4m)
+            }
+            PacketMessage::Assign5p(a5p)=>{
+                self.m2_cb.plus.selected = Some(a5p)
+            }
+            PacketMessage::Assign5m(a5m)=>{
+                self.m2_cb.minus.selected = Some(a5m)
+            },
+            PacketMessage::PowerRateX(x)=>{
+                self.x_pow_rate = x;
+            }
+            PacketMessage::PowerRateY(y)=>{
+                self.y_pow_rate = y;
+            }
+            PacketMessage::PowerRateRotation(rotation)=>{
+                self.ro_pow_rate = rotation;
+            }
+            PacketMessage::PowerRateM1(m1)=>{
+                self.m1_pow_rate = m1;
+            }
+            PacketMessage::PowerRateM2(m2)=>{
+                self.m2_pow_rate = m2;
+            }
+        }
+    }
+}
+
 
 impl PacketCreator {
     pub fn new()->PacketCreator
@@ -93,24 +132,24 @@ impl PacketCreator {
         }
     }
 
-    pub fn packet_view(&self)->iced::widget::Column<RRMessage>
+    pub fn packet_view(&self)->iced::widget::Column<PacketMessage>
     {
         let x_text = text(format!("Select X (Rate : {})", self.x_pow_rate)).size(30);
         let x_sc = slider(
             0..=100, 
             self.x_pow_rate, 
-        interface::RRMessage::PowerRateX).width(500);
+            PacketMessage::PowerRateX).width(500);
         let x_title = row![x_text, x_sc];
         let combo_xp = combo_box(
             &self.x_cb.plus.all, 
             "Selecct assign of x plus value", 
             self.x_cb.plus.selected.as_ref(), 
-            interface::RRMessage::PacketAssign1p);
+            PacketMessage::Assign1p);
         let combo_xm = combo_box(
             &self.x_cb.minus.all, 
             "Selecct assign of x minus value", 
             self.x_cb.minus.selected.as_ref(), 
-            interface::RRMessage::PacketAssign1m);
+            PacketMessage::Assign1m);
         let row_x = row![combo_xp, combo_xm].spacing(30);
 
         let y_text = text(format!("Select Y (Rate : {})", self.y_pow_rate)).size(30);
@@ -208,6 +247,19 @@ impl PacketCreator {
             row_m2,
             p_text
         ]
+    }
+}
+
+#[derive(Clone)]
+pub struct PlusMinus
+{
+    pub plus:ComboBox<AssignController>,
+    pub minus:ComboBox<AssignController>,
+}
+impl PlusMinus {
+    pub fn new()->PlusMinus
+    {
+        PlusMinus { plus: ComboBox::new(AssignController::ALL.to_vec()), minus: ComboBox::new(AssignController::ALL.to_vec()) }
     }
 }
 

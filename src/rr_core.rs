@@ -1,14 +1,13 @@
-mod dualshock;
+mod controller_manager;
 mod interface;
 mod thread_connection;
-mod packet;
+mod packet_manager;
 mod utils;
 mod serial;
 mod save_data;
 
-use dualshock::DualShock4DriverManager;
-use interface::{AppState, ControllerConnectionType, DualShock4, Packet, RRMessage, LifeCycle};
-
+use controller_manager::DualShock4DriverManager;
+use interface::{AppState, DualShock4, Packet, RRMessage, LifeCycle};
 use iced::{self, Element};
 use iced::widget::{button, column, combo_box, row, text};
 use save_data::SaveDataManager;
@@ -17,10 +16,8 @@ use utils::path_to_image;
 
 pub struct RusticRover
 {
-    game_controller_manager:dualshock::DualShock4DriverManager,
-    controller_connection_types_combo_box:utils::ComboBox<ControllerConnectionType>,
-    packet_creator:packet::PacketCreator,
-    controller_state:AppState,
+    game_controller_manager:controller_manager::DualShock4DriverManager,
+    packet_creator:packet_manager::PacketCreator,
     serial_state:AppState,
     packet_state:AppState,
     life_cycle:LifeCycle,
@@ -40,9 +37,7 @@ impl iced::Application for RusticRover {
         let app = RusticRover
         {
             game_controller_manager:DualShock4DriverManager::new(),
-            controller_connection_types_combo_box:utils::ComboBox::new(ControllerConnectionType::ALL.to_vec()),
-            packet_creator:packet::PacketCreator::new(),
-            controller_state:AppState::NoReady,
+            packet_creator:packet_manager::PacketCreator::new(),
             serial_state:AppState::NoReady,
             packet_state:AppState::NoReady,
             life_cycle:LifeCycle::Setting,
@@ -99,63 +94,8 @@ impl iced::Application for RusticRover {
                     }
                 }
             }
-            interface::RRMessage::ControllerType(type_)=>{
-                self.controller_connection_types_combo_box.selected = Some(type_);
-            }
-            interface::RRMessage::ControllerStart=>{
-                if self.controller_connection_types_combo_box.selected == None
-                {
-                    self.controller_state = AppState::NoReady;
-                }
-                else 
-                {
-                    self.game_controller_manager.scan_device();
-                    if !self.game_controller_manager.device_list.is_empty()
-                    {
-                        match self.controller_connection_types_combo_box.selected {
-                            Some(type_)=>{
-                                self.game_controller_manager.spawn_driver(type_);
-                                self.game_controller_manager.controller_num += 1;
-                                self.controller_state = AppState::OK;
-                                self.life_cycle = LifeCycle::Home;
-                            }
-                            None=>{
-                                self.controller_state = AppState::ERROR;
-                            }
-                        }
-                    }
-
-                    
-                    self.sd_manager.search_data_files();
-                }
-            }
-            interface::RRMessage::AddController=>{
-                if self.game_controller_manager.controller_num < 3
-                {
-                    if !self.game_controller_manager.device_list.is_empty()
-                    {
-                        match self.controller_connection_types_combo_box.selected {
-                            Some(type_)=>{
-                                let new_connector = thread_connection::ThreadConnector::<DualShock4>::new();
-                                self.game_controller_manager.connectors.push(new_connector);
-                                let index = self.game_controller_manager.controller_num;
-                                self.game_controller_manager.add_driver(
-                                    type_, 
-                                    self.game_controller_manager.connectors.get(index).unwrap().publisher.clone());
-
-                                self.game_controller_manager.controller_num += 1;
-                                self.game_controller_manager.get_value.push(DualShock4::new());
-                                self.controller_state = AppState::OK;
-                            }
-                            None=>{
-                                self.controller_state = AppState::ERROR;
-                            }
-                        }
-                    }
-                    else {
-                        self.controller_state = AppState::ERROR;
-                    }
-                }
+            interface::RRMessage::Controller(msg)=>{
+                self.game_controller_manager.update(msg)
             }
             interface::RRMessage::PowerRateX(get_rate)=>{
                 self.packet_creator.x_pow_rate = get_rate
@@ -172,36 +112,6 @@ impl iced::Application for RusticRover {
             interface::RRMessage::PowerRateM2(get_rate)=>{
                 self.packet_creator.m2_pow_rate = get_rate;
             }
-            interface::RRMessage::PacketAssign1p(a1p)=>{
-                self.packet_creator.x_cb.plus.selected = Some(a1p)
-            }
-            interface::RRMessage::PacketAssign1m(a1m)=>{
-                self.packet_creator.x_cb.minus.selected = Some(a1m)
-            }
-            interface::RRMessage::PacketAssign2p(a2p)=>{
-                self.packet_creator.y_cb.plus.selected = Some(a2p)
-            }
-            interface::RRMessage::PacketAssign2m(a2m)=>{
-                self.packet_creator.y_cb.minus.selected = Some(a2m)
-            }
-            interface::RRMessage::PacketAssign3p(a3p)=>{
-                self.packet_creator.ro_cb.plus.selected = Some(a3p)
-            }
-            interface::RRMessage::PacketAssign3m(a3m)=>{
-                self.packet_creator.ro_cb.minus.selected = Some(a3m)
-            }
-            interface::RRMessage::PacketAssign4p(a4p)=>{
-                self.packet_creator.m1_cb.plus.selected = Some(a4p)
-            }
-            interface::RRMessage::PacketAssign4m(a4m)=>{
-                self.packet_creator.m1_cb.minus.selected = Some(a4m)
-            }
-            interface::RRMessage::PacketAssign5p(a5p)=>{
-                self.packet_creator.m2_cb.plus.selected = Some(a5p)
-            }
-            interface::RRMessage::PacketAssign5m(a5m)=>{
-                self.packet_creator.m2_cb.minus.selected = Some(a5m)
-            },
             interface::RRMessage::SerialSearch=>{
                 self.serial_manager.search_port();
             }
@@ -219,7 +129,7 @@ impl iced::Application for RusticRover {
                     None=>{
 
                     }
-                }    
+                }
             }
             interface::RRMessage::PortList(port_name)=>{
                 self.input_path = port_name;
@@ -338,33 +248,6 @@ impl RusticRover {
 
         row![home_btn, con_clm, packet_clm, serial_clm].spacing(50).padding(10).align_items(iced::Alignment::End).into()
     }
-    fn controller_view(&self)->Element<'_, interface::RRMessage, iced::Theme, iced::Renderer>
-    {
-        let tit = text("Controller Info").size(100);
-        
-        match self.game_controller_manager.controller_num {
-            1=>{
-                let con_1 = input_to_controller_view(self.game_controller_manager.get_value[0]);
-                column![tit, con_1].padding(10).into()
-            }
-            2=>{
-                let con_1 = input_to_controller_view(self.game_controller_manager.get_value[0]);
-                let con_2 = input_to_controller_view(self.game_controller_manager.get_value[1]);
-
-                column![tit, con_1, con_2].padding(10).into()
-            }
-            3=>{
-                let con_1 = input_to_controller_view(self.game_controller_manager.get_value[0]);
-                let con_2 = input_to_controller_view(self.game_controller_manager.get_value[1]);
-                let con_3 = input_to_controller_view(self.game_controller_manager.get_value[2]);
-
-                column![tit, con_1, con_2, con_3].padding(10).into()
-            }
-            _=>{
-                text("GameControllerManager Error!!").size(300).into()
-            }
-        }
-    }
     fn serial_view(&self)->Element<'_, interface::RRMessage, iced::Theme, iced::Renderer>
     {
         match &self.serial_manager.path_list {
@@ -386,34 +269,4 @@ impl RusticRover {
             }
         }
     }
-}
-
-fn input_to_controller_view<'a>(input:DualShock4)->Element<'a, interface::RRMessage, iced::Theme, iced::Renderer>
-{
-    let con_state = if input.state
-            {
-                "Connected!!"
-            }
-            else
-            {
-                "Not Connected"
-            };
-            let state_tex = text(format!("Type:{}\nState:{}\n",input.mode, con_state)).size(25);
-            let joy_tex = text(format!("JoyStick\nleft_x:{:2.5}\nleft_y:{:2.5}\nright_x:{:2.5}\nright_y:{:2.5}", 
-                input.sticks.left_x,
-                input.sticks.left_y,
-                input.sticks.right_x,
-                input.sticks.right_y)).size(25);
-            let dpad_tex = text(format!("DPad\nup:{:5}\ndown:{:5}\nright:{:5}\nleft:{:5}", 
-                input.dpad.up_key,
-                input.dpad.down_key,
-                input.dpad.right_key,
-                input.dpad.left_key)).size(25);
-            let btn_tex = text(format!("Buttons\ncircle:{:5},cross:{:5}\ncube:{:5},triangle:{:5}\nR1:{},R2:{}\nL1:{},L2:{}", 
-                input.btns.circle,input.btns.cross,
-                input.btns.cube,input.btns.triangle,
-                input.btns.r1,input.btns.r2,
-                input.btns.l1,input.btns.l2)).size(25);
-
-            row![state_tex, joy_tex, dpad_tex, btn_tex].padding(10).spacing(30).into()
 }

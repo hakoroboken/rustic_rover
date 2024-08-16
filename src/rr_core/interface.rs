@@ -4,24 +4,8 @@
 pub enum RRMessage
 {
     ControllerThreadMessage(DualShock4),
-    ControllerType(ControllerConnectionType),
-    PowerRateX(u16),
-    PowerRateY(u16),
-    PowerRateRotation(u16),
-    PowerRateM1(u16),
-    PowerRateM2(u16),
-    PacketAssign1p(AssignController),
-    PacketAssign1m(AssignController),
-    PacketAssign2p(AssignController),
-    PacketAssign2m(AssignController),
-    PacketAssign3p(AssignController),
-    PacketAssign3m(AssignController),
-    PacketAssign4p(AssignController),
-    PacketAssign4m(AssignController),
-    PacketAssign5p(AssignController),
-    PacketAssign5m(AssignController),
-    ControllerStart,
-    AddController,
+    Controller(ControllerMessage),
+    Packet(PacketMessage),
     PortList(String),
     SerialSearch,
     SerialStart,
@@ -31,6 +15,35 @@ pub enum RRMessage
     CycleSerial,
     CyclePacket,
 }
+
+#[derive(Debug,Clone)]
+pub enum PacketMessage
+{
+    PowerRateX(u16),
+    PowerRateY(u16),
+    PowerRateRotation(u16),
+    PowerRateM1(u16),
+    PowerRateM2(u16),
+    Assign1p(AssignController),
+    Assign1m(AssignController),
+    Assign2p(AssignController),
+    Assign2m(AssignController),
+    Assign3p(AssignController),
+    Assign3m(AssignController),
+    Assign4p(AssignController),
+    Assign4m(AssignController),
+    Assign5p(AssignController),
+    Assign5m(AssignController),
+}
+
+#[derive(Debug,Clone)]
+pub enum ControllerMessage
+{
+    TypeSelect(ControllerConnectionType),
+    ControllerStart,
+    AddController
+}
+
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum LifeCycle
