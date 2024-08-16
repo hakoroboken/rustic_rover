@@ -9,7 +9,6 @@ pub enum RRMessage
     PortList(String),
     SerialSearch,
     SerialStart,
-    FileSelect(String),
     CycleHome,
     CycleController,
     CycleSerial,
@@ -19,6 +18,7 @@ pub enum RRMessage
 #[derive(Debug,Clone)]
 pub enum PacketMessage
 {
+    FileSelect(String),
     PowerRateX(u16),
     PowerRateY(u16),
     PowerRateRotation(u16),

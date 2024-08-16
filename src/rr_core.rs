@@ -4,13 +4,13 @@ mod thread_connection;
 mod packet_manager;
 mod utils;
 mod serial;
-mod save_data;
+mod save_data_manager;
 
 use controller_manager::DualShock4DriverManager;
-use interface::{AppState, DualShock4, Packet, RRMessage, LifeCycle};
+use interface::{AppState, Packet, RRMessage, LifeCycle};
 use iced::{self, Element};
 use iced::widget::{button, column, combo_box, row, text};
-use save_data::SaveDataManager;
+use save_data_manager::SaveDataManager;
 use serial::SerialManager;
 use utils::path_to_image;
 
@@ -23,8 +23,8 @@ pub struct RusticRover
     life_cycle:LifeCycle,
     serial_manager:serial::SerialManager,
     input_path:String,
-    sd_manager:save_data::SaveDataManager,
-    selected_file_name:String,
+    sd_manager:save_data_manager::SaveDataManager,
+    
 }
 
 impl iced::Application for RusticRover {
