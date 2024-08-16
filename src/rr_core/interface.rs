@@ -4,42 +4,59 @@
 pub enum RRMessage
 {
     ControllerThreadMessage(DualShock4),
-    ControllerType(ControllerConnectionType),
+    Controller(ControllerMessage),
+    Packet(PacketMessage),
+    Serial(SerialMessage),
+    Cycle(LifeCycle),
+    TabClosed
+}
+
+#[derive(Debug, Clone)]
+pub enum SerialMessage
+{
+    SerialScan,
+    SerialStart,
+    PortSelected(String)
+}
+
+#[derive(Debug,Clone)]
+pub enum PacketMessage
+{
+    FileSelect(String),
     PowerRateX(u16),
     PowerRateY(u16),
     PowerRateRotation(u16),
     PowerRateM1(u16),
     PowerRateM2(u16),
-    PacketAssign1p(AssignController),
-    PacketAssign1m(AssignController),
-    PacketAssign2p(AssignController),
-    PacketAssign2m(AssignController),
-    PacketAssign3p(AssignController),
-    PacketAssign3m(AssignController),
-    PacketAssign4p(AssignController),
-    PacketAssign4m(AssignController),
-    PacketAssign5p(AssignController),
-    PacketAssign5m(AssignController),
-    ControllerStart,
-    AddController,
-    PortList(String),
-    SerialSearch,
-    SerialStart,
-    FileSelect(String),
-    CycleHome,
-    CycleController,
-    CycleSerial,
-    CyclePacket,
+    Assign1p(AssignController),
+    Assign1m(AssignController),
+    Assign2p(AssignController),
+    Assign2m(AssignController),
+    Assign3p(AssignController),
+    Assign3m(AssignController),
+    Assign4p(AssignController),
+    Assign4m(AssignController),
+    Assign5p(AssignController),
+    Assign5m(AssignController),
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug,Clone)]
+pub enum ControllerMessage
+{
+    TypeSelect(ControllerConnectionType),
+    ControllerStart,
+    AddController
+}
+
+
+#[derive(Debug, PartialEq, Clone, Copy, Eq)]
 pub enum LifeCycle
 {
     Setting,
     Home,
     ControllerInfo,
     PacketInfo,
-    SerialInfo
+    SerialInfo,
 }
 
 

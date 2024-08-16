@@ -1,15 +1,143 @@
 extern crate hidapi;
 use hidapi::{HidApi, HidDevice, DeviceInfo};
-use crate::rr_core::interface::{RGB ,ControllerConnectionType, DualShock4, Dpad, JoyStick, Buttons};
-use crate::rr_core::thread_connection;
+
+use crate::rr_core::interface::{RRMessage,AppState,ControllerMessage,RGB ,ControllerConnectionType, DualShock4, Dpad, JoyStick, Buttons};
+use crate::rr_core::{utils, thread_connection};
+
+use iced_aw::TabLabel;
+
 pub struct DualShock4DriverManager
 {
     pub first_connector:thread_connection::AsyncThreadConnector<DualShock4>,
     pub connectors:Vec<thread_connection::ThreadConnector<DualShock4>>,
+    pub controller_connection_types_combo_box:utils::ComboBox<ControllerConnectionType>,
     pub controller_num:usize,
     pub device_list:Vec<DeviceInfo>,
     api:HidApi,
     pub get_value:Vec<DualShock4>,
+    pub state:AppState
+}
+
+impl DualShock4DriverManager {
+    fn title(&self)->String
+    {
+        String::from("Controller Manager")
+    }
+    pub fn tab_label(&self)->TabLabel
+    {
+        TabLabel::Text(self.title())
+    }
+    pub fn view(&self)->iced::Element<'_, RRMessage>
+    {
+        use iced::widget::{button, combo_box};
+        let add_con = button("Add Controller").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(ControllerMessage::AddController);
+            let combo_ = combo_box(
+                &self.controller_connection_types_combo_box.all, 
+                "Select Controller Connection Method", 
+                self.controller_connection_types_combo_box.selected.as_ref(), 
+                ControllerMessage::TypeSelect);
+        use iced::widget::container::Container;
+        use iced::widget::column;
+        match self.controller_num {
+            1=>{
+                let con_1 = input_to_controller_view(self.get_value[0]);
+                
+                let content:iced::Element<'_, ControllerMessage> = Container::new(
+                    column![con_1, combo_, add_con].align_items(iced::Alignment::Center)
+                )
+                .align_x(iced::alignment::Horizontal::Center)
+                .align_y(iced::alignment::Vertical::Center).into();
+
+                content.map(RRMessage::Controller)
+            }
+            2=>{
+                let con_1 = input_to_controller_view(self.get_value[0]);
+                let con_2 = input_to_controller_view(self.get_value[1]);
+
+                let content:iced::Element<'_, ControllerMessage> = Container::new(
+                    column![con_1, con_2, combo_, add_con].align_items(iced::Alignment::Center)
+                )
+                .align_x(iced::alignment::Horizontal::Center)
+                .align_y(iced::alignment::Vertical::Center).into();
+
+                content.map(RRMessage::Controller)
+            }
+            3=>{
+                let con_1 = input_to_controller_view(self.get_value[0]);
+                let con_2 = input_to_controller_view(self.get_value[1]);
+                let con_3 = input_to_controller_view(self.get_value[2]);
+
+                let content:iced::Element<'_, ControllerMessage> = Container::new(
+                    column![con_1, con_2, con_3, combo_, add_con].align_items(iced::Alignment::Center)
+                )
+                .align_x(iced::alignment::Horizontal::Center)
+                .align_y(iced::alignment::Vertical::Center).into();
+
+                content.map(RRMessage::Controller)
+            }
+            _=>{
+                use iced::widget::text;
+                text("GameControllerManager Error!!").size(300).into()
+            }
+        }
+    }
+    pub fn update(&mut self, message:ControllerMessage)
+    {
+        match message {
+            ControllerMessage::TypeSelect(get_type)=>{
+                self.controller_connection_types_combo_box.selected = Some(get_type)
+            }
+            ControllerMessage::ControllerStart=>{
+                if self.controller_connection_types_combo_box.selected == None
+                {
+                    self.state = AppState::NoReady;
+                }
+                else 
+                {
+                    self.scan_device();
+                    if !self.device_list.is_empty()
+                    {
+                        match self.controller_connection_types_combo_box.selected {
+                            Some(type_)=>{
+                                self.spawn_driver(type_);
+                                self.controller_num += 1;
+                                self.state = AppState::OK;
+                            }
+                            None=>{
+                                self.state = AppState::ERROR;
+                            }
+                        }
+                    }
+                }
+            }
+            ControllerMessage::AddController=>{
+                if self.controller_num < 3
+                {
+                    if !self.device_list.is_empty()
+                    {
+                        match self.controller_connection_types_combo_box.selected {
+                            Some(type_)=>{
+                                let new_connector = thread_connection::ThreadConnector::<DualShock4>::new();
+                                self.connectors.push(new_connector);
+                                let index = self.controller_num;
+                                self.add_driver(type_, self.connectors.get(index).unwrap().publisher.clone());
+
+                                self.controller_num += 1;
+                                self.get_value.push(DualShock4::new());
+                                self.state = AppState::OK;
+                            }
+                            None=>{
+                                self.state = AppState::ERROR;
+                            }
+                        }
+                    }
+                    else {
+                        self.state = AppState::ERROR;
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl DualShock4DriverManager {
@@ -22,7 +150,16 @@ impl DualShock4DriverManager {
         let mut in_v = Vec::<DualShock4>::new();
         let ds4 = DualShock4::new();
         in_v.push(ds4);
-        DualShock4DriverManager {first_connector:ds4_conn, connectors:ds4_conn_vec, controller_num:0, device_list: Vec::<DeviceInfo>::new(), api: HidApi::new().unwrap() ,get_value:in_v}
+        DualShock4DriverManager {
+            first_connector:ds4_conn, 
+            connectors:ds4_conn_vec,
+            controller_connection_types_combo_box:utils::ComboBox::new(ControllerConnectionType::ALL.to_vec()), 
+            controller_num:0, 
+            device_list: Vec::<DeviceInfo>::new(), 
+            api: HidApi::new().unwrap() ,
+            get_value:in_v,
+            state:AppState::NoReady
+        }
     }
 
     pub fn scan_device(&mut self)
@@ -367,4 +504,35 @@ fn map(value:u8,in_min:f32, in_max:f32, out_min:f32, out_max:f32)->f32
     }
 
     result
+}
+
+fn input_to_controller_view<'a>(input:DualShock4)->iced::widget::Row<'a,ControllerMessage>
+{
+    let con_state = if input.state
+            {
+                "Connected!!"
+            }
+            else
+            {
+                "Not Connected"
+            };
+            use iced::widget::text;
+            let state_tex = text(format!("Type:{}\nState:{}\n",input.mode, con_state)).size(40);
+            let joy_tex = text(format!("JoyStick\nleft_x:{:2.5}\nleft_y:{:2.5}\nright_x:{:2.5}\nright_y:{:2.5}", 
+                input.sticks.left_x,
+                input.sticks.left_y,
+                input.sticks.right_x,
+                input.sticks.right_y)).size(40);
+            let dpad_tex = text(format!("DPad\nup:{:5}\ndown:{:5}\nright:{:5}\nleft:{:5}", 
+                input.dpad.up_key,
+                input.dpad.down_key,
+                input.dpad.right_key,
+                input.dpad.left_key)).size(40);
+            let btn_tex = text(format!("Buttons\ncircle:{:5},cross:{:5}\ncube:{:5},triangle:{:5}\nR1:{},R2:{}\nL1:{},L2:{}", 
+                input.btns.circle,input.btns.cross,
+                input.btns.cube,input.btns.triangle,
+                input.btns.r1,input.btns.r2,
+                input.btns.l1,input.btns.l2)).size(40);
+            use iced::widget::row;
+            row![state_tex, joy_tex, dpad_tex, btn_tex].padding(10).spacing(30)
 }

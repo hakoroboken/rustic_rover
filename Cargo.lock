@@ -1129,6 +1129,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "iced_aw"
+version = "0.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e68c330918a95bd73176206d65b84efe9aee6581da0e6dea0390cd146d7214c"
+dependencies = [
+ "cfg-if",
+ "iced",
+]
+
+[[package]]
 name = "iced_core"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2297,10 +2307,11 @@ checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
 
 [[package]]
 name = "rustic_rover"
-version = "1.2.0"
+version = "1.5.0"
 dependencies = [
  "hidapi",
  "iced",
+ "iced_aw",
  "serialport",
  "tokio",
  "yaml-rust",

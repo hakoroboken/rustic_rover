@@ -1,9 +1,11 @@
-use crate::rr_core::interface::{AssignController, RRMessage};
+use crate::rr_core::interface::AssignController;
 use crate::rr_core::utils::ComboBox;
 use std::fs;
 use std::io::Read;
 use yaml_rust::YamlLoader;
 use iced::widget::combo_box;
+
+use super::interface::PacketMessage;
 
 pub struct SaveDataManager
 {
@@ -108,7 +110,7 @@ impl SaveDataManager {
             }
         }
     }
-    pub fn menu_view(&self, f_name_:String)->iced::widget::Column<RRMessage>
+    pub fn menu_view(&self, f_name_:String)->iced::widget::Column<PacketMessage>
     {
         match &self.file_list {
             Some(f_list)=>{
@@ -116,7 +118,7 @@ impl SaveDataManager {
                     &f_list.all, 
                     "Select config file", 
                     Some(&f_name_), 
-                    RRMessage::FileSelect);
+                PacketMessage::FileSelect);
 
                 iced::widget::column![combo_xp]
             }
