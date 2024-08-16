@@ -36,7 +36,7 @@ impl iced::Application for RusticRover {
             game_controller_manager:DualShock4DriverManager::new(),
             packet_creator:packet_manager::PacketManager::new(),
             serial_state:AppState::NoReady,
-            life_cycle:LifeCycle::Setting,
+            life_cycle:LifeCycle::Home,
             serial_manager:SerialManager::new(),
         };
 
@@ -114,8 +114,14 @@ impl iced::Application for RusticRover {
             self.title_view()
         }
         else {
+            let home:iced::Element<'_, RRMessage> = column![utils::path_to_image("./rustic_rover.png", 500)].align_items(iced::Alignment::Center).into();
             let tab = Tabs::new(RRMessage::Cycle)
             .tab_icon_position(iced_aw::tabs::Position::Bottom)
+            .push(
+                LifeCycle::Home, 
+                iced_aw::TabLabel::Text("Home".to_string()), 
+                home
+            )
             .push(
                 LifeCycle::ControllerInfo, 
                 self.game_controller_manager.tab_label(), 
@@ -131,6 +137,7 @@ impl iced::Application for RusticRover {
                 self.serial_manager.tab_label(), 
             self.serial_manager.view()
             )
+            
             .set_active_tab(&self.life_cycle)
             .tab_bar_style(iced_aw::style::tab_bar::TabBarStyles::Blue)
             .tab_bar_position(iced_aw::TabBarPosition::Bottom)

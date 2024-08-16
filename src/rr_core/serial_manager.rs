@@ -69,7 +69,7 @@ impl SerialManager {
     }
     pub fn tab_label(&self)->TabLabel
     {
-        TabLabel::IconText('C', self.title())
+        TabLabel::Text(self.title())
     }
 }
 

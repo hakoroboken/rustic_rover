@@ -31,7 +31,7 @@ impl PacketManager {
     }
     pub fn tab_label(&self)->TabLabel
     {
-        TabLabel::IconText('P', self.title())
+        TabLabel::Text(self.title())
     }
     pub fn update(&mut self, message:PacketMessage)
     {

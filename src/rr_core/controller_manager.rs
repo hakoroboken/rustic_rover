@@ -25,7 +25,7 @@ impl DualShock4DriverManager {
     }
     pub fn tab_label(&self)->TabLabel
     {
-        TabLabel::IconText('C', self.title())
+        TabLabel::Text(self.title())
     }
     pub fn view(&self)->iced::Element<'_, RRMessage>
     {
