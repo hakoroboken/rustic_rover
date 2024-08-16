@@ -1,4 +1,4 @@
-use crate::rr_core::interface::{Packet, SerialMessage, AppState};
+use crate::rr_core::interface::{Packet, SerialMessage, AppState, RRMessage};
 use crate::rr_core::thread_connection::ThreadConnector;
 use crate::rr_core::utils::ComboBox;
 
@@ -13,9 +13,9 @@ pub struct SerialManager
 }
 
 impl SerialManager {
-    pub fn view(&self)->iced::Element<'_, SerialMessage, iced::Theme, iced::Renderer>
+    pub fn view(&self)->iced::Element<'_, RRMessage>
     {
-        use iced::widget::{button, column, text};
+        use iced::widget::{button, column, text, container::Container};
         match &self.path_list {
             Some(get_list)=>{
                 use iced::widget::combo_box;
@@ -28,12 +28,25 @@ impl SerialManager {
                 let start_b = button("Start Serial").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::SerialStart);
                 let scan_b = button("Scan Port").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::SerialScan);
 
-                column![scan_b, combo_yp, start_b].align_items(iced::alignment::Alignment::Center).padding(10).spacing(50).into()
+                let container:iced::Element<'_, SerialMessage> = Container::new(
+                    column![scan_b, combo_yp, start_b].align_items(iced::alignment::Alignment::Center).padding(10).spacing(50)
+                )
+                .align_x(iced::alignment::Horizontal::Center)
+                .align_y(iced::alignment::Vertical::Center).into();
+
+                container.map(RRMessage::Serial)
             }
             None=>{
                 let serial_text = text("Press Button and search serialport").size(30);
                 let b = button("Scan Port").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::SerialScan);
-                column![serial_text, b].align_items(iced::alignment::Alignment::Center).padding(10).spacing(50).into()
+                
+                let container:iced::Element<'_, SerialMessage> = Container::new(
+                    column![serial_text, b].align_items(iced::alignment::Alignment::Center).padding(10).spacing(50)
+                )
+                .align_x(iced::alignment::Horizontal::Center)
+                .align_y(iced::alignment::Vertical::Center).into();
+
+                container.map(RRMessage::Serial)
             }
         }
     }
@@ -55,7 +68,7 @@ impl SerialManager {
     {
         String::from("Serial Manager")
     }
-    fn tab_label(&self)->TabLabel
+    pub fn tab_label(&self)->TabLabel
     {
         TabLabel::IconText('C', self.title())
     }

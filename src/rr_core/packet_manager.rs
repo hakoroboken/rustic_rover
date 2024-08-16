@@ -29,7 +29,7 @@ impl PacketManager {
     {
         String::from("Packet Manager")
     }
-    fn tab_label(&self)->TabLabel
+    pub fn tab_label(&self)->TabLabel
     {
         TabLabel::IconText('P', self.title())
     }

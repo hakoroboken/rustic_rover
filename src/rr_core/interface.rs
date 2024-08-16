@@ -7,10 +7,8 @@ pub enum RRMessage
     Controller(ControllerMessage),
     Packet(PacketMessage),
     Serial(SerialMessage),
-    CycleHome,
-    CycleController,
-    CycleSerial,
-    CyclePacket,
+    Cycle(LifeCycle),
+    TabClosed
 }
 
 #[derive(Debug, Clone)]
@@ -51,14 +49,14 @@ pub enum ControllerMessage
 }
 
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, Eq)]
 pub enum LifeCycle
 {
     Setting,
     Home,
     ControllerInfo,
     PacketInfo,
-    SerialInfo
+    SerialInfo,
 }
 
 

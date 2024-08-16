@@ -7,11 +7,14 @@ mod serial_manager;
 mod save_data_manager;
 
 use controller_manager::DualShock4DriverManager;
-use interface::{AppState, Packet, RRMessage, LifeCycle};
-use iced::{self, Element};
-use iced::widget::{button, column, combo_box, row, text};
+use interface::{AppState,RRMessage, LifeCycle};
 use serial_manager::SerialManager;
 use utils::path_to_image;
+
+use iced::{self, Element};
+use iced::widget::{button, column, combo_box, row, text};
+use iced_aw::Tabs;
+
 
 pub struct RusticRover
 {
@@ -96,17 +99,11 @@ impl iced::Application for RusticRover {
             interface::RRMessage::Serial(msg)=>{
                 self.serial_manager.update(msg)
             }
-            interface::RRMessage::CycleHome=>{
-                self.life_cycle = LifeCycle::Home;
+            interface::RRMessage::Cycle(cycle)=>{
+                self.life_cycle = cycle
             }
-            interface::RRMessage::CycleController=>{
-                self.life_cycle = LifeCycle::ControllerInfo
-            }
-            interface::RRMessage::CyclePacket=>{
-                self.life_cycle = LifeCycle::PacketInfo
-            }
-            interface::RRMessage::CycleSerial=>{
-                self.life_cycle = LifeCycle::SerialInfo
+            interface::RRMessage::TabClosed=>{
+                println!("close tab");
             }
         }
 
@@ -114,23 +111,18 @@ impl iced::Application for RusticRover {
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message, Self::Theme, iced::Renderer> {
-        if self.life_cycle == LifeCycle::Setting
-        {
-            self.title_view()
-        }
-        else if self.life_cycle == LifeCycle::Home
-        {
-            let icon = path_to_image("./rustic_rover.png", 600);
-            
-            column![icon,self.home_view()].align_items(iced::Alignment::Center).align_items(iced::alignment::Horizontal::Center.into()).padding(10).into()
-        }
-        else if self.life_cycle == LifeCycle::SerialInfo
-        {
-            column![self.serial_view(), self.home_view()].align_items(iced::alignment::Horizontal::Center.into()).padding(10).spacing(50).into()
-        }
-        else {
-            text("LifeCycleError!!").size(300).into()
-        }
+        let tab = Tabs::new(RRMessage::Cycle)
+            .tab_icon_position(iced_aw::tabs::Position::Bottom)
+            .push(
+                LifeCycle::ControllerInfo, 
+                self.game_controller_manager.tab_label(), 
+                self.game_controller_manager.view()
+            )
+            .push(
+                LifeCycle::PacketInfo, 
+                self.packet_creator.tab_label(), 
+                self.packet_creator.view()
+            )
     }
 }
 

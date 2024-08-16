@@ -1,7 +1,7 @@
 extern crate hidapi;
 use hidapi::{HidApi, HidDevice, DeviceInfo};
 
-use crate::rr_core::interface::{AppState,ControllerMessage,RGB ,ControllerConnectionType, DualShock4, Dpad, JoyStick, Buttons};
+use crate::rr_core::interface::{RRMessage,AppState,ControllerMessage,RGB ,ControllerConnectionType, DualShock4, Dpad, JoyStick, Buttons};
 use crate::rr_core::{utils, thread_connection};
 
 use iced_aw::TabLabel;
@@ -23,11 +23,11 @@ impl DualShock4DriverManager {
     {
         String::from("Controller Manager")
     }
-    fn tab_label(&self)->TabLabel
+    pub fn tab_label(&self)->TabLabel
     {
         TabLabel::IconText('C', self.title())
     }
-    pub fn view(&self)->iced::Element<'_, ControllerMessage, iced::Theme, iced::Renderer>
+    pub fn view(&self)->iced::Element<'_, RRMessage>
     {
         use iced::widget::{button, combo_box};
         let add_con = button("Add Controller").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(ControllerMessage::AddController);
@@ -36,25 +36,44 @@ impl DualShock4DriverManager {
                 "Select Controller Connection Method", 
                 self.controller_connection_types_combo_box.selected.as_ref(), 
                 ControllerMessage::TypeSelect);
+        use iced::widget::container::Container;
         use iced::widget::column;
         match self.controller_num {
             1=>{
                 let con_1 = input_to_controller_view(self.get_value[0]);
                 
-                column![con_1, combo_, add_con].padding(10).into()
+                let content:iced::Element<'_, ControllerMessage> = Container::new(
+                    column![con_1, combo_, add_con]
+                )
+                .align_x(iced::alignment::Horizontal::Center)
+                .align_y(iced::alignment::Vertical::Center).into();
+
+                content.map(RRMessage::Controller)
             }
             2=>{
                 let con_1 = input_to_controller_view(self.get_value[0]);
                 let con_2 = input_to_controller_view(self.get_value[1]);
 
-                column![con_1, con_2, combo_, add_con].padding(10).into()
+                let content:iced::Element<'_, ControllerMessage> = Container::new(
+                    column![con_1, con_2, combo_, add_con]
+                )
+                .align_x(iced::alignment::Horizontal::Center)
+                .align_y(iced::alignment::Vertical::Center).into();
+
+                content.map(RRMessage::Controller)
             }
             3=>{
                 let con_1 = input_to_controller_view(self.get_value[0]);
                 let con_2 = input_to_controller_view(self.get_value[1]);
                 let con_3 = input_to_controller_view(self.get_value[2]);
 
-                column![con_1, con_2, con_3, combo_, add_con].padding(10).into()
+                let content:iced::Element<'_, ControllerMessage> = Container::new(
+                    column![con_1, con_2, con_3, combo_, add_con]
+                )
+                .align_x(iced::alignment::Horizontal::Center)
+                .align_y(iced::alignment::Vertical::Center).into();
+
+                content.map(RRMessage::Controller)
             }
             _=>{
                 use iced::widget::text;
@@ -487,7 +506,7 @@ fn map(value:u8,in_min:f32, in_max:f32, out_min:f32, out_max:f32)->f32
     result
 }
 
-fn input_to_controller_view<'a>(input:DualShock4)->iced::Element<'a, ControllerMessage, iced::Theme, iced::Renderer>
+fn input_to_controller_view<'a>(input:DualShock4)->iced::widget::Row<'a,ControllerMessage>
 {
     let con_state = if input.state
             {
@@ -515,5 +534,5 @@ fn input_to_controller_view<'a>(input:DualShock4)->iced::Element<'a, ControllerM
                 input.btns.r1,input.btns.r2,
                 input.btns.l1,input.btns.l2)).size(25);
             use iced::widget::row;
-            row![state_tex, joy_tex, dpad_tex, btn_tex].padding(10).spacing(30).into()
+            row![state_tex, joy_tex, dpad_tex, btn_tex].padding(10).spacing(30)
 }
