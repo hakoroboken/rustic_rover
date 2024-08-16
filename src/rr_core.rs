@@ -137,10 +137,9 @@ impl iced::Application for RusticRover {
                 self.serial_manager.tab_label(), 
             self.serial_manager.view()
             )
-            
             .set_active_tab(&self.life_cycle)
-            .tab_bar_style(iced_aw::style::tab_bar::TabBarStyles::Blue)
-            .tab_bar_position(iced_aw::TabBarPosition::Bottom)
+            .tab_bar_style(iced_aw::style::tab_bar::TabBarStyles::Dark)
+            .tab_bar_position(iced_aw::TabBarPosition::Top)
             .into();
 
             tab

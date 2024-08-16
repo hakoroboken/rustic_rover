@@ -43,7 +43,7 @@ impl DualShock4DriverManager {
                 let con_1 = input_to_controller_view(self.get_value[0]);
                 
                 let content:iced::Element<'_, ControllerMessage> = Container::new(
-                    column![con_1, combo_, add_con]
+                    column![con_1, combo_, add_con].align_items(iced::Alignment::Center)
                 )
                 .align_x(iced::alignment::Horizontal::Center)
                 .align_y(iced::alignment::Vertical::Center).into();
@@ -55,7 +55,7 @@ impl DualShock4DriverManager {
                 let con_2 = input_to_controller_view(self.get_value[1]);
 
                 let content:iced::Element<'_, ControllerMessage> = Container::new(
-                    column![con_1, con_2, combo_, add_con]
+                    column![con_1, con_2, combo_, add_con].align_items(iced::Alignment::Center)
                 )
                 .align_x(iced::alignment::Horizontal::Center)
                 .align_y(iced::alignment::Vertical::Center).into();
@@ -68,7 +68,7 @@ impl DualShock4DriverManager {
                 let con_3 = input_to_controller_view(self.get_value[2]);
 
                 let content:iced::Element<'_, ControllerMessage> = Container::new(
-                    column![con_1, con_2, con_3, combo_, add_con]
+                    column![con_1, con_2, con_3, combo_, add_con].align_items(iced::Alignment::Center)
                 )
                 .align_x(iced::alignment::Horizontal::Center)
                 .align_y(iced::alignment::Vertical::Center).into();

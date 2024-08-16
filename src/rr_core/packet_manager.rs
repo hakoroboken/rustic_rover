@@ -220,7 +220,7 @@ impl PacketManager {
                     row_m2,
                     p_text,
                     self.sdm.menu_view(self.selected_file_name.clone())
-            ]
+            ].align_items(iced::Alignment::Center)
         )
         .align_x(iced::alignment::Horizontal::Center)
         .align_y(iced::alignment::Vertical::Center).into();

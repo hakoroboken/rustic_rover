@@ -21,14 +21,14 @@ impl SerialManager {
                 let combo_yp = combo_box(
                     &get_list.all, 
                     "Select Serial Port", 
-                    get_list.selected.as_ref(), 
+                    Some(&self.selected), 
                     SerialMessage::PortSelected);
                 
                 let start_b = button("Start Serial").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::SerialStart);
                 let scan_b = button("Scan Port").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::SerialScan);
 
                 let container:iced::Element<'_, SerialMessage> = Container::new(
-                    column![scan_b, combo_yp, start_b].align_items(iced::alignment::Alignment::Center).padding(10).spacing(50)
+                    column![scan_b, combo_yp, start_b].align_items(iced::Alignment::Center).padding(10).spacing(50)
                 )
                 .align_x(iced::alignment::Horizontal::Center)
                 .align_y(iced::alignment::Vertical::Center).into();
@@ -36,11 +36,11 @@ impl SerialManager {
                 container.map(RRMessage::Serial)
             }
             None=>{
-                let serial_text = text("Press Button and search serialport").size(30);
+                let serial_text = text("Press Button and search serialport").size(100);
                 let b = button("Scan Port").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::SerialScan);
                 
                 let container:iced::Element<'_, SerialMessage> = Container::new(
-                    column![serial_text, b].align_items(iced::alignment::Alignment::Center).padding(10).spacing(50)
+                    column![serial_text, b].align_items(iced::Alignment::Center).padding(10).spacing(50)
                 )
                 .align_x(iced::alignment::Horizontal::Center)
                 .align_y(iced::alignment::Vertical::Center).into();
