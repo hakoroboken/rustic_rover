@@ -517,22 +517,22 @@ fn input_to_controller_view<'a>(input:DualShock4)->iced::widget::Row<'a,Controll
                 "Not Connected"
             };
             use iced::widget::text;
-            let state_tex = text(format!("Type:{}\nState:{}\n",input.mode, con_state)).size(25);
+            let state_tex = text(format!("Type:{}\nState:{}\n",input.mode, con_state)).size(40);
             let joy_tex = text(format!("JoyStick\nleft_x:{:2.5}\nleft_y:{:2.5}\nright_x:{:2.5}\nright_y:{:2.5}", 
                 input.sticks.left_x,
                 input.sticks.left_y,
                 input.sticks.right_x,
-                input.sticks.right_y)).size(25);
+                input.sticks.right_y)).size(40);
             let dpad_tex = text(format!("DPad\nup:{:5}\ndown:{:5}\nright:{:5}\nleft:{:5}", 
                 input.dpad.up_key,
                 input.dpad.down_key,
                 input.dpad.right_key,
-                input.dpad.left_key)).size(25);
+                input.dpad.left_key)).size(40);
             let btn_tex = text(format!("Buttons\ncircle:{:5},cross:{:5}\ncube:{:5},triangle:{:5}\nR1:{},R2:{}\nL1:{},L2:{}", 
                 input.btns.circle,input.btns.cross,
                 input.btns.cube,input.btns.triangle,
                 input.btns.r1,input.btns.r2,
-                input.btns.l1,input.btns.l2)).size(25);
+                input.btns.l1,input.btns.l2)).size(40);
             use iced::widget::row;
             row![state_tex, joy_tex, dpad_tex, btn_tex].padding(10).spacing(30)
 }
