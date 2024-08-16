@@ -1,4 +1,4 @@
-use crate::rr_core::interface::{Packet, SerialMessage, AppState, RRMessage};
+use crate::rr_core::interface::{Packet, SerialMessage, RRMessage};
 use crate::rr_core::thread_connection::ThreadConnector;
 use crate::rr_core::utils::ComboBox;
 
@@ -9,7 +9,6 @@ pub struct SerialManager
     pub conn:ThreadConnector<Packet>,
     pub path_list:Option<ComboBox<String>>,
     pub selected:String,
-    pub state:AppState
 }
 
 impl SerialManager {
@@ -77,7 +76,7 @@ impl SerialManager {
 impl SerialManager {
     pub fn new()->SerialManager
     {
-        SerialManager { conn: ThreadConnector::<Packet>::new(), path_list : None, selected:String::new(), state:AppState::NoReady}
+        SerialManager { conn: ThreadConnector::<Packet>::new(), path_list : None, selected:String::new()}
     }
     pub fn search_port(&mut self)
     {
