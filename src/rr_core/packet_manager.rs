@@ -1,4 +1,4 @@
-use crate::rr_core::interface::{Packet, DualShock4, AssignController, PacketMessage, AppState};
+use crate::rr_core::interface::{Packet, DualShock4, AssignController, PacketMessage, AppState, RRMessage};
 use crate::rr_core::utils::ComboBox;
 
 use iced::widget::{text, slider, column, row, combo_box};
@@ -103,7 +103,7 @@ impl PacketManager {
             }
         }
     }
-    pub fn view(&self)->iced::Element<'_, PacketMessage, iced::Theme, iced::Renderer>
+    pub fn view(&self)->iced::Element<'_, RRMessage>
     {
         let x_text = text(format!("Select X (Rate : {})", self.x_pow_rate)).size(30);
         let x_sc = slider(
@@ -205,20 +205,27 @@ impl PacketManager {
             }
         };
 
-        column![
-            x_title,
-            row_x,
-            y_title,
-            row_y,
-            ro_title,
-            row_ro,
-            m1_title,
-            row_m1,
-            m2_title,
-            row_m2,
-            p_text,
-            self.sdm.menu_view(self.selected_file_name.clone())
-        ].into()
+        use iced::widget::container::Container;
+        let container:iced::Element<'_, PacketMessage> = Container::new(
+            column![
+                    x_title,
+                    row_x,
+                    y_title,
+                    row_y,
+                    ro_title,
+                    row_ro,
+                    m1_title,
+                    row_m1,
+                    m2_title,
+                    row_m2,
+                    p_text,
+                    self.sdm.menu_view(self.selected_file_name.clone())
+            ]
+        )
+        .align_x(iced::alignment::Horizontal::Center)
+        .align_y(iced::alignment::Vertical::Center).into();
+
+        container.map(RRMessage::Packet)
     }
 }
 
