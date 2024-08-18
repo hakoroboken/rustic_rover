@@ -12,7 +12,7 @@ use interface::{AppState,RRMessage, LifeCycle};
 use serial_manager::SerialManager;
 
 use iced;
-use iced::widget::column;
+use iced::widget::{column, text};
 use iced_aw::Tabs;
 
 
@@ -66,16 +66,26 @@ impl iced::Application for RusticRover {
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
         match message {
             interface::RRMessage::ControllerThreadMessage(ds4)=>{
+                if self.game_controller_manager.controller_num - self.packet_creator.packet_id.len() > 0
+                {
+                    for _i in 0..self.game_controller_manager.controller_num - self.packet_creator.packet_id.len()
+                    {
+                        self.packet_creator.new_set();
+                    }
+                }
                 self.packet_creator.sdm.search_data_files();
                 self.game_controller_manager.get_value[0] = ds4;
                 for i in 1..self.game_controller_manager.controller_num
                 {
                     self.game_controller_manager.get_value[i] = self.game_controller_manager.connectors[i].subscriber.recv().unwrap();
                 }
-                
-                self.packet_creator.create_packet(ds4);
 
-                match self.packet_creator.packet_ {
+                for i in 0..self.game_controller_manager.controller_num
+                {
+                    self.packet_creator.create_packet(self.game_controller_manager.get_value[i], i);
+                }
+                
+                match self.packet_creator.packet_[0] {
                     Some(p)=>{
                         self.packet_creator.state = AppState::OK;
                         
@@ -110,7 +120,31 @@ impl iced::Application for RusticRover {
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message, Self::Theme, iced::Renderer> {
-        let home:iced::Element<'_, RRMessage> = column![utils::path_to_image("./rustic_rover.png", 500)].align_items(iced::Alignment::Center).into();
+        let con_text = text(format!("{} Controller is connected!!", self.game_controller_manager.controller_num)).size(30);
+        let mut p_str = String::new();
+        for i in 0..self.packet_creator.packet_id.len()
+        {
+            match self.packet_creator.packet_.get(i) {
+                Some(packet)=>{
+                    match packet {
+                        Some(p)=>{
+                            let str = format!("packet{} : [x:{:3},y:{:3},ro:{:3},m1:{:3},m2:{:3}]\n", i, p.x, p.y, p.ro, p.m1, p.m2);
+                            p_str += &str;
+                        }
+                        None=>{
+
+                        }
+                    }
+                }
+                None=>{
+                    
+                }
+            }
+            
+        }
+
+        let p_text = text(p_str).size(30);
+        let home:iced::Element<'_, RRMessage> = column![utils::path_to_image("./rustic_rover.png", 500), con_text, p_text].align_items(iced::Alignment::Center).into();
         let tab = Tabs::new(RRMessage::Cycle)
         .tab_icon_position(iced_aw::tabs::Position::Bottom)
         .push(
