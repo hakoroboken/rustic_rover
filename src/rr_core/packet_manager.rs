@@ -8,17 +8,19 @@ use crate::rr_core::save_data_manager;
 
 pub struct PacketManager
 {
-    pub x_cb:PlusMinus,
-    pub y_cb:PlusMinus,
-    pub ro_cb:PlusMinus,
-    pub m1_cb:PlusMinus,
-    pub m2_cb:PlusMinus,
-    pub packet_:Option<Packet>,
-    pub x_pow_rate:u16,
-    pub y_pow_rate:u16,
-    pub ro_pow_rate:u16,
-    pub m1_pow_rate:u16,
-    pub m2_pow_rate:u16,
+    pub packet_:Vec<Option<Packet>>,
+    pub packet_id:Vec<usize>,
+    pub packet_id_list:ComboBox<usize>,
+    pub x_cb:Vec<PlusMinus>,
+    pub y_cb:Vec<PlusMinus>,
+    pub ro_cb:Vec<PlusMinus>,
+    pub m1_cb:Vec<PlusMinus>,
+    pub m2_cb:Vec<PlusMinus>,
+    pub x_pow_rate:Vec<u16>,
+    pub y_pow_rate:Vec<u16>,
+    pub ro_pow_rate:Vec<u16>,
+    pub m1_pow_rate:Vec<u16>,
+    pub m2_pow_rate:Vec<u16>,
     pub sdm:save_data_manager::SaveDataManager,
     selected_file_name:String,
     pub state:AppState
@@ -37,69 +39,186 @@ impl PacketManager {
     {
         match message {
             PacketMessage::Assign1p(a1p)=>{
-                self.x_cb.plus.selected = Some(a1p)
+                match self.packet_id_list.selected {
+                    Some(id)=>{
+                        self.x_cb[id].plus.selected = Some(a1p)
+                    }
+                    None=>{
+
+                    }
+                }                
             }
             PacketMessage::Assign1m(a1m)=>{
-                self.x_cb.minus.selected = Some(a1m)
+                match self.packet_id_list.selected {
+                    Some(id)=>{
+                        self.x_cb[id].minus.selected = Some(a1m)
+                    }
+                    None=>{
+
+                    }
+                }     
             }
             PacketMessage::Assign2p(a2p)=>{
-                self.y_cb.plus.selected = Some(a2p)
+                match self.packet_id_list.selected {
+                    Some(id)=>{
+                        self.y_cb[id].plus.selected = Some(a2p)
+                    }
+                    None=>{
+
+                    }
+                }
             }
             PacketMessage::Assign2m(a2m)=>{
-                self.y_cb.minus.selected = Some(a2m)
+                match self.packet_id_list.selected {
+                    Some(id)=>{
+                        self.y_cb[id].minus.selected = Some(a2m)
+                    }
+                    None=>{
+
+                    }
+                }
             }
             PacketMessage::Assign3p(a3p)=>{
-                self.ro_cb.plus.selected = Some(a3p)
+                match self.packet_id_list.selected {
+                    Some(id)=>{
+                        self.ro_cb[id].plus.selected = Some(a3p)
+                    }
+                    None=>{
+
+                    }
+                }
             }
             PacketMessage::Assign3m(a3m)=>{
-                self.ro_cb.minus.selected = Some(a3m)
+                match self.packet_id_list.selected {
+                    Some(id)=>{
+                        self.ro_cb[id].minus.selected = Some(a3m)
+                    }
+                    None=>{
+
+                    }
+                }
             }
             PacketMessage::Assign4p(a4p)=>{
-                self.m1_cb.plus.selected = Some(a4p)
+                match self.packet_id_list.selected {
+                    Some(id)=>{
+                        self.m1_cb[id].plus.selected = Some(a4p)
+                    }
+                    None=>{
+
+                    }
+                }
             }
             PacketMessage::Assign4m(a4m)=>{
-                self.m1_cb.minus.selected = Some(a4m)
+                match self.packet_id_list.selected {
+                    Some(id)=>{
+                        self.m1_cb[id].minus.selected = Some(a4m)
+                    }
+                    None=>{
+
+                    }
+                }
             }
             PacketMessage::Assign5p(a5p)=>{
-                self.m2_cb.plus.selected = Some(a5p)
+                match self.packet_id_list.selected {
+                    Some(id)=>{
+                        self.m2_cb[id].plus.selected = Some(a5p)
+                    }
+                    None=>{
+
+                    }
+                }
             }
             PacketMessage::Assign5m(a5m)=>{
-                self.m2_cb.minus.selected = Some(a5m)
+                match self.packet_id_list.selected {
+                    Some(id)=>{
+                        self.m2_cb[id].minus.selected = Some(a5m)
+                    }
+                    None=>{
+
+                    }
+                }
             },
             PacketMessage::PowerRateX(x)=>{
-                self.x_pow_rate = x;
+                match self.packet_id_list.selected {
+                    Some(id)=>{
+                        self.x_pow_rate[id] = x
+                    }
+                    None=>{
+
+                    }
+                }
             }
             PacketMessage::PowerRateY(y)=>{
-                self.y_pow_rate = y;
+                match self.packet_id_list.selected {
+                    Some(id)=>{
+                        self.y_pow_rate[id] = y
+                    }
+                    None=>{
+
+                    }
+                }
             }
             PacketMessage::PowerRateRotation(rotation)=>{
-                self.ro_pow_rate = rotation;
+                match self.packet_id_list.selected {
+                    Some(id)=>{
+                        self.ro_pow_rate[id] = rotation
+                    }
+                    None=>{
+
+                    }
+                }
             }
             PacketMessage::PowerRateM1(m1)=>{
-                self.m1_pow_rate = m1;
+                match self.packet_id_list.selected {
+                    Some(id)=>{
+                        self.m1_pow_rate[id] = m1
+                    }
+                    None=>{
+
+                    }
+                }
             }
             PacketMessage::PowerRateM2(m2)=>{
-                self.m2_pow_rate = m2;
+                match self.packet_id_list.selected {
+                    Some(id)=>{
+                        self.m2_pow_rate[id] = m2
+                    }
+                    None=>{
+
+                    }
+                }
             }
             PacketMessage::FileSelect(name)=>{
                 self.selected_file_name = name;
 
                 self.sdm.load_from_file(self.selected_file_name.clone());
-                self.x_cb.plus.selected = self.sdm.xp_assign;
-                self.x_cb.minus.selected = self.sdm.xm_assign;
-                self.x_pow_rate = self.sdm.x_rate.unwrap();
-                self.y_cb.plus.selected = self.sdm.yp_assign;
-                self.y_cb.minus.selected = self.sdm.ym_assign;
-                self.y_pow_rate = self.sdm.y_rate.unwrap();
-                self.ro_cb.plus.selected = self.sdm.rop_assign;
-                self.ro_cb.minus.selected = self.sdm.rom_assign;
-                self.ro_pow_rate = self.sdm.ro_rate.unwrap();
-                self.m1_cb.plus.selected = self.sdm.m1p_assign;
-                self.m1_cb.minus.selected = self.sdm.m1m_assign;
-                self.m1_pow_rate = self.sdm.m1_rate.unwrap();
-                self.m2_cb.plus.selected = self.sdm.m2p_assign;
-                self.m2_cb.minus.selected = self.sdm.m2m_assign;
-                self.m2_pow_rate = self.sdm.m2_rate.unwrap();
+
+                match self.packet_id_list.selected
+                {
+                    Some(id)=>{
+                        self.x_cb[id].plus.selected = self.sdm.xp_assign;
+                        self.x_cb[id].minus.selected = self.sdm.xm_assign;
+                        self.x_pow_rate[id] = self.sdm.x_rate.unwrap();
+                        self.y_cb[id].plus.selected = self.sdm.yp_assign;
+                        self.y_cb[id].minus.selected = self.sdm.ym_assign;
+                        self.y_pow_rate[id] = self.sdm.y_rate.unwrap();
+                        self.ro_cb[id].plus.selected = self.sdm.rop_assign;
+                        self.ro_cb[id].minus.selected = self.sdm.rom_assign;
+                        self.ro_pow_rate[id] = self.sdm.ro_rate.unwrap();
+                        self.m1_cb[id].plus.selected = self.sdm.m1p_assign;
+                        self.m1_cb[id].minus.selected = self.sdm.m1m_assign;
+                        self.m1_pow_rate[id] = self.sdm.m1_rate.unwrap();
+                        self.m2_cb[id].plus.selected = self.sdm.m2p_assign;
+                        self.m2_cb[id].minus.selected = self.sdm.m2m_assign;
+                        self.m2_pow_rate[id] = self.sdm.m2_rate.unwrap();
+                    }
+                    None=>{
+
+                    }
+                }
+            }
+            PacketMessage::PacketID(selected_)=>{
+                self.packet_id_list.selected = Some(selected_)
             }
         }
     }
@@ -239,13 +358,23 @@ impl PacketManager {
         let m1_cb_ = PlusMinus::new();
         let m2_cb_ = PlusMinus::new();
 
+        let mut none = Vec::<Option<Packet>>::new();
+        none.push(None);
+
+        let mut packet_id_ = Vec::<usize>::new();
+        packet_id_.push(1);
+
+        let packet_id_list_ = ComboBox::<usize>::new(packet_id_.clone());
+
         PacketManager { 
+            packet_:none,
+            packet_id:packet_id_,
+            packet_id_list:packet_id_list_,
             x_cb: x_cb_, 
             y_cb: y_cb_, 
             ro_cb: ro_cb_, 
             m1_cb: m1_cb_, 
             m2_cb: m2_cb_ , 
-            packet_:None, 
             x_pow_rate:100, 
             y_pow_rate:100, 
             ro_pow_rate:100, 
