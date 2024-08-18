@@ -11,6 +11,11 @@ pub enum RRMessage
     TabClosed
 }
 
+#[derive(Debug,Clone)]
+pub enum UDPMessage {
+    SpawnUDPDriver
+}
+
 #[derive(Debug, Clone)]
 pub enum SerialMessage
 {
@@ -22,6 +27,7 @@ pub enum SerialMessage
 #[derive(Debug,Clone)]
 pub enum PacketMessage
 {
+    PacketID(usize),
     FileSelect(String),
     PowerRateX(u16),
     PowerRateY(u16),

@@ -1,6 +1,9 @@
 use std::cell::RefCell;
 use tokio::sync::mpsc;
 use std::sync::mpsc::{channel, Sender, Receiver};
+
+pub type Publisher<T> = Sender<T>;
+pub type Subscriber<T> = Receiver<T>;
 pub struct AsyncThreadConnector<T>
 {
     pub publisher:RefCell<Option<mpsc::UnboundedSender<T>>>,
@@ -18,8 +21,8 @@ impl<T> AsyncThreadConnector<T> {
 
 pub struct ThreadConnector<T>
 {
-    pub publisher:Sender<T>,
-    pub subscriber:Receiver<T>
+    pub publisher:Publisher<T>,
+    pub subscriber:Subscriber<T>
 }
 
 impl<T> ThreadConnector<T> {
