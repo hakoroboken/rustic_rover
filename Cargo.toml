@@ -1,6 +1,6 @@
 [package]
 name = "rustic_rover"
-version = "1.5.0"
+version = "1.6.0"
 edition = "2021"
 
 [dependencies]
@@ -11,3 +11,4 @@ tokio = {version = "1", features=["full"]}
 hidapi = "2.6.0"
 serialport = "4.2.0"
 yaml-rust = "0.4"
+local-ip-address = "0.6.1"

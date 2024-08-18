@@ -39,6 +39,19 @@ impl DualShock4DriverManager {
         use iced::widget::container::Container;
         use iced::widget::column;
         match self.controller_num {
+            0=>{
+                let btn = button("Start").on_press(ControllerMessage::ControllerStart).width(iced::Length::Shrink).height(iced::Length::Shrink);
+
+                let err_text = utils::setting_state_logger(self.state);
+
+                let content:iced::Element<'_, ControllerMessage> = Container::new(
+                    column![combo_, btn, err_text].align_items(iced::Alignment::Center)
+                )
+                .align_x(iced::alignment::Horizontal::Center)
+                .align_y(iced::alignment::Vertical::Center).into();
+
+                content.map(RRMessage::Controller)
+            }
             1=>{
                 let con_1 = input_to_controller_view(self.get_value[0]);
                 
@@ -97,16 +110,20 @@ impl DualShock4DriverManager {
                     self.scan_device();
                     if !self.device_list.is_empty()
                     {
+                        self.scan_device();
                         match self.controller_connection_types_combo_box.selected {
                             Some(type_)=>{
                                 self.spawn_driver(type_);
-                                self.controller_num += 1;
                                 self.state = AppState::OK;
                             }
                             None=>{
                                 self.state = AppState::ERROR;
                             }
                         }
+                    }
+                    else {
+                        println!("Not found device");
+                        self.state = AppState::NoReady;
                     }
                 }
             }
@@ -188,6 +205,7 @@ impl DualShock4DriverManager {
         match self.device_list.first()
         {
             Some(dr)=>{
+                self.controller_num += 1;
                 match dr.open_device(&self.api) {
                     Ok(device_)=>{
                         let mut dsdr = DualShock4Driver{device:device_,mode:mode_, rgb:RGB::new()};

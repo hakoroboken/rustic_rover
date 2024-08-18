@@ -11,6 +11,11 @@ pub enum RRMessage
     TabClosed
 }
 
+#[derive(Debug,Clone)]
+pub enum UDPMessage {
+    SpawnUDPDriver
+}
+
 #[derive(Debug, Clone)]
 pub enum SerialMessage
 {
