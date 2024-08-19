@@ -115,12 +115,7 @@ impl SerialManager {
     }
     pub fn spawn_serial(&mut self)
     {
-        let mut port_ = serialport::new(self.selected.clone(), 115200)
-            .data_bits(serialport::DataBits::Eight)
-            .stop_bits(serialport::StopBits::One)
-            .timeout(std::time::Duration::from_millis(100))
-            .open().unwrap();
-
+        let selected_port = self.selected.clone();
         let node = ThreadConnector::<Packet>::new();
         self.conn[self.driver_num].publisher = node.publisher.clone();
 
@@ -130,6 +125,9 @@ impl SerialManager {
         let mut ab = "a";
 
         std::thread::spawn(move ||{
+            let mut port_ = serialport::new(selected_port, 115200)
+            .timeout(std::time::Duration::from_millis(100))
+            .open().unwrap();
             loop {
                 let send_packet = node.subscriber.recv().unwrap();
 
@@ -161,10 +159,10 @@ impl SerialManager {
 
                 match port_.write(write_buf.as_bytes()) {
                     Ok(_)=>{
-            
+                        println!("Write:{}", write_buf)
                     }
-                    Err(_)=>{
-            
+                    Err(e)=>{
+                        println!("{:?}", e)
                     }
                 }
             }
