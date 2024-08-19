@@ -6,7 +6,9 @@ use iced_aw::TabLabel;
 
 pub struct SerialManager
 {
-    pub conn:ThreadConnector<Packet>,
+    pub driver_num:usize,
+    pub is_small_packet:bool,
+    pub conn:Vec<ThreadConnector<Packet>>,
     pub path_list:Option<ComboBox<String>>,
     pub selected:String,
 }
@@ -17,6 +19,9 @@ impl SerialManager {
         use iced::widget::{button, column, text, container::Container};
         match &self.path_list {
             Some(get_list)=>{
+                use iced::widget::checkbox;
+                let is_sp = checkbox("Small Packet", self.is_small_packet).on_toggle(SerialMessage::SetPacketSize);
+
                 use iced::widget::combo_box;
                 let combo_yp = combo_box(
                     &get_list.all, 
@@ -27,8 +32,11 @@ impl SerialManager {
                 let start_b = button("Start Serial").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::SerialStart);
                 let scan_b = button("Scan Port").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::SerialScan);
 
+                use iced::widget::row;
+                let row = row![is_sp, start_b];
+
                 let container:iced::Element<'_, SerialMessage> = Container::new(
-                    column![scan_b, combo_yp, start_b].align_items(iced::Alignment::Center).padding(10).spacing(50)
+                    column![scan_b, combo_yp, row].align_items(iced::Alignment::Center).padding(10).spacing(50)
                 )
                 .align_x(iced::alignment::Horizontal::Center)
                 .align_y(iced::alignment::Vertical::Center).into();
@@ -61,6 +69,9 @@ impl SerialManager {
             SerialMessage::SerialStart=>{
                 self.spawn_serial();
             }
+            SerialMessage::SetPacketSize(changed)=>{
+                self.is_small_packet = changed
+            }
         }
     }
     fn title(&self)->String
@@ -76,7 +87,9 @@ impl SerialManager {
 impl SerialManager {
     pub fn new()->SerialManager
     {
-        SerialManager { conn: ThreadConnector::<Packet>::new(), path_list : None, selected:String::new()}
+        let mut v = Vec::<ThreadConnector<Packet>>::new();
+        v.push(ThreadConnector::<Packet>::new());
+        SerialManager {driver_num:0, is_small_packet:false,conn: v, path_list : None, selected:String::new()}
     }
     pub fn search_port(&mut self)
     {
@@ -87,7 +100,10 @@ impl SerialManager {
 
                 for i in 0..vec.len()
                 {
-                    path_list_.push(vec.get(i).unwrap().port_name.clone())
+                    if !vec.get(i).unwrap().port_name.contains("/dev/ttyS")
+                    {
+                        path_list_.push(vec.get(i).unwrap().port_name.clone())
+                    }
                 }
 
                 self.path_list = Some(ComboBox::new(path_list_));
@@ -99,41 +115,55 @@ impl SerialManager {
     }
     pub fn spawn_serial(&mut self)
     {
-        let mut port_ = serialport::new(self.selected.clone(), 115200)
-            .data_bits(serialport::DataBits::Eight)
-            .stop_bits(serialport::StopBits::One)
-            .timeout(std::time::Duration::from_millis(100))
-            .open().unwrap();
-
+        let selected_port = self.selected.clone();
         let node = ThreadConnector::<Packet>::new();
-        self.conn.publisher = node.publisher.clone();
+        self.conn[self.driver_num].publisher = node.publisher.clone();
+
+        self.driver_num += 1;
+        let is_ = self.is_small_packet.clone();
 
         let mut ab = "a";
 
         std::thread::spawn(move ||{
-            let send_packet = node.subscriber.recv().unwrap();
+            let mut port_ = serialport::new(selected_port, 115200)
+            .timeout(std::time::Duration::from_millis(100))
+            .open().unwrap();
+            loop {
+                let send_packet = node.subscriber.recv().unwrap();
 
-            if ab == "a"
-            {
-                ab = "b";
-            }
-            else {
-                ab = "a"
-            }
-
-            let write_buf = format!("{}{},{},{},{},{}e", ab,
-                    send_packet.x/10 as i32+10,
-                    send_packet.y/10 as i32+10,
-                    send_packet.ro/10 as i32+10,
-                    send_packet.m1/10 as i32+10,
-                    send_packet.m2/10 as i32+10);
-
-            match port_.write(write_buf.as_bytes()) {
-                Ok(_)=>{
-        
+                if ab == "a"
+                {
+                    ab = "b";
                 }
-                Err(_)=>{
-        
+                else {
+                    ab = "a"
+                }
+
+                let write_buf = if is_
+                {
+                    format!("{}{},{},{},{}e", ab,
+                            send_packet.x/10 as i32+10,
+                            send_packet.y/10 as i32+10,
+                            send_packet.ro/10 as i32+10,
+                            send_packet.m1/10 as i32+10)
+                }
+                else
+                {
+                    format!("{}{},{},{},{},{}e", ab,
+                            send_packet.x/10 as i32+10,
+                            send_packet.y/10 as i32+10,
+                            send_packet.ro/10 as i32+10,
+                            send_packet.m1/10 as i32+10,
+                            send_packet.m2/10 as i32+10)
+                };
+
+                match port_.write(write_buf.as_bytes()) {
+                    Ok(_)=>{
+                        println!("Write:{}", write_buf)
+                    }
+                    Err(e)=>{
+                        println!("{:?}", e)
+                    }
                 }
             }
         });

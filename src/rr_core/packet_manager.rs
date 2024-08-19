@@ -1,4 +1,4 @@
-use crate::rr_core::interface::{Packet, DualShock4, AssignController, PacketMessage, AppState, RRMessage};
+use crate::rr_core::interface::{Packet, DualShock4, AssignController, PacketMessage, RRMessage};
 use crate::rr_core::utils::ComboBox;
 
 use iced::widget::{text, slider, column, row, combo_box};
@@ -24,7 +24,6 @@ pub struct PacketManager
     pub m2_pow_rate:Vec<u16>,
     pub sdm:save_data_manager::SaveDataManager,
     selected_file_name:String,
-    pub state:AppState
 }
 
 impl PacketManager {
@@ -566,7 +565,6 @@ impl PacketManager {
             m2_pow_rate:m2_rate,
             sdm:save_data_manager::SaveDataManager::new(),
             selected_file_name:String::new(),
-            state:AppState::NoReady,
         }
     }
 

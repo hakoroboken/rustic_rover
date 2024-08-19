@@ -8,7 +8,7 @@ mod save_data_manager;
 mod udp_manager;
 
 use controller_manager::DualShock4DriverManager;
-use interface::{AppState,RRMessage, LifeCycle};
+use interface::{RRMessage, LifeCycle};
 use serial_manager::SerialManager;
 
 use iced;
@@ -20,7 +20,6 @@ pub struct RusticRover
 {
     game_controller_manager:controller_manager::DualShock4DriverManager,
     packet_creator:packet_manager::PacketManager,
-    serial_state:AppState,
     life_cycle:LifeCycle,
     serial_manager:serial_manager::SerialManager,
 }
@@ -36,7 +35,6 @@ impl iced::Application for RusticRover {
         {
             game_controller_manager:DualShock4DriverManager::new(),
             packet_creator:packet_manager::PacketManager::new(),
-            serial_state:AppState::NoReady,
             life_cycle:LifeCycle::Home,
             serial_manager:SerialManager::new(),
         };
@@ -66,40 +64,45 @@ impl iced::Application for RusticRover {
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
         match message {
             interface::RRMessage::ControllerThreadMessage(ds4)=>{
-                if self.game_controller_manager.controller_num - self.packet_creator.packet_id.len() > 0
-                {
-                    for _i in 0..self.game_controller_manager.controller_num - self.packet_creator.packet_id.len()
-                    {
-                        self.packet_creator.new_set();
-                    }
-                }
                 self.packet_creator.sdm.search_data_files();
                 self.game_controller_manager.get_value[0] = ds4;
-                for i in 1..self.game_controller_manager.controller_num
-                {
-                    self.game_controller_manager.get_value[i] = self.game_controller_manager.connectors[i].subscriber.recv().unwrap();
-                }
-
                 for i in 0..self.game_controller_manager.controller_num
                 {
+                    if i != 0
+                    {
+                        self.game_controller_manager.get_value[i] = self.game_controller_manager.connectors[i].subscriber.recv().unwrap();
+                    }
                     self.packet_creator.create_packet(self.game_controller_manager.get_value[i], i);
                 }
                 
-                match self.packet_creator.packet_[0] {
-                    Some(p)=>{
-                        self.packet_creator.state = AppState::OK;
-                        
-                        if self.serial_state == AppState::OK
-                        {
-                            self.serial_manager.conn.publisher.send(p).unwrap();
+                for i in 0..self.serial_manager.driver_num
+                {
+                    match self.packet_creator.packet_.get(i) {
+                        Some(packet)=>{
+                            match packet {
+                                Some(p)=>{
+                                    let _ = self.serial_manager.conn[i].publisher.send(*p);
+                                }
+                                None=>{
+
+                                }
+                            }
                         }
-                    }
-                    None=>{
-                        self.packet_creator.state = AppState::NoReady;
+                        None=>{
+
+                        }
                     }
                 }
             }
             interface::RRMessage::Controller(msg)=>{
+                match msg {
+                    interface::ControllerMessage::AddController=>{
+                        self.packet_creator.new_set()
+                    }
+                    _=>{
+
+                    }
+                }
                 self.game_controller_manager.update(msg)
             }
             interface::RRMessage::Packet(msg)=>{
