@@ -19,6 +19,7 @@ pub enum UDPMessage {
 #[derive(Debug, Clone)]
 pub enum SerialMessage
 {
+    SetPacketSize(bool),
     SerialScan,
     SerialStart,
     PortSelected(String)

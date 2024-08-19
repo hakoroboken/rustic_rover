@@ -8,7 +8,7 @@ mod save_data_manager;
 mod udp_manager;
 
 use controller_manager::DualShock4DriverManager;
-use interface::{AppState,RRMessage, LifeCycle};
+use interface::{RRMessage, LifeCycle};
 use serial_manager::SerialManager;
 
 use iced;
@@ -20,7 +20,6 @@ pub struct RusticRover
 {
     game_controller_manager:controller_manager::DualShock4DriverManager,
     packet_creator:packet_manager::PacketManager,
-    serial_state:AppState,
     life_cycle:LifeCycle,
     serial_manager:serial_manager::SerialManager,
 }
@@ -36,7 +35,6 @@ impl iced::Application for RusticRover {
         {
             game_controller_manager:DualShock4DriverManager::new(),
             packet_creator:packet_manager::PacketManager::new(),
-            serial_state:AppState::NoReady,
             life_cycle:LifeCycle::Home,
             serial_manager:SerialManager::new(),
         };
@@ -85,17 +83,22 @@ impl iced::Application for RusticRover {
                     self.packet_creator.create_packet(self.game_controller_manager.get_value[i], i);
                 }
                 
-                match self.packet_creator.packet_[0] {
-                    Some(p)=>{
-                        self.packet_creator.state = AppState::OK;
-                        
-                        if self.serial_state == AppState::OK
-                        {
-                            self.serial_manager.conn.publisher.send(p).unwrap();
+                for i in 0..self.serial_manager.driver_num
+                {
+                    match self.packet_creator.packet_.get(i) {
+                        Some(packet)=>{
+                            match packet {
+                                Some(p)=>{
+                                    let _ = self.serial_manager.conn[i].publisher.send(*p);
+                                }
+                                None=>{
+
+                                }
+                            }
                         }
-                    }
-                    None=>{
-                        self.packet_creator.state = AppState::NoReady;
+                        None=>{
+
+                        }
                     }
                 }
             }
