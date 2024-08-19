@@ -100,7 +100,10 @@ impl SerialManager {
 
                 for i in 0..vec.len()
                 {
-                    path_list_.push(vec.get(i).unwrap().port_name.clone())
+                    if !vec.get(i).unwrap().port_name.contains("/dev/ttyS")
+                    {
+                        path_list_.push(vec.get(i).unwrap().port_name.clone())
+                    }
                 }
 
                 self.path_list = Some(ComboBox::new(path_list_));
