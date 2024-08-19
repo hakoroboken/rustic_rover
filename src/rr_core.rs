@@ -64,22 +64,14 @@ impl iced::Application for RusticRover {
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
         match message {
             interface::RRMessage::ControllerThreadMessage(ds4)=>{
-                if self.game_controller_manager.controller_num - self.packet_creator.packet_id.len() > 0
-                {
-                    for _i in 0..self.game_controller_manager.controller_num - self.packet_creator.packet_id.len()
-                    {
-                        self.packet_creator.new_set();
-                    }
-                }
                 self.packet_creator.sdm.search_data_files();
                 self.game_controller_manager.get_value[0] = ds4;
-                for i in 1..self.game_controller_manager.controller_num
-                {
-                    self.game_controller_manager.get_value[i] = self.game_controller_manager.connectors[i].subscriber.recv().unwrap();
-                }
-
                 for i in 0..self.game_controller_manager.controller_num
                 {
+                    if i != 0
+                    {
+                        self.game_controller_manager.get_value[i] = self.game_controller_manager.connectors[i].subscriber.recv().unwrap();
+                    }
                     self.packet_creator.create_packet(self.game_controller_manager.get_value[i], i);
                 }
                 
@@ -103,6 +95,14 @@ impl iced::Application for RusticRover {
                 }
             }
             interface::RRMessage::Controller(msg)=>{
+                match msg {
+                    interface::ControllerMessage::AddController=>{
+                        self.packet_creator.new_set()
+                    }
+                    _=>{
+
+                    }
+                }
                 self.game_controller_manager.update(msg)
             }
             interface::RRMessage::Packet(msg)=>{
