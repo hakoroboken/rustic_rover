@@ -122,26 +122,28 @@ impl SerialManager {
         self.driver_num += 1;
         let is_ = self.is_small_packet.clone();
 
-        let mut ab = "a";
-
         std::thread::spawn(move ||{
             let mut port_ = serialport::new(selected_port, 115200)
-            .timeout(std::time::Duration::from_millis(100))
+            .timeout(std::time::Duration::from_millis(1000))
             .open().unwrap();
             loop {
-                let send_packet = node.subscriber.recv().unwrap();
-
-                if ab == "a"
+                let send_packet = match node.subscriber.recv()
                 {
-                    ab = "b";
-                }
-                else {
-                    ab = "a"
-                }
+                    Ok(ok)=>{
+                        println!("Recv");
+                        ok
+                    }
+                    Err(_e)=>{
+                        println!("{}", _e);
+                        let p = Packet{x:10, y:10, ro:10, m1:10, m2:10};
+
+                        p
+                    }
+                };
 
                 let write_buf = if is_
                 {
-                    format!("{}{},{},{},{}e", ab,
+                    format!("s{},{},{},{}e",
                             send_packet.x/10 as i32+10,
                             send_packet.y/10 as i32+10,
                             send_packet.ro/10 as i32+10,
@@ -149,7 +151,7 @@ impl SerialManager {
                 }
                 else
                 {
-                    format!("{}{},{},{},{},{}e", ab,
+                    format!("s{},{},{},{},{}e",
                             send_packet.x/10 as i32+10,
                             send_packet.y/10 as i32+10,
                             send_packet.ro/10 as i32+10,
@@ -159,10 +161,12 @@ impl SerialManager {
 
                 match port_.write(write_buf.as_bytes()) {
                     Ok(_)=>{
-                        println!("Write:{}", write_buf)
+                        println!("Write:{}", write_buf);
+                        let _ = port_.clear(serialport::ClearBuffer::Input);
                     }
                     Err(e)=>{
-                        println!("{:?}", e)
+                        println!("{:?}", e);
+                        let _ = port_.clear(serialport::ClearBuffer::Output);
                     }
                 }
             }
