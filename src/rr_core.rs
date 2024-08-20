@@ -145,9 +145,10 @@ impl iced::Application for RusticRover {
             }
             
         }
+        let serial_text = text(format!("{} serial port open.", self.serial_manager.driver_num));
 
         let p_text = text(p_str).size(30);
-        let home:iced::Element<'_, RRMessage> = column![utils::path_to_image("./rustic_rover.png", 500), con_text, p_text].align_items(iced::Alignment::Center).into();
+        let home:iced::Element<'_, RRMessage> = column![utils::path_to_image("./rustic_rover.png", 500), con_text, p_text, serial_text].align_items(iced::Alignment::Center).into();
         let tab = Tabs::new(RRMessage::Cycle)
         .tab_icon_position(iced_aw::tabs::Position::Bottom)
         .push(
