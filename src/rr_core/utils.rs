@@ -20,7 +20,7 @@ pub fn setting_state_logger<'a>(app_state:AppState)->iced::widget::text::Text<'a
 {
     let err_text = if app_state == AppState::NoReady
             {
-                text("").size(50)
+                text("Let's Start Controller to press button!!").size(50)
             }
             else if app_state == AppState::ERROR
             {

@@ -33,12 +33,12 @@ impl DualShock4DriverManager {
         use iced::widget::column;
         match self.controller_num {
             0=>{
-                let btn = button("Start").on_press(ControllerMessage::ControllerStart).width(iced::Length::Shrink).height(iced::Length::Shrink);
+                let btn = button("Start").on_press(ControllerMessage::ControllerStart).width(50).height(50);
 
-                let err_text = utils::setting_state_logger(self.state).size(30).horizontal_alignment(iced::alignment::Horizontal::Center);
+                let err_text = utils::setting_state_logger(self.state).size(100).horizontal_alignment(iced::alignment::Horizontal::Center);
 
                 let content:iced::Element<'_, ControllerMessage> = Container::new(
-                    column![btn, err_text].align_items(iced::Alignment::Center)
+                    column![err_text, btn].align_items(iced::Alignment::Center)
                 )
                 .align_x(iced::alignment::Horizontal::Center)
                 .align_y(iced::alignment::Vertical::Center).into();
