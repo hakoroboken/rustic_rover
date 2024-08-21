@@ -10,7 +10,6 @@ pub struct DualShock4DriverManager
 {
     pub first_connector:thread_connection::AsyncThreadConnector<DualShock4>,
     pub connectors:Vec<thread_connection::ThreadConnector<DualShock4>>,
-    pub controller_connection_types_combo_box:utils::ComboBox<ControllerConnectionType>,
     pub controller_num:usize,
     pub device_list:Vec<DeviceInfo>,
     api:HidApi,
@@ -29,23 +28,17 @@ impl DualShock4DriverManager {
     }
     pub fn view(&self)->iced::Element<'_, RRMessage>
     {
-        use iced::widget::{button, combo_box};
-        let add_con = button("Add Controller").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(ControllerMessage::AddController);
-            let combo_ = combo_box(
-                &self.controller_connection_types_combo_box.all, 
-                "Select Controller Connection Method", 
-                self.controller_connection_types_combo_box.selected.as_ref(), 
-                ControllerMessage::TypeSelect);
+        use iced::widget::button;
         use iced::widget::container::Container;
         use iced::widget::column;
         match self.controller_num {
             0=>{
-                let btn = button("Start").on_press(ControllerMessage::ControllerStart).width(iced::Length::Shrink).height(iced::Length::Shrink);
+                let btn = button("Start").on_press(ControllerMessage::ControllerStart).width(50).height(50);
 
-                let err_text = utils::setting_state_logger(self.state);
+                let err_text = utils::setting_state_logger(self.state).size(100).horizontal_alignment(iced::alignment::Horizontal::Center);
 
                 let content:iced::Element<'_, ControllerMessage> = Container::new(
-                    column![combo_, btn, err_text].align_items(iced::Alignment::Center)
+                    column![err_text, btn].align_items(iced::Alignment::Center)
                 )
                 .align_x(iced::alignment::Horizontal::Center)
                 .align_y(iced::alignment::Vertical::Center).into();
@@ -56,7 +49,7 @@ impl DualShock4DriverManager {
                 let con_1 = input_to_controller_view(self.get_value[0]);
                 
                 let content:iced::Element<'_, ControllerMessage> = Container::new(
-                    column![con_1, combo_, add_con].align_items(iced::Alignment::Center)
+                    column![con_1].align_items(iced::Alignment::Center)
                 )
                 .align_x(iced::alignment::Horizontal::Center)
                 .align_y(iced::alignment::Vertical::Center).into();
@@ -68,7 +61,7 @@ impl DualShock4DriverManager {
                 let con_2 = input_to_controller_view(self.get_value[1]);
 
                 let content:iced::Element<'_, ControllerMessage> = Container::new(
-                    column![con_1, con_2, combo_, add_con].align_items(iced::Alignment::Center)
+                    column![con_1, con_2].align_items(iced::Alignment::Center)
                 )
                 .align_x(iced::alignment::Horizontal::Center)
                 .align_y(iced::alignment::Vertical::Center).into();
@@ -81,7 +74,7 @@ impl DualShock4DriverManager {
                 let con_3 = input_to_controller_view(self.get_value[2]);
 
                 let content:iced::Element<'_, ControllerMessage> = Container::new(
-                    column![con_1, con_2, con_3, combo_, add_con].align_items(iced::Alignment::Center)
+                    column![con_1, con_2, con_3].align_items(iced::Alignment::Center)
                 )
                 .align_x(iced::alignment::Horizontal::Center)
                 .align_y(iced::alignment::Vertical::Center).into();
@@ -97,61 +90,31 @@ impl DualShock4DriverManager {
     pub fn update(&mut self, message:ControllerMessage)
     {
         match message {
-            ControllerMessage::TypeSelect(get_type)=>{
-                self.controller_connection_types_combo_box.selected = Some(get_type)
-            }
             ControllerMessage::ControllerStart=>{
-                if self.controller_connection_types_combo_box.selected == None
-                {
-                    self.state = AppState::NoReady;
-                }
-                else 
-                {
                     self.scan_device();
                     if !self.device_list.is_empty()
                     {
                         self.scan_device();
-                        match self.controller_connection_types_combo_box.selected {
-                            Some(type_)=>{
-                                self.spawn_driver(type_);
-                                self.state = AppState::OK;
-                            }
-                            None=>{
-                                self.state = AppState::ERROR;
-                            }
+                        
+                        self.spawn_driver(ControllerConnectionType::BLE);
+
+                        while self.controller_num < 3 && !self.device_list.is_empty() {
+                            let new_conn = thread_connection::ThreadConnector::<DualShock4>::new();
+                            self.connectors.push(new_conn);
+                            let i = self.controller_num;
+                            self.add_driver(ControllerConnectionType::BLE, self.connectors.get(i).unwrap().publisher.clone());
+
+                            self.controller_num += 1;
+                            self.get_value.push(DualShock4::new());
+
+                            self.state = AppState::OK;
                         }
                     }
                     else {
                         println!("Not found device");
+                        self.scan_device();
                         self.state = AppState::NoReady;
                     }
-                }
-            }
-            ControllerMessage::AddController=>{
-                if self.controller_num < 3
-                {
-                    if !self.device_list.is_empty()
-                    {
-                        match self.controller_connection_types_combo_box.selected {
-                            Some(type_)=>{
-                                let new_connector = thread_connection::ThreadConnector::<DualShock4>::new();
-                                self.connectors.push(new_connector);
-                                let index = self.controller_num;
-                                self.add_driver(type_, self.connectors.get(index).unwrap().publisher.clone());
-
-                                self.controller_num += 1;
-                                self.get_value.push(DualShock4::new());
-                                self.state = AppState::OK;
-                            }
-                            None=>{
-                                self.state = AppState::ERROR;
-                            }
-                        }
-                    }
-                    else {
-                        self.state = AppState::ERROR;
-                    }
-                }
             }
         }
     }
@@ -170,7 +133,6 @@ impl DualShock4DriverManager {
         DualShock4DriverManager {
             first_connector:ds4_conn, 
             connectors:ds4_conn_vec,
-            controller_connection_types_combo_box:utils::ComboBox::new(ControllerConnectionType::ALL.to_vec()), 
             controller_num:0, 
             device_list: Vec::<DeviceInfo>::new(), 
             api: HidApi::new().unwrap() ,
@@ -213,29 +175,12 @@ impl DualShock4DriverManager {
                         std::thread::spawn(move ||
                             loop {
                                 let get = dsdr.task();
-                                if get.btns.left_push
+                                
+                                dsdr.rgb.red += 1;
+
+                                if dsdr.rgb.red > 254
                                 {
-                                    dsdr.rgb.red += 1;
-                                    if dsdr.rgb.red > 254
-                                    {
-                                        dsdr.rgb.red = 0
-                                    }
-                                }
-                                else if get.btns.right_push
-                                {
-                                    dsdr.rgb.grenn += 1;
-                                    if dsdr.rgb.grenn > 254
-                                    {
-                                        dsdr.rgb.grenn = 0
-                                    }
-                                }
-                                else if get.btns.right_push && get.btns.left_push
-                                {
-                                    dsdr.rgb.blue += 1;
-                                    if dsdr.rgb.blue > 254
-                                    {
-                                        dsdr.rgb.blue = 0
-                                    }
+                                    dsdr.rgb.red = 0;
                                 }
                                 
                                 let _ = publisher_.clone().send(get);
@@ -266,29 +211,12 @@ impl DualShock4DriverManager {
                         std::thread::spawn(move ||
                             loop {
                                 let get = dsdr.task();
-                                if get.btns.left_push
+                                
+                                dsdr.rgb.red += 1;
+
+                                if dsdr.rgb.red > 254
                                 {
-                                    dsdr.rgb.red += 1;
-                                    if dsdr.rgb.red > 254
-                                    {
-                                        dsdr.rgb.red = 0
-                                    }
-                                }
-                                else if get.btns.right_push
-                                {
-                                    dsdr.rgb.grenn += 1;
-                                    if dsdr.rgb.grenn > 254
-                                    {
-                                        dsdr.rgb.grenn = 0
-                                    }
-                                }
-                                else if get.btns.right_push && get.btns.left_push
-                                {
-                                    dsdr.rgb.blue += 1;
-                                    if dsdr.rgb.blue > 254
-                                    {
-                                        dsdr.rgb.blue = 0
-                                    }
+                                    dsdr.rgb.red = 0;
                                 }
                                 
                                 let _ = publisher_.clone().send(get);
@@ -302,7 +230,6 @@ impl DualShock4DriverManager {
                 }
             }
             None=>{
-
             }
         }
     }
