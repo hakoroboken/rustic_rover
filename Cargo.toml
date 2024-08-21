@@ -1,6 +1,6 @@
 [package]
 name = "rustic_rover"
-version = "1.9.0"
+version = "1.9.4"
 edition = "2021"
 
 [dependencies]
