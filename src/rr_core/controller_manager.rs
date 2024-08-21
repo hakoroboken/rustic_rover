@@ -35,7 +35,7 @@ impl DualShock4DriverManager {
             0=>{
                 let btn = button("Start").on_press(ControllerMessage::ControllerStart).width(iced::Length::Shrink).height(iced::Length::Shrink);
 
-                let err_text = utils::setting_state_logger(self.state);
+                let err_text = utils::setting_state_logger(self.state).size(30).horizontal_alignment(iced::alignment::Horizontal::Center);
 
                 let content:iced::Element<'_, ControllerMessage> = Container::new(
                     column![btn, err_text].align_items(iced::Alignment::Center)
