@@ -65,6 +65,10 @@ impl iced::Application for RusticRover {
         match message {
             interface::RRMessage::ControllerThreadMessage(ds4)=>{
                 self.packet_creator.sdm.search_data_files();
+                for _i in 0..(self.game_controller_manager.controller_num-self.packet_creator.packet_num)
+                {
+                    self.packet_creator.new_set();
+                }
                 self.game_controller_manager.get_value[0] = ds4;
                 for i in 0..self.game_controller_manager.controller_num
                 {
@@ -95,14 +99,6 @@ impl iced::Application for RusticRover {
                 }
             }
             interface::RRMessage::Controller(msg)=>{
-                match msg {
-                    interface::ControllerMessage::AddController=>{
-                        self.packet_creator.new_set()
-                    }
-                    _=>{
-
-                    }
-                }
                 self.game_controller_manager.update(msg)
             }
             interface::RRMessage::Packet(msg)=>{
@@ -145,7 +141,7 @@ impl iced::Application for RusticRover {
             }
             
         }
-        let serial_text = text(format!("{} serial port open.", self.serial_manager.driver_num));
+        let serial_text = text(format!("{} serial port open.", self.serial_manager.driver_num)).size(30);
 
         let p_text = text(p_str).size(30);
         let home:iced::Element<'_, RRMessage> = column![utils::path_to_image("./rustic_rover.png", 500), con_text, p_text, serial_text].align_items(iced::Alignment::Center).into();

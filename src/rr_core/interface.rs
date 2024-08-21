@@ -22,7 +22,9 @@ pub enum SerialMessage
     SetPacketSize(bool),
     SerialScan,
     SerialStart,
-    PortSelected(String)
+    PortSelected(String),
+    ThreadID(usize),
+    ThreadStop
 }
 
 #[derive(Debug,Clone)]
@@ -50,9 +52,7 @@ pub enum PacketMessage
 #[derive(Debug,Clone)]
 pub enum ControllerMessage
 {
-    TypeSelect(ControllerConnectionType),
     ControllerStart,
-    AddController
 }
 
 

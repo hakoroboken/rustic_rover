@@ -1,5 +1,5 @@
 use crate::rr_core::interface::{Packet, SerialMessage, RRMessage};
-use crate::rr_core::thread_connection::ThreadConnector;
+use crate::rr_core::thread_connection::{ThreadConnector, ThreadManager};
 use crate::rr_core::utils::ComboBox;
 
 use iced_aw::TabLabel;
@@ -7,8 +7,11 @@ use iced_aw::TabLabel;
 pub struct SerialManager
 {
     pub driver_num:usize,
+    pub id:Vec<usize>,
+    pub id_box:ComboBox<usize>,
     pub is_small_packet:bool,
     pub conn:Vec<ThreadConnector<Packet>>,
+    pub thread_manager:Vec<ThreadManager>,
     pub path_list:Option<ComboBox<String>>,
     pub selected:String,
 }
@@ -35,8 +38,17 @@ impl SerialManager {
                 use iced::widget::row;
                 let row = row![is_sp, start_b];
 
+                let id_combo_box = combo_box(
+                    &self.id_box.all, 
+                    "Select id that you want to stop", 
+                    self.id_box.selected.as_ref(), 
+                    SerialMessage::ThreadID
+                );
+
+                let stop = button("Stop Button").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::ThreadStop);
+
                 let container:iced::Element<'_, SerialMessage> = Container::new(
-                    column![scan_b, combo_yp, row].align_items(iced::Alignment::Center).padding(10).spacing(50)
+                    column![scan_b, combo_yp, row, id_combo_box, stop].align_items(iced::Alignment::Center).padding(10).spacing(50)
                 )
                 .align_x(iced::alignment::Horizontal::Center)
                 .align_y(iced::alignment::Vertical::Center).into();
@@ -72,6 +84,22 @@ impl SerialManager {
             SerialMessage::SetPacketSize(changed)=>{
                 self.is_small_packet = changed
             }
+            SerialMessage::ThreadID(id)=>{
+                self.id_box.selected = Some(id)
+            }
+            SerialMessage::ThreadStop=>{
+                match self.id_box.selected {
+                    Some(id)=>{
+                        self.thread_manager[id].thread_stop();
+                        self.conn.remove(id);
+                        self.driver_num -= 1;
+                        self.id.remove(id);
+                    }
+                    None=>{
+
+                    }
+                }
+            }
         }
     }
     fn title(&self)->String
@@ -89,7 +117,10 @@ impl SerialManager {
     {
         let mut v = Vec::<ThreadConnector<Packet>>::new();
         v.push(ThreadConnector::<Packet>::new());
-        SerialManager {driver_num:0, is_small_packet:false,conn: v, path_list : None, selected:String::new()}
+        let mut manager_vec = Vec::<ThreadManager>::new();
+        manager_vec.push(ThreadManager::new());
+        let id_v = Vec::<usize>::new();
+        SerialManager {driver_num:0, is_small_packet:false,conn: v, path_list : None, selected:String::new(), thread_manager:manager_vec, id:id_v.clone(), id_box:ComboBox::<usize>::new(id_v.clone())}
     }
     pub fn search_port(&mut self)
     {
@@ -118,23 +149,27 @@ impl SerialManager {
         let selected_port = self.selected.clone();
         let node = ThreadConnector::<Packet>::new();
         self.conn[self.driver_num].publisher = node.publisher.clone();
+        let clone_ = self.thread_manager[self.driver_num].get_clone();
+        self.id.push(self.driver_num);
+        self.id_box = ComboBox::new(self.id.clone());
 
         self.driver_num += 1;
+        self.thread_manager.push(ThreadManager::new());
+        self.conn.push(ThreadConnector::<Packet>::new());
         let is_ = self.is_small_packet.clone();
 
         std::thread::spawn(move ||{
             let mut port_ = serialport::new(selected_port, 115200)
             .timeout(std::time::Duration::from_millis(1000))
             .open().unwrap();
-            loop {
+            while !clone_.load(std::sync::atomic::Ordering::Relaxed) 
+            {
                 let send_packet = match node.subscriber.recv()
                 {
                     Ok(ok)=>{
-                        println!("Recv");
                         ok
                     }
                     Err(_e)=>{
-                        println!("{}", _e);
                         let p = Packet{x:10, y:10, ro:10, m1:10, m2:10};
 
                         p
