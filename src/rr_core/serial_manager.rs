@@ -1,4 +1,4 @@
-use crate::rr_core::interface::{Packet, SerialMessage, RRMessage};
+use crate::rr_core::interface::{FloatPacket, Packet, SerialMessage, RRMessage};
 use crate::rr_core::thread_connection::{ThreadConnector, ThreadManager};
 use crate::rr_core::utils::ComboBox;
 
@@ -10,10 +10,12 @@ pub struct SerialManager
     pub id:Vec<usize>,
     pub id_box:ComboBox<usize>,
     pub is_small_packet:bool,
+    pub is_smooth:bool,
     pub conn:Vec<ThreadConnector<Packet>>,
     pub thread_manager:Vec<ThreadManager>,
     pub path_list:Option<ComboBox<String>>,
     pub selected:String,
+    pub smooth_value:f32,
 }
 
 impl SerialManager {
@@ -24,6 +26,7 @@ impl SerialManager {
             Some(get_list)=>{
                 use iced::widget::checkbox;
                 let is_sp = checkbox("Small Packet", self.is_small_packet).on_toggle(SerialMessage::SetPacketSize);
+                let is_smooth = checkbox("Use Smooth", self.is_smooth).on_toggle(SerialMessage::SetSmooth);
 
                 use iced::widget::combo_box;
                 let combo_yp = combo_box(
@@ -36,7 +39,7 @@ impl SerialManager {
                 let scan_b = button("Scan Port").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::SerialScan);
 
                 use iced::widget::row;
-                let row = row![is_sp, start_b];
+                let row = row![is_smooth,is_sp, start_b].spacing(30);
 
                 let id_combo_box = combo_box(
                     &self.id_box.all, 
@@ -47,8 +50,10 @@ impl SerialManager {
 
                 let stop = button("Stop Button").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::ThreadStop);
 
+                use iced_aw::number_input;
+                let number_input = number_input(self.smooth_value, 2.0, SerialMessage::SmoothValue).step(0.1);
                 let container:iced::Element<'_, SerialMessage> = Container::new(
-                    column![scan_b, combo_yp, row, id_combo_box, stop].align_items(iced::Alignment::Center).padding(10).spacing(50)
+                    column![scan_b, combo_yp, row, number_input, id_combo_box, stop].align_items(iced::Alignment::Center).padding(10).spacing(50)
                 )
                 .align_x(iced::alignment::Horizontal::Center)
                 .align_y(iced::alignment::Vertical::Center).into();
@@ -79,7 +84,13 @@ impl SerialManager {
                 self.search_port();
             }
             SerialMessage::SerialStart=>{
-                self.spawn_serial();
+                if self.is_smooth
+                {
+                    self.spawn_smooth_serial(self.smooth_value);
+                }
+                else {
+                    self.spawn_serial();
+                }
             }
             SerialMessage::SetPacketSize(changed)=>{
                 self.is_small_packet = changed
@@ -99,6 +110,12 @@ impl SerialManager {
 
                     }
                 }
+            }
+            SerialMessage::SmoothValue(val)=>{
+                self.smooth_value = val;
+            }
+            SerialMessage::SetSmooth(sm)=>{
+                self.is_smooth = sm;
             }
         }
     }
@@ -120,7 +137,18 @@ impl SerialManager {
         let mut manager_vec = Vec::<ThreadManager>::new();
         manager_vec.push(ThreadManager::new());
         let id_v = Vec::<usize>::new();
-        SerialManager {driver_num:0, is_small_packet:false,conn: v, path_list : None, selected:String::new(), thread_manager:manager_vec, id:id_v.clone(), id_box:ComboBox::<usize>::new(id_v.clone())}
+        SerialManager {
+            driver_num:0, 
+            is_small_packet:false,
+            conn: v, 
+            path_list : None, 
+            selected:String::new(), 
+            thread_manager:manager_vec, 
+            id:id_v.clone(), 
+            id_box:ComboBox::<usize>::new(id_v.clone()), 
+            smooth_value:1.0, 
+            is_smooth:false
+        }
     }
     pub fn search_port(&mut self)
     {
@@ -204,6 +232,130 @@ impl SerialManager {
                         let _ = port_.clear(serialport::ClearBuffer::Output);
                     }
                 }
+            }
+        });
+    }
+    pub fn spawn_smooth_serial(&mut self, smooth_value:f32)
+    {let selected_port = self.selected.clone();
+        let node = ThreadConnector::<Packet>::new();
+        self.conn[self.driver_num].publisher = node.publisher.clone();
+        let clone_ = self.thread_manager[self.driver_num].get_clone();
+        self.id.push(self.driver_num);
+        self.id_box = ComboBox::new(self.id.clone());
+
+        self.driver_num += 1;
+        self.thread_manager.push(ThreadManager::new());
+        self.conn.push(ThreadConnector::<Packet>::new());
+        let is_ = self.is_small_packet.clone();
+
+        std::thread::spawn(move ||{
+            let mut port_ = serialport::new(selected_port, 115200)
+            .timeout(std::time::Duration::from_millis(1000))
+            .open().unwrap();
+
+            let mut send = FloatPacket{x:10.0, y:10.0, ro:10.0, m1:10.0, m2:10.0};
+            let mut history = Packet{x:10, y:10, ro:10, m1:10, m2:10};
+            while !clone_.load(std::sync::atomic::Ordering::Relaxed) 
+            {
+                let target = match node.subscriber.recv()
+                {
+                    Ok(ok)=>{
+                        ok
+                    }
+                    Err(_e)=>{
+                        let p = Packet{x:10, y:10, ro:10, m1:10, m2:10};
+
+                        p
+                    }
+                };
+
+                let vec = Packet{
+                    x: target.x - history.x,
+                    y: target.y - history.y,
+                    ro: target.ro - history.ro,
+                    m1: target.m1 - history.m1,
+                    m2: target.m2 - history.m2,
+                };
+
+                if vec.x > 0
+                {
+                    send.x += smooth_value;
+                }
+                else if vec.x < 0
+                {
+                    send.x -= smooth_value;
+                }
+
+                if vec.y > 0
+                {
+                    send.y += smooth_value
+                }
+                else if vec.y < 0
+                {
+                    send.y -= smooth_value;
+                }
+
+                if vec.ro > 0
+                {
+                    send.ro += smooth_value;
+                }
+                else if vec.ro < 0
+                {
+                    send.ro -= smooth_value;
+                }
+
+                if vec.m1 > 0
+                {
+                    send.m1 += smooth_value;
+                }
+                else if vec.m1 < 0
+                {
+                    send.m1 -= smooth_value;
+                }
+
+                if vec.m2 > 0
+                {
+                    send.m2 += smooth_value;
+                }
+                else if vec.m2 < 0
+                {
+                    send.m2 -= smooth_value;
+                }
+
+                let write_buf = if is_
+                {
+                    format!("s{},{},{},{}e",
+                            (send.x/10.0) as i32+10,
+                            (send.y/10.0) as i32+10,
+                            (send.ro/10.0) as i32+10,
+                            (send.m1/10.0) as i32+10)
+                }
+                else
+                {
+                    format!("s{},{},{},{},{}e",
+                            (send.x/10.0) as i32+10,
+                            (send.y/10.0) as i32+10,
+                            (send.ro/10.0) as i32+10,
+                            (send.m1/10.0) as i32+10,
+                            (send.m2/10.0) as i32+10)
+                };
+
+                match port_.write(write_buf.as_bytes()) {
+                    Ok(_)=>{
+                        println!("Write:{}", write_buf);
+                        let _ = port_.clear(serialport::ClearBuffer::Input);
+                    }
+                    Err(e)=>{
+                        println!("{:?}", e);
+                        let _ = port_.clear(serialport::ClearBuffer::Output);
+                    }
+                }
+
+                history.x = send.x as i32;
+                history.y = send.y as i32;
+                history.ro = send.ro as i32;
+                history.m1 = send.m1 as i32;
+                history.m2 = send.m2 as i32;
             }
         });
     }

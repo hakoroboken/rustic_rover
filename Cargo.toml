@@ -1,11 +1,11 @@
 [package]
 name = "rustic_rover"
-version = "1.9.4"
+version = "2.0.0"
 edition = "2021"
 
 [dependencies]
 iced = {version="0.12.0", features=["image"]}
-iced_aw = { version = "0.9.0", default-features = false, features=["tabs", "icons"]}
+iced_aw = { version = "0.9.0", default-features = false, features=["tabs", "icons", "number_input"]}
 
 tokio = {version = "1", features=["full"]}
 hidapi = "2.6.0"
