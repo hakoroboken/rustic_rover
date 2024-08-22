@@ -132,6 +132,8 @@ impl SerialManager {
             }
             SerialMessage::SmoothValue(val)=>{
                 self.smooth_value = val;
+
+                self.state_text = format!("Set smooth gain:{}\n{}", val, self.state_text.clone())
             }
             SerialMessage::SetSmooth(sm)=>{
                 self.is_smooth = sm;
