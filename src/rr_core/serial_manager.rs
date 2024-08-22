@@ -111,7 +111,9 @@ impl SerialManager {
                 }
             }
             SerialMessage::ThreadID(id)=>{
-                self.id_box.selected = Some(id)
+                self.id_box.selected = Some(id);
+
+                self.state_text = format!("Select thread id that you want to stop :{}\n{}", id, self.state_text.clone())
             }
             SerialMessage::ThreadStop=>{
                 match self.id_box.selected {
@@ -133,6 +135,14 @@ impl SerialManager {
             }
             SerialMessage::SetSmooth(sm)=>{
                 self.is_smooth = sm;
+
+                if sm
+                {
+                    self.state_text = format!("Smoother is set to enable.\n{}", self.state_text.clone())
+                }
+                else {
+                    self.state_text = format!("Smoother is set to disable.\n{}", self.state_text.clone())
+                }
             }
         }
     }
