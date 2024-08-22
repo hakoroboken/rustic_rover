@@ -16,6 +16,7 @@ pub struct SerialManager
     pub path_list:Option<ComboBox<String>>,
     pub selected:String,
     pub smooth_value:f32,
+    pub state_text:String
 }
 
 impl SerialManager {
@@ -52,8 +53,10 @@ impl SerialManager {
 
                 use iced_aw::number_input;
                 let number_input = number_input(self.smooth_value, 2.0, SerialMessage::SmoothValue).step(0.1);
+
+                let state_log = text(self.state_text.clone()).size(100);
                 let container:iced::Element<'_, SerialMessage> = Container::new(
-                    column![scan_b, combo_yp, row, number_input, id_combo_box, stop].align_items(iced::Alignment::Center).padding(10).spacing(50)
+                    column![scan_b, combo_yp, row, number_input, id_combo_box, stop, state_log].align_items(iced::Alignment::Center).padding(10).spacing(50)
                 )
                 .align_x(iced::alignment::Horizontal::Center)
                 .align_y(iced::alignment::Vertical::Center).into();
@@ -87,9 +90,11 @@ impl SerialManager {
                 if self.is_smooth
                 {
                     self.spawn_smooth_serial(self.smooth_value);
+                    self.state_text = format!("Spawned Smooth Serial path:{}\n{}", self.selected.clone(), self.state_text.clone())
                 }
                 else {
                     self.spawn_serial();
+                    self.state_text = format!("Spawned Serial path:{}\n{}", self.selected.clone(), self.state_text.clone())
                 }
             }
             SerialMessage::SetPacketSize(changed)=>{
@@ -147,7 +152,8 @@ impl SerialManager {
             id:id_v.clone(), 
             id_box:ComboBox::<usize>::new(id_v.clone()), 
             smooth_value:1.0, 
-            is_smooth:false
+            is_smooth:false,
+            state_text:String::new()
         }
     }
     pub fn search_port(&mut self)
@@ -236,7 +242,8 @@ impl SerialManager {
         });
     }
     pub fn spawn_smooth_serial(&mut self, smooth_value:f32)
-    {let selected_port = self.selected.clone();
+    {
+        let selected_port = self.selected.clone();
         let node = ThreadConnector::<Packet>::new();
         self.conn[self.driver_num].publisher = node.publisher.clone();
         let clone_ = self.thread_manager[self.driver_num].get_clone();
@@ -357,6 +364,10 @@ impl SerialManager {
                 history.m1 = send.m1 as i32;
                 history.m2 = send.m2 as i32;
             }
+
+            drop(port_);
         });
+
+        println!("Stop SmoothSerial path:{}", self.selected.clone());
     }
 }
