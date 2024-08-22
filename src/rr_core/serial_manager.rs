@@ -25,7 +25,7 @@ impl SerialManager {
         use iced::widget::{button, column, text, container::Container};
         match &self.path_list {
             Some(get_list)=>{
-                let p_config_text = text("Packet Config").size(50);
+                let p_config_text = text("Packet Config").size(80);
                 use iced::widget::checkbox;
                 use iced_aw::number_input;
                 
@@ -52,7 +52,7 @@ impl SerialManager {
                 
 
 
-                let port_config_text = text("Port Config").size(50);
+                let port_config_text = text("Port Config").size(80);
                 use iced::widget::combo_box;
                 let combo_yp = combo_box(
                     &get_list.all, 
@@ -65,7 +65,7 @@ impl SerialManager {
 
                 let port_config_clm = iced::widget::column![port_config_text, scan_b, combo_yp, start_b].spacing(30);
 
-                let id_config_text = text("Thread Config").size(50);
+                let id_config_text = text("Thread Config").size(80);
                 let id_combo_box = combo_box(
                     &self.id_box.all, 
                     "Select id that you want to stop", 
@@ -77,7 +77,7 @@ impl SerialManager {
                 let id_config_clm = iced::widget::column![id_config_text, id_combo_box, stop].spacing(30);
 
                 use iced::widget::row;
-                let above_row = row![packet_config_clm, port_config_clm].spacing(30);
+                let above_row = row![packet_config_clm, port_config_clm].spacing(400);
 
                 let state_log = text(self.state_text.clone()).size(50);
                 let container:iced::Element<'_, SerialMessage> = Container::new(
