@@ -143,6 +143,7 @@ impl DualShock4DriverManager {
 
     pub fn scan_device(&mut self)
     {
+        self.api = HidApi::new().unwrap();
         let mut dev_vec = Vec::<DeviceInfo>::new();
         for i in self.api.device_list()
         {
