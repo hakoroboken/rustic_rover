@@ -16,6 +16,7 @@ pub struct SerialManager
     pub path_list:Option<ComboBox<String>>,
     pub selected:String,
     pub smooth_value:f32,
+    pub state_text:String
 }
 
 impl SerialManager {
@@ -24,10 +25,34 @@ impl SerialManager {
         use iced::widget::{button, column, text, container::Container};
         match &self.path_list {
             Some(get_list)=>{
+                let p_config_text = text("Packet Config").size(80);
                 use iced::widget::checkbox;
-                let is_sp = checkbox("Small Packet", self.is_small_packet).on_toggle(SerialMessage::SetPacketSize);
+                use iced_aw::number_input;
+                
+                let is_sp = checkbox("Use Small Packet", self.is_small_packet).on_toggle(SerialMessage::SetPacketSize);
                 let is_smooth = checkbox("Use Smooth", self.is_smooth).on_toggle(SerialMessage::SetSmooth);
 
+                let sm_gain_item = if self.is_smooth
+                {
+                    Some(number_input(self.smooth_value, 2.0, SerialMessage::SmoothValue).step(0.1))
+                }
+                else
+                {
+                    None
+                };
+
+                let packet_config_clm = match sm_gain_item {
+                    Some(sm_gain)=>{
+                        iced::widget::column![p_config_text, is_sp, is_smooth, sm_gain].spacing(30)
+                    }
+                    None=>{
+                        iced::widget::column![p_config_text, is_sp, is_smooth].spacing(30)
+                    }
+                };
+                
+
+
+                let port_config_text = text("Port Config").size(80);
                 use iced::widget::combo_box;
                 let combo_yp = combo_box(
                     &get_list.all, 
@@ -38,22 +63,25 @@ impl SerialManager {
                 let start_b = button("Start Serial").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::SerialStart);
                 let scan_b = button("Scan Port").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::SerialScan);
 
-                use iced::widget::row;
-                let row = row![is_smooth,is_sp, start_b].spacing(30);
+                let port_config_clm = iced::widget::column![port_config_text, scan_b, combo_yp, start_b].spacing(30);
 
+                let id_config_text = text("Thread Config").size(80);
                 let id_combo_box = combo_box(
                     &self.id_box.all, 
                     "Select id that you want to stop", 
                     self.id_box.selected.as_ref(), 
                     SerialMessage::ThreadID
                 );
-
                 let stop = button("Stop Button").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::ThreadStop);
 
-                use iced_aw::number_input;
-                let number_input = number_input(self.smooth_value, 2.0, SerialMessage::SmoothValue).step(0.1);
+                let id_config_clm = iced::widget::column![id_config_text, id_combo_box, stop].spacing(30);
+
+                use iced::widget::row;
+                let above_row = row![packet_config_clm, port_config_clm].spacing(400);
+
+                let state_log = text(self.state_text.clone()).size(50);
                 let container:iced::Element<'_, SerialMessage> = Container::new(
-                    column![scan_b, combo_yp, row, number_input, id_combo_box, stop].align_items(iced::Alignment::Center).padding(10).spacing(50)
+                    column![above_row, id_config_clm, state_log].align_items(iced::Alignment::Center).padding(10).spacing(50)
                 )
                 .align_x(iced::alignment::Horizontal::Center)
                 .align_y(iced::alignment::Vertical::Center).into();
@@ -78,44 +106,70 @@ impl SerialManager {
     {
         match message {
             SerialMessage::PortSelected(name)=>{
-                self.selected = name
+                self.selected = name;
+                self.state_text = format!("Port path selected:{}\n{}", self.selected.clone(), self.state_text.clone())
             }
             SerialMessage::SerialScan=>{
                 self.search_port();
+                self.state_text = format!("Search available port.\n{}", self.state_text.clone())
             }
             SerialMessage::SerialStart=>{
                 if self.is_smooth
                 {
                     self.spawn_smooth_serial(self.smooth_value);
+                    self.state_text = format!("Spawned Smooth Serial path:{}\n{}", self.selected.clone(), self.state_text.clone())
                 }
                 else {
                     self.spawn_serial();
+                    self.state_text = format!("Spawned Serial path:{}\n{}", self.selected.clone(), self.state_text.clone())
                 }
             }
             SerialMessage::SetPacketSize(changed)=>{
-                self.is_small_packet = changed
+                self.is_small_packet = changed;
+
+                if changed
+                {
+                    self.state_text = format!("Set packet size: Small\n{}", self.state_text.clone())
+                }
+                else {
+                    self.state_text = format!("Set packet size: Normal\n{}", self.state_text.clone())
+                }
             }
             SerialMessage::ThreadID(id)=>{
-                self.id_box.selected = Some(id)
+                self.id_box.selected = Some(id);
+
+                self.state_text = format!("Select thread id that you want to stop :{}\n{}", id, self.state_text.clone())
             }
             SerialMessage::ThreadStop=>{
                 match self.id_box.selected {
-                    Some(id)=>{
-                        self.thread_manager[id].thread_stop();
-                        self.conn.remove(id);
+                    Some(id_)=>{
+                        self.thread_manager[id_].thread_stop();
+                        self.conn.remove(id_);
                         self.driver_num -= 1;
-                        self.id.remove(id);
+                        self.id.remove(id_);
+
+                        self.state_text = format!("Stop thread at ID:{}\n{}", id_, self.state_text.clone())
                     }
                     None=>{
-
+                        self.state_text = format!("Can't stop thread because don't select thread id.\n{}", self.state_text.clone())
                     }
                 }
             }
             SerialMessage::SmoothValue(val)=>{
                 self.smooth_value = val;
+
+                self.state_text = format!("Set smooth gain:{}\n{}", val, self.state_text.clone())
             }
             SerialMessage::SetSmooth(sm)=>{
                 self.is_smooth = sm;
+
+                if sm
+                {
+                    self.state_text = format!("Smoother is set to enable.\n{}", self.state_text.clone())
+                }
+                else {
+                    self.state_text = format!("Smoother is set to disable.\n{}", self.state_text.clone())
+                }
             }
         }
     }
@@ -147,7 +201,8 @@ impl SerialManager {
             id:id_v.clone(), 
             id_box:ComboBox::<usize>::new(id_v.clone()), 
             smooth_value:1.0, 
-            is_smooth:false
+            is_smooth:false,
+            state_text:String::new()
         }
     }
     pub fn search_port(&mut self)
@@ -236,7 +291,8 @@ impl SerialManager {
         });
     }
     pub fn spawn_smooth_serial(&mut self, smooth_value:f32)
-    {let selected_port = self.selected.clone();
+    {
+        let selected_port = self.selected.clone();
         let node = ThreadConnector::<Packet>::new();
         self.conn[self.driver_num].publisher = node.publisher.clone();
         let clone_ = self.thread_manager[self.driver_num].get_clone();
@@ -357,6 +413,10 @@ impl SerialManager {
                 history.m1 = send.m1 as i32;
                 history.m2 = send.m2 as i32;
             }
+
+            drop(port_);
         });
+
+        println!("Stop SmoothSerial path:{}", self.selected.clone());
     }
 }
