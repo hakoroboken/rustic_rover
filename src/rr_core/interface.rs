@@ -20,11 +20,13 @@ pub enum RRMessage
 pub enum SerialMessage
 {
     SetPacketSize(bool),
+    SetSmooth(bool),
     SerialScan,
     SerialStart,
     PortSelected(String),
     ThreadID(usize),
-    ThreadStop
+    ThreadStop,
+    SmoothValue(f32),
 }
 
 #[derive(Debug,Clone)]
@@ -254,4 +256,14 @@ pub struct Packet
     pub ro:i32,
     pub m1:i32,
     pub m2:i32,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct FloatPacket
+{
+    pub x:f32,
+    pub y:f32,
+    pub ro:f32,
+    pub m1:f32,
+    pub m2:f32,
 }

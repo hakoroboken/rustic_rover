@@ -47,7 +47,7 @@ impl iced::Application for RusticRover {
     }
 
     fn theme(&self) -> Self::Theme {
-        iced::Theme::CatppuccinMocha
+        iced::Theme::Light
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
@@ -168,7 +168,7 @@ impl iced::Application for RusticRover {
         self.serial_manager.view()
         )
         .set_active_tab(&self.life_cycle)
-        .tab_bar_style(iced_aw::style::tab_bar::TabBarStyles::Default)
+        .tab_bar_style(iced_aw::style::tab_bar::TabBarStyles::Dark)
         .tab_bar_position(iced_aw::TabBarPosition::Top)
         .text_size(30.0)
         .into();
