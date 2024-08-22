@@ -25,10 +25,34 @@ impl SerialManager {
         use iced::widget::{button, column, text, container::Container};
         match &self.path_list {
             Some(get_list)=>{
+                let p_config_text = text("Packet Config").size(50);
                 use iced::widget::checkbox;
-                let is_sp = checkbox("Small Packet", self.is_small_packet).on_toggle(SerialMessage::SetPacketSize);
+                use iced_aw::number_input;
+                
+                let is_sp = checkbox("Use Small Packet", self.is_small_packet).on_toggle(SerialMessage::SetPacketSize);
                 let is_smooth = checkbox("Use Smooth", self.is_smooth).on_toggle(SerialMessage::SetSmooth);
 
+                let sm_gain_item = if self.is_smooth
+                {
+                    Some(number_input(self.smooth_value, 2.0, SerialMessage::SmoothValue).step(0.1))
+                }
+                else
+                {
+                    None
+                };
+
+                let packet_config_clm = match sm_gain_item {
+                    Some(sm_gain)=>{
+                        column![p_config_text, is_sp, is_smooth, sm_gain]
+                    }
+                    None=>{
+                        column![p_config_text, is_sp, is_smooth]
+                    }
+                };
+                
+
+
+                let port_config_text = text("Port Config").size(50);
                 use iced::widget::combo_box;
                 let combo_yp = combo_box(
                     &get_list.all, 
@@ -39,24 +63,25 @@ impl SerialManager {
                 let start_b = button("Start Serial").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::SerialStart);
                 let scan_b = button("Scan Port").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::SerialScan);
 
-                use iced::widget::row;
-                let row = row![is_smooth,is_sp, start_b].spacing(30);
+                let port_config_clm = column![port_config_text, scan_b, combo_yp, start_b];
 
+                let id_config_text = text("Thread Config").size(50);
                 let id_combo_box = combo_box(
                     &self.id_box.all, 
                     "Select id that you want to stop", 
                     self.id_box.selected.as_ref(), 
                     SerialMessage::ThreadID
                 );
-
                 let stop = button("Stop Button").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::ThreadStop);
 
-                use iced_aw::number_input;
-                let number_input = number_input(self.smooth_value, 2.0, SerialMessage::SmoothValue).step(0.1);
+                let id_config_clm = column![id_config_text, id_combo_box, stop];
+
+                use iced::widget::row;
+                let above_row = row![packet_config_clm, port_config_clm];
 
                 let state_log = text(self.state_text.clone()).size(50);
                 let container:iced::Element<'_, SerialMessage> = Container::new(
-                    column![scan_b, combo_yp, row, number_input, id_combo_box, stop, state_log].align_items(iced::Alignment::Center).padding(10).spacing(50)
+                    column![above_row, id_config_clm, state_log].align_items(iced::Alignment::Center).padding(10).spacing(50)
                 )
                 .align_x(iced::alignment::Horizontal::Center)
                 .align_y(iced::alignment::Vertical::Center).into();
