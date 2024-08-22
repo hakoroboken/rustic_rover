@@ -43,10 +43,10 @@ impl SerialManager {
 
                 let packet_config_clm = match sm_gain_item {
                     Some(sm_gain)=>{
-                        column![p_config_text, is_sp, is_smooth, sm_gain]
+                        iced::widget::column![p_config_text, is_sp, is_smooth, sm_gain].spacing(30)
                     }
                     None=>{
-                        column![p_config_text, is_sp, is_smooth]
+                        iced::widget::column![p_config_text, is_sp, is_smooth].spacing(30)
                     }
                 };
                 
@@ -63,7 +63,7 @@ impl SerialManager {
                 let start_b = button("Start Serial").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::SerialStart);
                 let scan_b = button("Scan Port").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::SerialScan);
 
-                let port_config_clm = column![port_config_text, scan_b, combo_yp, start_b];
+                let port_config_clm = iced::widget::column![port_config_text, scan_b, combo_yp, start_b].spacing(30);
 
                 let id_config_text = text("Thread Config").size(50);
                 let id_combo_box = combo_box(
@@ -74,10 +74,10 @@ impl SerialManager {
                 );
                 let stop = button("Stop Button").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::ThreadStop);
 
-                let id_config_clm = column![id_config_text, id_combo_box, stop];
+                let id_config_clm = iced::widget::column![id_config_text, id_combo_box, stop].spacing(30);
 
                 use iced::widget::row;
-                let above_row = row![packet_config_clm, port_config_clm];
+                let above_row = row![packet_config_clm, port_config_clm].spacing(30);
 
                 let state_log = text(self.state_text.clone()).size(50);
                 let container:iced::Element<'_, SerialMessage> = Container::new(
