@@ -54,7 +54,7 @@ impl SerialManager {
                 use iced_aw::number_input;
                 let number_input = number_input(self.smooth_value, 2.0, SerialMessage::SmoothValue).step(0.1);
 
-                let state_log = text(self.state_text.clone()).size(100);
+                let state_log = text(self.state_text.clone()).size(50);
                 let container:iced::Element<'_, SerialMessage> = Container::new(
                     column![scan_b, combo_yp, row, number_input, id_combo_box, stop, state_log].align_items(iced::Alignment::Center).padding(10).spacing(50)
                 )
@@ -81,10 +81,12 @@ impl SerialManager {
     {
         match message {
             SerialMessage::PortSelected(name)=>{
-                self.selected = name
+                self.selected = name;
+                self.state_text = format!("Port path selected:{}\n{}", self.selected.clone(), self.state_text.clone())
             }
             SerialMessage::SerialScan=>{
                 self.search_port();
+                self.state_text = format!("Search available port.\n{}", self.state_text.clone())
             }
             SerialMessage::SerialStart=>{
                 if self.is_smooth
@@ -98,21 +100,31 @@ impl SerialManager {
                 }
             }
             SerialMessage::SetPacketSize(changed)=>{
-                self.is_small_packet = changed
+                self.is_small_packet = changed;
+
+                if changed
+                {
+                    self.state_text = format!("Set packet size: Small\n{}", self.state_text.clone())
+                }
+                else {
+                    self.state_text = format!("Set packet size: Normal\n{}", self.state_text.clone())
+                }
             }
             SerialMessage::ThreadID(id)=>{
                 self.id_box.selected = Some(id)
             }
             SerialMessage::ThreadStop=>{
                 match self.id_box.selected {
-                    Some(id)=>{
-                        self.thread_manager[id].thread_stop();
-                        self.conn.remove(id);
+                    Some(id_)=>{
+                        self.thread_manager[id_].thread_stop();
+                        self.conn.remove(id_);
                         self.driver_num -= 1;
-                        self.id.remove(id);
+                        self.id.remove(id_);
+
+                        self.state_text = format!("Stop thread at ID:{}\n{}", id_, self.state_text.clone())
                     }
                     None=>{
-
+                        self.state_text = format!("Can't stop thread because don't select thread id.\n{}", self.state_text.clone())
                     }
                 }
             }
