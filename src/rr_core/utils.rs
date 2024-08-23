@@ -38,3 +38,25 @@ pub fn path_to_image(path:&str, size:u16)->iced::widget::Image<iced::widget::ima
 {
     iced::widget::image::Image::new(iced::widget::image::Handle::from_path(path)).width(size).height(size)
 }
+
+pub struct LogManager
+{
+    log_text:String,
+}
+
+impl LogManager {
+    pub fn new()->LogManager
+    {
+        LogManager { log_text: String::new() }
+    }
+
+    pub fn add_str(&mut self ,str:String)
+    {
+        self.log_text = format!("{}\n{}",str, self.log_text.clone())
+    }
+
+    pub fn view<'a>(&self)->iced::widget::Text<'a, iced::Theme, iced::Renderer>
+    {
+        text(self.log_text.clone())
+    }
+}

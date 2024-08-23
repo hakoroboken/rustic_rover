@@ -1,6 +1,6 @@
 use crate::rr_core::interface::{FloatPacket, Packet, SerialMessage, RRMessage};
 use crate::rr_core::thread_connection::{ThreadConnector, ThreadManager};
-use crate::rr_core::utils::ComboBox;
+use crate::rr_core::utils::{ComboBox, LogManager};
 
 use iced_aw::TabLabel;
 
@@ -16,7 +16,7 @@ pub struct SerialManager
     pub path_list:Option<ComboBox<String>>,
     pub selected:String,
     pub smooth_value:f32,
-    pub state_text:String
+    pub logger:LogManager
 }
 
 impl SerialManager {
@@ -79,7 +79,7 @@ impl SerialManager {
                 use iced::widget::row;
                 let above_row = row![packet_config_clm, port_config_clm].spacing(400);
 
-                let state_log = text(self.state_text.clone()).size(50);
+                let state_log = self.logger.view().size(50);
                 let container:iced::Element<'_, SerialMessage> = Container::new(
                     column![above_row, id_config_clm, state_log].align_items(iced::Alignment::Center).padding(10).spacing(50)
                 )
@@ -106,22 +106,22 @@ impl SerialManager {
     {
         match message {
             SerialMessage::PortSelected(name)=>{
-                self.selected = name;
-                self.state_text = format!("Port path selected:{}\n{}", self.selected.clone(), self.state_text.clone())
+                self.selected = name.clone();
+                self.logger.add_str(format!("Port path selected: {}", name));
             }
             SerialMessage::SerialScan=>{
                 self.search_port();
-                self.state_text = format!("Search available port.\n{}", self.state_text.clone())
+                self.logger.add_str(format!("Search available port."));
             }
             SerialMessage::SerialStart=>{
                 if self.is_smooth
                 {
                     self.spawn_smooth_serial(self.smooth_value);
-                    self.state_text = format!("Spawned Smooth Serial path:{}\n{}", self.selected.clone(), self.state_text.clone())
+                    self.logger.add_str(format!("Start Serial with smoother at {}", self.selected.clone()));
                 }
                 else {
                     self.spawn_serial();
-                    self.state_text = format!("Spawned Serial path:{}\n{}", self.selected.clone(), self.state_text.clone())
+                    self.logger.add_str(format!("Start Serial at {}", self.selected.clone()));
                 }
             }
             SerialMessage::SetPacketSize(changed)=>{
@@ -129,16 +129,16 @@ impl SerialManager {
 
                 if changed
                 {
-                    self.state_text = format!("Set packet size: Small\n{}", self.state_text.clone())
+                    self.logger.add_str(format!("Set small packet is enable."));
                 }
                 else {
-                    self.state_text = format!("Set packet size: Normal\n{}", self.state_text.clone())
+                    self.logger.add_str(format!("Set small packet is disable."));
                 }
             }
             SerialMessage::ThreadID(id)=>{
                 self.id_box.selected = Some(id);
 
-                self.state_text = format!("Select thread id that you want to stop :{}\n{}", id, self.state_text.clone())
+                self.logger.add_str(format!("Select thread id :{}", id));
             }
             SerialMessage::ThreadStop=>{
                 match self.id_box.selected {
@@ -148,27 +148,27 @@ impl SerialManager {
                         self.driver_num -= 1;
                         self.id.remove(id_);
 
-                        self.state_text = format!("Stop thread at ID:{}\n{}", id_, self.state_text.clone())
+                        self.logger.add_str(format!("Stop the thread. ID is {}", id_));
                     }
                     None=>{
-                        self.state_text = format!("Can't stop thread because don't select thread id.\n{}", self.state_text.clone())
+                        self.logger.add_str(format!("Don't select thread ID."));
                     }
                 }
             }
             SerialMessage::SmoothValue(val)=>{
                 self.smooth_value = val;
 
-                self.state_text = format!("Set smooth gain:{}\n{}", val, self.state_text.clone())
+                self.logger.add_str(format!("Set smooth gain : {}", val));
             }
             SerialMessage::SetSmooth(sm)=>{
                 self.is_smooth = sm;
 
                 if sm
                 {
-                    self.state_text = format!("Smoother is set to enable.\n{}", self.state_text.clone())
+                    self.logger.add_str(format!("Set smoother to enable"));
                 }
                 else {
-                    self.state_text = format!("Smoother is set to disable.\n{}", self.state_text.clone())
+                    self.logger.add_str(format!("Set smoother to disable"));
                 }
             }
         }
@@ -202,7 +202,7 @@ impl SerialManager {
             id_box:ComboBox::<usize>::new(id_v.clone()), 
             smooth_value:1.0, 
             is_smooth:false,
-            state_text:String::new()
+            logger:LogManager::new()
         }
     }
     pub fn search_port(&mut self)
