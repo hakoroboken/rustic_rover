@@ -1,6 +1,7 @@
 use crate::rr_core::interface::AppState;
 use iced::widget::text;
 use iced::widget::combo_box;
+use iced::Font;
 
 #[derive(Clone)]
 pub struct ComboBox<T>
@@ -41,17 +42,19 @@ pub fn path_to_image(path:&str, size:u16)->iced::widget::Image<iced::widget::ima
 
 pub struct LogManager
 {
+    pub new_line:String,
     log_text:String,
 }
 
 impl LogManager {
     pub fn new()->LogManager
     {
-        LogManager { log_text: String::new() }
+        LogManager {new_line: String::new(), log_text: String::new()}
     }
 
     pub fn add_str(&mut self ,str:String)
     {
+        self.new_line = str.clone();
         self.log_text = format!("{}\n{}",str, self.log_text.clone())
     }
 
