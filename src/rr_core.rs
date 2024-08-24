@@ -67,28 +67,30 @@ impl iced::Application for RusticRover {
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
         match message {
             interface::RRMessage::ControllerThreadMessage(ds4)=>{
-                self.packet_creator.sdm.search_data_files();
-                for _i in 0..(self.game_controller_manager.controller_num-self.packet_creator.packet_num)
+                let want_to_add = self.game_controller_manager.controller_num-self.packet_creator.packet_num;
+                for _i in 0..want_to_add
                 {
                     self.packet_creator.new_set();
+                    self.home_manager.add_view();
+                    println!("{}", _i)
                 }
                 self.game_controller_manager.get_value[0] = ds4;
-                self.home_manager.conn_viewer.set_controller_type(ds4.mode);
+                self.home_manager.conn_viewer[0].set_controller_type(ds4.mode);
                 for i in 0..self.game_controller_manager.controller_num
                 {
                     if i != 0
                     {
                         self.game_controller_manager.get_value[i] = self.game_controller_manager.connectors[i].subscriber.recv().unwrap();
+                        self.home_manager.conn_viewer[i].set_controller_type(self.game_controller_manager.connectors[i].subscriber.recv().unwrap().mode);
                     }
                     self.packet_creator.create_packet(self.game_controller_manager.get_value[i], i);
                 }
-
-                self.home_manager.conn_viewer.set_packet(self.packet_creator.packet_[0]);
                 
                 for i in 0..self.serial_manager.driver_num
                 {
                     match self.packet_creator.packet_.get(i) {
                         Some(packet)=>{
+                            self.home_manager.conn_viewer[i].set_packet(*packet);
                             match packet {
                                 Some(p)=>{
                                     let _ = self.serial_manager.conn[i].publisher.send(*p);
@@ -105,6 +107,7 @@ impl iced::Application for RusticRover {
                 }
             }
             interface::RRMessage::Controller(msg)=>{
+                self.packet_creator.sdm.search_data_files();
                 self.game_controller_manager.update(msg)
             }
             interface::RRMessage::Packet(msg)=>{
@@ -112,7 +115,10 @@ impl iced::Application for RusticRover {
             }
             interface::RRMessage::Serial(msg)=>{
                 match msg {
-                    interface::SerialMessage::SerialStart=>self.home_manager.conn_viewer.set_external(self.serial_manager.selected.clone()),
+                    interface::SerialMessage::SerialStart=>
+                    {
+                        self.home_manager.conn_viewer[self.serial_manager.driver_num].set_external(self.serial_manager.selected.clone())
+                    }
                     _=>{}
                 }
                 self.serial_manager.update(msg)

@@ -259,11 +259,6 @@ pub struct Packet
 }
 
 impl Packet {
-    pub fn new()->Packet
-    {
-        Packet { x: 0, y: 0, ro: 0, m1: 0, m2: 0 }
-    }
-
     pub fn get_string(&self)->String
     {
         format!("[x:{:3},y:{:3},ro:{:3},m1:{:3},m2:{:3}]", self.x, self.y, self.ro, self.m1, self.m2)

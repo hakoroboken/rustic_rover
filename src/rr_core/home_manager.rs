@@ -12,7 +12,9 @@ pub struct HomeManager
 impl HomeManager {
     pub fn new()->HomeManager
     {
-        HomeManager { conn_viewer: Vec::<ConnectionViewer>::new() }
+        let mut v = Vec::<ConnectionViewer>::new();
+        v.push(ConnectionViewer::new());
+        HomeManager { conn_viewer: v }
     }
     pub fn view(&self)->iced::Element<'_, RRMessage>
     {
@@ -55,6 +57,10 @@ impl HomeManager {
     pub fn tab_label(&self)->TabLabel
     {
         TabLabel::Text(self.title())
+    }
+    pub fn add_view(&mut self)
+    {
+        self.conn_viewer.push(ConnectionViewer::new())
     }
 }
 

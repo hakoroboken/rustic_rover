@@ -251,8 +251,6 @@ impl DualShock4Driver {
             match self.device.read(&mut buf) {
                 Ok(size)=>{
                     let get_data = &buf[..size];
-                    // println!("{:?}", get_data);
-
                     let (j, btn, d) = convert(get_data, self.mode);
 
                     if j.right_x == -0.9372549 && self.mode == ControllerConnectionType::BLE
