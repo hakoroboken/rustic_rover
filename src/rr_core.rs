@@ -73,7 +73,7 @@ impl iced::Application for RusticRover {
                 for i in 1..self.game_controller_manager.controller_num
                 {
                     self.game_controller_manager.get_value[i] = self.game_controller_manager.connectors[i].subscriber.recv().unwrap();
-                    self.home_manager.conn_viewer[i].set_controller_type(self.game_controller_manager.connectors[i].subscriber.recv().unwrap().mode);
+                    self.home_manager.conn_viewer[i].set_controller_type(self.game_controller_manager.get_value[i].mode);
                     self.packet_creator.create_packet(self.game_controller_manager.get_value[i], i);
                 }
 
@@ -91,7 +91,6 @@ impl iced::Application for RusticRover {
                 
                 if self.serial_manager.driver_num != 0
                 {
-                    println!("a");
                     for i in 0..self.serial_manager.driver_num
                     {
                         match self.packet_creator.packet_.get(i) {
