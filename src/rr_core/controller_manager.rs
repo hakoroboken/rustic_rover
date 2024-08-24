@@ -93,17 +93,17 @@ impl DualShock4DriverManager {
             ControllerMessage::ControllerStart=>{
                     self.scan_device();
                     if !self.device_list.is_empty()
-                    {
-                        self.scan_device();
-                        
-                        self.spawn_driver(ControllerConnectionType::BLE);
+                    {   
+                        self.spawn_driver(ControllerConnectionType::SERIAL);
+                        self.controller_num += 1;
+                        self.get_value.push(DualShock4::new());
                         self.device_list.remove(0);
 
                         for i in 0..self.device_list.len() {
                             let new_conn = thread_connection::ThreadConnector::<DualShock4>::new();
                             self.connectors.push(new_conn);
 
-                            self.add_driver(ControllerConnectionType::BLE, self.connectors.get(i+1).unwrap().publisher.clone());
+                            self.add_driver(ControllerConnectionType::SERIAL, self.connectors.get(i+1).unwrap().publisher.clone());
                             self.device_list.remove(0);
 
                             self.controller_num += 1;
@@ -170,7 +170,6 @@ impl DualShock4DriverManager {
         match self.device_list.first()
         {
             Some(dr)=>{
-                self.controller_num += 1;
                 match dr.open_device(&self.api) {
                     Ok(device_)=>{
                         let mut dsdr = DualShock4Driver{device:device_,mode:mode_, rgb:RGB::new()};

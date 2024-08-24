@@ -69,29 +69,45 @@ impl iced::Application for RusticRover {
             interface::RRMessage::ControllerThreadMessage(ds4)=>{
                 self.game_controller_manager.get_value[0] = ds4;
                 self.home_manager.conn_viewer[0].set_controller_type(ds4.mode);
+                self.packet_creator.create_packet(ds4, 0);
                 for i in 1..self.game_controller_manager.controller_num
                 {
                     self.game_controller_manager.get_value[i] = self.game_controller_manager.connectors[i].subscriber.recv().unwrap();
                     self.home_manager.conn_viewer[i].set_controller_type(self.game_controller_manager.connectors[i].subscriber.recv().unwrap().mode);
                     self.packet_creator.create_packet(self.game_controller_manager.get_value[i], i);
                 }
-                
-                for i in 0..self.serial_manager.driver_num
+
+                for i in 0..self.packet_creator.packet_num
                 {
                     match self.packet_creator.packet_.get(i) {
-                        Some(packet)=>{
-                            self.home_manager.conn_viewer[i].set_packet(*packet);
-                            match packet {
-                                Some(p)=>{
-                                    let _ = self.serial_manager.conn[i].publisher.send(*p);
-                                }
-                                None=>{
-
-                                }
-                            }
+                        Some(p)=>{
+                            self.home_manager.conn_viewer[i].set_packet(*p);
                         }
                         None=>{
 
+                        }
+                    }
+                }
+                
+                if self.serial_manager.driver_num != 0
+                {
+                    println!("a");
+                    for i in 0..self.serial_manager.driver_num
+                    {
+                        match self.packet_creator.packet_.get(i) {
+                            Some(packet)=>{
+                                match packet {
+                                    Some(p)=>{
+                                        let _ = self.serial_manager.conn[i].publisher.send(*p);
+                                    }
+                                    None=>{
+
+                                    }
+                                }
+                            }
+                            None=>{
+
+                            }
                         }
                     }
                 }

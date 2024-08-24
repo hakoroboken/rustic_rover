@@ -132,10 +132,7 @@ impl ConnectionViewer {
 
         let content = iced::widget::row![controller_connection, packet_text, micro_connection].align_items(iced::Alignment::Center);
 
-        use iced::widget::container;
-        let con = container::Container::new(content).align_x(iced::alignment::Horizontal::Center).align_y(iced::alignment::Vertical::Center);
-
-        con.into()
+        content.into()
     }
     pub fn set_controller_type(&mut self, input:ControllerConnectionType)
     {
