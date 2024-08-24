@@ -30,7 +30,7 @@ pub struct PacketManager
 impl PacketManager {
     fn title(&self)->String
     {
-        String::from("Packet Manager")
+        String::from("パケット設定")
     }
     pub fn tab_label(&self)->TabLabel
     {

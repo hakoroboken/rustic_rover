@@ -175,7 +175,7 @@ impl SerialManager {
     }
     fn title(&self)->String
     {
-        String::from("Serial Manager")
+        String::from("シリアル設定")
     }
     pub fn tab_label(&self)->TabLabel
     {

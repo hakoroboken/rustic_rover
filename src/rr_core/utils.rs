@@ -1,7 +1,6 @@
 use crate::rr_core::interface::AppState;
 use iced::widget::text;
 use iced::widget::combo_box;
-use iced::Font;
 
 #[derive(Clone)]
 pub struct ComboBox<T>

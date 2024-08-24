@@ -8,7 +8,7 @@ pub enum RRMessage
     Packet(PacketMessage),
     Serial(SerialMessage),
     Cycle(LifeCycle),
-    TabClosed
+    TabClosed,
 }
 
 // #[derive(Debug,Clone)]
