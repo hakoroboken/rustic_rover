@@ -5,11 +5,12 @@ mod packet_manager;
 mod utils;
 mod serial_manager;
 mod save_data_manager;
+mod home_manager;
 mod udp_manager;
 
 use controller_manager::DualShock4DriverManager;
 use interface::{RRMessage, LifeCycle};
-use serial_manager::SerialManager;
+use serial_manager::SerialManager;  
 
 use iced;
 use iced::widget::{column, text};
@@ -119,32 +120,6 @@ impl iced::Application for RusticRover {
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message, Self::Theme, iced::Renderer> {
-        let con_text = text(format!("{} Controller is connected!!", self.game_controller_manager.controller_num)).size(30);
-        let mut p_str = String::new();
-        for i in 0..self.packet_creator.packet_id.len()
-        {
-            match self.packet_creator.packet_.get(i) {
-                Some(packet)=>{
-                    match packet {
-                        Some(p)=>{
-                            let str = format!("packet{} : [x:{:3},y:{:3},ro:{:3},m1:{:3},m2:{:3}]\n", i, p.x, p.y, p.ro, p.m1, p.m2);
-                            p_str += &str;
-                        }
-                        None=>{
-
-                        }
-                    }
-                }
-                None=>{
-                    
-                }
-            }
-            
-        }
-        let serial_text = text(format!("{} serial port open.", self.serial_manager.driver_num)).size(30);
-
-        let p_text = text(p_str).size(30);
-        let home:iced::Element<'_, RRMessage> = column![utils::path_to_image("./rustic_rover.png", 500), con_text, p_text, serial_text].align_items(iced::Alignment::Center).into();
         let tab = Tabs::new(RRMessage::Cycle)
         .tab_icon_position(iced_aw::tabs::Position::Bottom)
         .push(
