@@ -89,7 +89,7 @@ impl iced::Application for RusticRover {
                     }
                 }
                 
-                if self.serial_manager.driver_num != 0
+                if !self.home_manager.stop
                 {
                     for i in 0..self.serial_manager.driver_num
                     {
@@ -133,6 +133,9 @@ impl iced::Application for RusticRover {
                     _=>{}
                 }
                 self.serial_manager.update(msg)
+            }
+            interface::RRMessage::Home(msg)=>{
+                self.home_manager.update(msg)
             }
             interface::RRMessage::Cycle(cycle)=>{
                 self.life_cycle = cycle
