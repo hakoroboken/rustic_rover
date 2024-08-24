@@ -26,22 +26,22 @@ impl HomeManager {
             }
             1=>{
                 
-                let cont = Container::new(self.conn_viewer[0].create_view()).center_x().center_y().width(400).height(400);
+                let cont = Container::new(self.conn_viewer[0].create_view(0)).center_x().center_y().width(iced::Length::Fill).height(iced::Length::Fill);
 
                 cont.into()
             }
             2=>{
                 let cont = Container::new(column![
-                    self.conn_viewer[0].create_view(), 
-                    self.conn_viewer[1].create_view()]).center_x().center_y().width(400).height(400);
+                    self.conn_viewer[0].create_view(0), 
+                    self.conn_viewer[1].create_view(1)]).center_x().center_y().width(iced::Length::Fill).height(iced::Length::Fill).height(400);
 
                 cont.into()
             }
             3=>{
                 let cont = Container::new(column![
-                    self.conn_viewer[0].create_view(), 
-                    self.conn_viewer[1].create_view(), 
-                    self.conn_viewer[2].create_view()]).center_x().center_y();
+                    self.conn_viewer[0].create_view(0), 
+                    self.conn_viewer[1].create_view(1), 
+                    self.conn_viewer[2].create_view(2)]).center_x().center_y();
 
                 cont.into()
             }
@@ -77,21 +77,38 @@ impl ConnectionViewer {
     {
         ConnectionViewer { controller_connection_type: ExternalType::None, packet: None, external_path: String::new() , external_type:ExternalType::None}
     }
-    pub fn create_view(&self)->iced::Element<'_, RRMessage>
+    pub fn create_view(&self, controller_number:usize)->iced::Element<'_, RRMessage>
     {
+        let set_rgb = match controller_number {
+            0=>{
+                iced::Color::from_rgb8(0, 0, 255)
+            },
+            1=>{
+                iced::Color::from_rgb8(0, 255, 0)
+            }
+            2=>{
+                iced::Color::from_rgb8(255, 0, 0)
+            }
+            _=>{
+                iced::Color::from_rgb8(255, 0, 0)
+            }
+        };
+
         let controller_connection: iced::Element<'_, RRMessage> = if self.controller_connection_type == ExternalType::BLE
         {
-            let controller = path_to_image("./image/controller.png", 100);
+            let te = text("Controller").style(set_rgb).size(40);
+            let controller = path_to_image("./image/controller.png", 200);
             let line = path_to_image("./image/wireless.png", 100);
 
-            iced::widget::row![controller, line].align_items(iced::Alignment::Center).into()
+            iced::widget::row![te,controller, line].align_items(iced::Alignment::Center).into()
         }
         else if self.controller_connection_type == ExternalType::Serial
         {
-            let controller = path_to_image("./image/controller.png", 100);
+            let te = text("Controller").style(set_rgb).size(40);
+            let controller = path_to_image("./image/controller.png", 200);
             let line = path_to_image("./image/wired.png", 100);
 
-            iced::widget::row![controller, line].align_items(iced::Alignment::Center).into()
+            iced::widget::row![te,controller, line].align_items(iced::Alignment::Center).into()
         }
         else
         {

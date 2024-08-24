@@ -14,7 +14,8 @@ pub struct DualShock4DriverManager
     pub device_list:Vec<DeviceInfo>,
     api:HidApi,
     pub get_value:Vec<DualShock4>,
-    pub state:AppState
+    pub state:AppState,
+    green_flag:bool
 }
 
 impl DualShock4DriverManager {
@@ -139,7 +140,8 @@ impl DualShock4DriverManager {
             device_list: Vec::<DeviceInfo>::new(), 
             api: HidApi::new().unwrap() ,
             get_value:in_v,
-            state:AppState::NoReady
+            state:AppState::NoReady,
+            green_flag:false
         }
     }
 
@@ -173,17 +175,13 @@ impl DualShock4DriverManager {
                 match dr.open_device(&self.api) {
                     Ok(device_)=>{
                         let mut dsdr = DualShock4Driver{device:device_,mode:mode_, rgb:RGB::new()};
+                        dsdr.rgb.red = 0;
+                        dsdr.rgb.blue = 255;
+                        dsdr.rgb.grenn = 0;
 
                         std::thread::spawn(move ||
                             loop {
                                 let get = dsdr.task();
-                                
-                                dsdr.rgb.red += 1;
-
-                                if dsdr.rgb.red > 254
-                                {
-                                    dsdr.rgb.red = 0;
-                                }
                                 
                                 let _ = publisher_.clone().send(get);
                                 dsdr.color_change();
@@ -208,17 +206,22 @@ impl DualShock4DriverManager {
                 match dr.open_device(&self.api) {
                     Ok(device_)=>{
                         let mut dsdr = DualShock4Driver{device:device_,mode:mode_, rgb:RGB::new()};
+                        
+                        if !self.green_flag
+                        {
+                            dsdr.rgb.grenn = 255;
+                            dsdr.rgb.blue = 0;
+                            dsdr.rgb.red = 0;
+                        }
+                        else {
+                            dsdr.rgb.grenn = 0;
+                            dsdr.rgb.blue = 0;
+                            dsdr.rgb.red = 255;
+                        }
 
                         std::thread::spawn(move ||
                             loop {
                                 let get = dsdr.task();
-                                
-                                dsdr.rgb.red += 1;
-
-                                if dsdr.rgb.red > 254
-                                {
-                                    dsdr.rgb.red = 0;
-                                }
                                 
                                 let _ = publisher_.clone().send(get);
                                 dsdr.color_change();
@@ -232,7 +235,10 @@ impl DualShock4DriverManager {
             }
             None=>{
             }
+
+
         }
+        self.green_flag = true;
     }
 }
 
@@ -462,7 +468,7 @@ fn input_to_controller_view<'a>(input:DualShock4)->iced::widget::Row<'a,Controll
             };
             use iced::widget::text;
             let state_tex = text(format!("Type:{}\nState:{}\n",input.mode, con_state)).size(40);
-            let joy_tex = text(format!("ジョイスティック\nleft_x:{:2.5}\nleft_y:{:2.5}\nright_x:{:2.5}\nright_y:{:2.5}", 
+            let joy_tex = text(format!("Stick\nleft_x:{:2.5}\nleft_y:{:2.5}\nright_x:{:2.5}\nright_y:{:2.5}", 
                 input.sticks.left_x,
                 input.sticks.left_y,
                 input.sticks.right_x,
