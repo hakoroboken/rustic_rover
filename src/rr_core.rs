@@ -9,11 +9,11 @@ mod home_manager;
 mod udp_manager;
 
 use controller_manager::DualShock4DriverManager;
+use home_manager::HomeManager;
 use interface::{RRMessage, LifeCycle};
 use serial_manager::SerialManager;  
 
 use iced;
-use iced::widget::{column, text};
 use iced_aw::Tabs;
 
 
@@ -23,6 +23,7 @@ pub struct RusticRover
     packet_creator:packet_manager::PacketManager,
     life_cycle:LifeCycle,
     serial_manager:serial_manager::SerialManager,
+    home_manager:home_manager::HomeManager
 }
 
 impl iced::Application for RusticRover {
@@ -38,6 +39,7 @@ impl iced::Application for RusticRover {
             packet_creator:packet_manager::PacketManager::new(),
             life_cycle:LifeCycle::Home,
             serial_manager:SerialManager::new(),
+            home_manager:HomeManager::new()
         };
 
         (app, iced::Command::none())
@@ -71,6 +73,7 @@ impl iced::Application for RusticRover {
                     self.packet_creator.new_set();
                 }
                 self.game_controller_manager.get_value[0] = ds4;
+                self.home_manager.conn_viewer.set_controller_type(ds4.mode);
                 for i in 0..self.game_controller_manager.controller_num
                 {
                     if i != 0
@@ -79,6 +82,8 @@ impl iced::Application for RusticRover {
                     }
                     self.packet_creator.create_packet(self.game_controller_manager.get_value[i], i);
                 }
+
+                self.home_manager.conn_viewer.set_packet(self.packet_creator.packet_[0]);
                 
                 for i in 0..self.serial_manager.driver_num
                 {
@@ -106,6 +111,10 @@ impl iced::Application for RusticRover {
                 self.packet_creator.update(msg)
             }
             interface::RRMessage::Serial(msg)=>{
+                match msg {
+                    interface::SerialMessage::SerialStart=>self.home_manager.conn_viewer.set_external(self.serial_manager.selected.clone()),
+                    _=>{}
+                }
                 self.serial_manager.update(msg)
             }
             interface::RRMessage::Cycle(cycle)=>{
@@ -124,8 +133,8 @@ impl iced::Application for RusticRover {
         .tab_icon_position(iced_aw::tabs::Position::Bottom)
         .push(
             LifeCycle::Home, 
-            iced_aw::TabLabel::Text("ホーム".to_string()), 
-            home
+            self.home_manager.tab_label(), 
+            self.home_manager.view()
         )
         .push(
             LifeCycle::ControllerInfo, 
