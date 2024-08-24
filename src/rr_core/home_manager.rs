@@ -26,14 +26,14 @@ impl HomeManager {
             }
             1=>{
                 
-                let cont = Container::new(self.conn_viewer[0].create_view()).center_x().center_y();
+                let cont = Container::new(self.conn_viewer[0].create_view()).center_x().center_y().width(400).height(400);
 
                 cont.into()
             }
             2=>{
                 let cont = Container::new(column![
                     self.conn_viewer[0].create_view(), 
-                    self.conn_viewer[1].create_view()]).center_x().center_y();
+                    self.conn_viewer[1].create_view()]).center_x().center_y().width(400).height(400);
 
                 cont.into()
             }
