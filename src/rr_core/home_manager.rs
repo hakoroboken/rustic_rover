@@ -1,12 +1,13 @@
 use iced_aw::TabLabel;
 use iced::widget::text;
 
-use crate::rr_core::interface::{RRMessage, ControllerConnectionType, Packet};
+use crate::rr_core::interface::{RRMessage, ControllerConnectionType, Packet, HomeMessage};
 use crate::rr_core::utils::path_to_image;
 
 pub struct HomeManager
 {
-    pub conn_viewer:Vec<ConnectionViewer>
+    pub conn_viewer:Vec<ConnectionViewer>,
+    pub stop:bool
 }
 
 impl HomeManager {
@@ -14,36 +15,57 @@ impl HomeManager {
     {
         let mut v = Vec::<ConnectionViewer>::new();
         v.push(ConnectionViewer::new());
-        HomeManager { conn_viewer: v }
+        HomeManager { conn_viewer: v , stop:false}
+    }
+    pub fn update(&mut self, message:HomeMessage)
+    {
+        match message {
+            HomeMessage::EmergencyStop=>{
+                self.stop= true
+            }
+            HomeMessage::OK=>{
+                self.stop = false;
+            }
+        }
     }
     pub fn view(&self)->iced::Element<'_, RRMessage>
     {
         use iced::widget::container::Container;
-        use iced::widget::column;
+        use iced::widget::{column, button};
         match self.conn_viewer.len() {
             0=>{
                 text("").into()
             }
             1=>{
-                
-                let cont = Container::new(self.conn_viewer[0].create_view(0)).center_x().center_y().width(iced::Length::Fill).height(iced::Length::Fill);
+                let e_btn = button(path_to_image("./image/emergency_stop.png", 300)).on_press(HomeMessage::EmergencyStop);
+                let ok_btn = button(path_to_image("./image/ok.png", 300)).on_press(HomeMessage::OK);
 
-                cont.into()
+                let cont:iced::Element<'_, HomeMessage> = Container::new(column![self.conn_viewer[0].create_view(0, self.stop), e_btn, ok_btn]).center_x().center_y().width(iced::Length::Fill).height(iced::Length::Fill).into();
+
+                cont.map(RRMessage::Home)
             }
             2=>{
-                let cont = Container::new(column![
-                    self.conn_viewer[0].create_view(0), 
-                    self.conn_viewer[1].create_view(1)]).center_x().center_y().width(iced::Length::Fill).height(iced::Length::Fill).height(400);
+                let e_btn = button(path_to_image("./image/emergency_stop.png", 300)).on_press(HomeMessage::EmergencyStop);
+                let ok_btn = button(path_to_image("./image/ok.png", 300)).on_press(HomeMessage::OK);
 
-                cont.into()
+                let cont:iced::Element<'_, HomeMessage> = Container::new(column![
+                    self.conn_viewer[0].create_view(0, self.stop), 
+                    self.conn_viewer[1].create_view(1, self.stop),
+                    e_btn, ok_btn]).center_x().center_y().width(iced::Length::Fill).height(iced::Length::Fill).into();
+
+                cont.map(RRMessage::Home)
             }
             3=>{
-                let cont = Container::new(column![
-                    self.conn_viewer[0].create_view(0), 
-                    self.conn_viewer[1].create_view(1), 
-                    self.conn_viewer[2].create_view(2)]).center_x().center_y();
+                let e_btn = button(path_to_image("./image/emergency_stop.png", 300)).on_press(HomeMessage::EmergencyStop);
+                let ok_btn = button(path_to_image("./image/ok.png", 300)).on_press(HomeMessage::OK);
 
-                cont.into()
+                let cont:iced::Element<'_, HomeMessage> = Container::new(column![
+                    self.conn_viewer[0].create_view(0, self.stop), 
+                    self.conn_viewer[1].create_view(1, self.stop),
+                    self.conn_viewer[2].create_view(2, self.stop),
+                    e_btn, ok_btn]).center_x().center_y().width(iced::Length::Fill).height(iced::Length::Fill).into();
+
+                cont.map(RRMessage::Home)
             }
             _=>{
                 text("Errrrr").into()
@@ -77,7 +99,7 @@ impl ConnectionViewer {
     {
         ConnectionViewer { controller_connection_type: ExternalType::None, packet: None, external_path: String::new() , external_type:ExternalType::None}
     }
-    pub fn create_view(&self, controller_number:usize)->iced::Element<'_, RRMessage>
+    pub fn create_view(&self, controller_number:usize, stop:bool)->iced::Element<'_, HomeMessage>
     {
         let set_rgb = match controller_number {
             0=>{
@@ -94,7 +116,7 @@ impl ConnectionViewer {
             }
         };
 
-        let controller_connection: iced::Element<'_, RRMessage> = if self.controller_connection_type == ExternalType::BLE
+        let controller_connection: iced::Element<'_, HomeMessage> = if self.controller_connection_type == ExternalType::BLE
         {
             let te = text("Controller").style(set_rgb).size(40);
             let controller = path_to_image("./image/controller.png", 200);
@@ -126,11 +148,11 @@ impl ConnectionViewer {
             }
         };
 
-        let micro_connection:iced::Element<'_, RRMessage> = if self.external_type == ExternalType::UDP
+        let micro_connection:iced::Element<'_, HomeMessage> = if self.external_type == ExternalType::UDP
         {
             let micon = path_to_image("./image/micon.png", 100);
             let te = text(self.external_path.clone()).size(40);
-            let line = path_to_image("./image/wireless.png", 100);
+            let line = is_stop_wireless(stop);
 
             iced::widget::row![line, micon, te].align_items(iced::Alignment::Center).into()
         }
@@ -138,7 +160,7 @@ impl ConnectionViewer {
         {
             let micon = path_to_image("./image/micon.png", 100);
             let te = text(self.external_path.clone()).size(40);
-            let line = path_to_image("./image/wired.png", 100);
+            let line = is_stop_wired(stop);
 
             iced::widget::row![line, micon, te].align_items(iced::Alignment::Center).into()
         }
@@ -190,4 +212,26 @@ pub enum ExternalType {
     UDP,
     None,
     BLE,
+}
+
+fn is_stop_wireless(stop:bool)->iced::widget::Image<iced::widget::image::Handle>
+{
+    if stop
+    {
+        path_to_image("./image/lock_wireless.png", 100)
+    }
+    else {
+        path_to_image("./image/wireless.png", 100)
+    }
+}
+
+fn is_stop_wired(stop:bool)->iced::widget::Image<iced::widget::image::Handle>
+{
+    if stop
+    {
+        path_to_image("./image/lock_wired.png", 100)
+    }
+    else {
+        path_to_image("./image/wired.png", 100)
+    }
 }

@@ -8,7 +8,14 @@ pub enum RRMessage
     Packet(PacketMessage),
     Serial(SerialMessage),
     Cycle(LifeCycle),
+    Home(HomeMessage),
     TabClosed,
+}
+
+#[derive(Debug, Clone)]
+pub enum HomeMessage {
+    EmergencyStop,
+    OK
 }
 
 // #[derive(Debug,Clone)]
