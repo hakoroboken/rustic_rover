@@ -656,7 +656,7 @@ impl PacketManager {
         }
     }
 
-    pub fn new_set(&mut self)
+    pub fn new_set(&mut self, id:usize)
     {
         self.x_cb.push(PlusMinus::new());
         self.y_cb.push(PlusMinus::new());
@@ -670,7 +670,7 @@ impl PacketManager {
         self.m2_pow_rate.push(100);
 
         self.packet_.push(None);
-        self.packet_id.push(1);
+        self.packet_id.push(id);
         self.packet_id_list = ComboBox::new(self.packet_id.clone());
 
         self.packet_num += 1;

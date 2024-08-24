@@ -67,22 +67,12 @@ impl iced::Application for RusticRover {
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
         match message {
             interface::RRMessage::ControllerThreadMessage(ds4)=>{
-                let want_to_add = self.game_controller_manager.controller_num-self.packet_creator.packet_num;
-                for _i in 0..want_to_add
-                {
-                    self.packet_creator.new_set();
-                    self.home_manager.add_view();
-                    println!("{}", _i)
-                }
                 self.game_controller_manager.get_value[0] = ds4;
                 self.home_manager.conn_viewer[0].set_controller_type(ds4.mode);
-                for i in 0..self.game_controller_manager.controller_num
+                for i in 1..self.game_controller_manager.controller_num
                 {
-                    if i != 0
-                    {
-                        self.game_controller_manager.get_value[i] = self.game_controller_manager.connectors[i].subscriber.recv().unwrap();
-                        self.home_manager.conn_viewer[i].set_controller_type(self.game_controller_manager.connectors[i].subscriber.recv().unwrap().mode);
-                    }
+                    self.game_controller_manager.get_value[i] = self.game_controller_manager.connectors[i].subscriber.recv().unwrap();
+                    self.home_manager.conn_viewer[i].set_controller_type(self.game_controller_manager.connectors[i].subscriber.recv().unwrap().mode);
                     self.packet_creator.create_packet(self.game_controller_manager.get_value[i], i);
                 }
                 
@@ -108,7 +98,13 @@ impl iced::Application for RusticRover {
             }
             interface::RRMessage::Controller(msg)=>{
                 self.packet_creator.sdm.search_data_files();
-                self.game_controller_manager.update(msg)
+                self.game_controller_manager.update(msg);
+
+                for i in 1..self.game_controller_manager.controller_num
+                {
+                    self.packet_creator.new_set(i);
+                    self.home_manager.add_view();
+                }
             }
             interface::RRMessage::Packet(msg)=>{
                 self.packet_creator.update(msg)

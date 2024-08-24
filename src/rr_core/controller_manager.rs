@@ -97,12 +97,14 @@ impl DualShock4DriverManager {
                         self.scan_device();
                         
                         self.spawn_driver(ControllerConnectionType::BLE);
+                        self.device_list.remove(0);
 
-                        while self.controller_num < 3 && !self.device_list.is_empty() {
+                        for i in 0..self.device_list.len() {
                             let new_conn = thread_connection::ThreadConnector::<DualShock4>::new();
                             self.connectors.push(new_conn);
-                            let i = self.controller_num;
-                            self.add_driver(ControllerConnectionType::BLE, self.connectors.get(i).unwrap().publisher.clone());
+
+                            self.add_driver(ControllerConnectionType::BLE, self.connectors.get(i+1).unwrap().publisher.clone());
+                            self.device_list.remove(0);
 
                             self.controller_num += 1;
                             self.get_value.push(DualShock4::new());
@@ -187,7 +189,6 @@ impl DualShock4DriverManager {
                                 let _ = publisher_.clone().send(get);
                                 dsdr.color_change();
                         });
-                        self.device_list.remove(0);
                     }
                     Err(_e)=>{
 
@@ -223,7 +224,7 @@ impl DualShock4DriverManager {
                                 let _ = publisher_.clone().send(get);
                                 dsdr.color_change();
                         });
-                        self.device_list.remove(0);
+
                     }
                     Err(_e)=>{
 
