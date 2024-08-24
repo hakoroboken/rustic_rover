@@ -149,7 +149,7 @@ impl iced::Application for RusticRover {
         .tab_icon_position(iced_aw::tabs::Position::Bottom)
         .push(
             LifeCycle::Home, 
-            iced_aw::TabLabel::Text("Home".to_string()), 
+            iced_aw::TabLabel::Text("ホーム".to_string()), 
             home
         )
         .push(
