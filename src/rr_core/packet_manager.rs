@@ -1,5 +1,5 @@
 use crate::rr_core::interface::{Packet, DualShock4, AssignController, PacketMessage, RRMessage};
-use crate::rr_core::utils::ComboBox;
+use crate::rr_core::utils::{ComboBox, LogManager};
 
 use iced::widget::{text, slider, column, row, combo_box};
 use iced_aw::TabLabel;
@@ -24,12 +24,13 @@ pub struct PacketManager
     pub m2_pow_rate:Vec<u16>,
     pub sdm:save_data_manager::SaveDataManager,
     selected_file_name:String,
+    pub logger:LogManager
 }
 
 impl PacketManager {
     fn title(&self)->String
     {
-        String::from("Packet Manager")
+        String::from("パケット設定")
     }
     pub fn tab_label(&self)->TabLabel
     {
@@ -41,7 +42,9 @@ impl PacketManager {
             PacketMessage::Assign1p(a1p)=>{
                 match self.packet_id_list.selected {
                     Some(id)=>{
-                        self.x_cb[id].plus.selected = Some(a1p)
+                        self.x_cb[id].plus.selected = Some(a1p);
+
+                        self.logger.add_str(format!("Set Assign of X_Plus to {}", a1p))
                     }
                     None=>{
 
@@ -51,7 +54,9 @@ impl PacketManager {
             PacketMessage::Assign1m(a1m)=>{
                 match self.packet_id_list.selected {
                     Some(id)=>{
-                        self.x_cb[id].minus.selected = Some(a1m)
+                        self.x_cb[id].minus.selected = Some(a1m);
+
+                        self.logger.add_str(format!("Set Assign of X_Minus to {}", a1m))
                     }
                     None=>{
 
@@ -61,7 +66,9 @@ impl PacketManager {
             PacketMessage::Assign2p(a2p)=>{
                 match self.packet_id_list.selected {
                     Some(id)=>{
-                        self.y_cb[id].plus.selected = Some(a2p)
+                        self.y_cb[id].plus.selected = Some(a2p);
+
+                        self.logger.add_str(format!("Set Assign of Y_Plus to {}", a2p))
                     }
                     None=>{
 
@@ -71,7 +78,9 @@ impl PacketManager {
             PacketMessage::Assign2m(a2m)=>{
                 match self.packet_id_list.selected {
                     Some(id)=>{
-                        self.y_cb[id].minus.selected = Some(a2m)
+                        self.y_cb[id].minus.selected = Some(a2m);
+
+                        self.logger.add_str(format!("Set Assign of Y_Minus to {}", a2m))
                     }
                     None=>{
 
@@ -81,7 +90,9 @@ impl PacketManager {
             PacketMessage::Assign3p(a3p)=>{
                 match self.packet_id_list.selected {
                     Some(id)=>{
-                        self.ro_cb[id].plus.selected = Some(a3p)
+                        self.ro_cb[id].plus.selected = Some(a3p);
+
+                        self.logger.add_str(format!("Set Assign of Rotation_Plus to {}", a3p))
                     }
                     None=>{
 
@@ -91,7 +102,9 @@ impl PacketManager {
             PacketMessage::Assign3m(a3m)=>{
                 match self.packet_id_list.selected {
                     Some(id)=>{
-                        self.ro_cb[id].minus.selected = Some(a3m)
+                        self.ro_cb[id].minus.selected = Some(a3m);
+
+                        self.logger.add_str(format!("Set Assign of Rotation_Minus to {}", a3m))
                     }
                     None=>{
 
@@ -101,7 +114,9 @@ impl PacketManager {
             PacketMessage::Assign4p(a4p)=>{
                 match self.packet_id_list.selected {
                     Some(id)=>{
-                        self.m1_cb[id].plus.selected = Some(a4p)
+                        self.m1_cb[id].plus.selected = Some(a4p);
+
+                        self.logger.add_str(format!("Set Assign of Machine1_Plus to {}", a4p))
                     }
                     None=>{
 
@@ -111,7 +126,9 @@ impl PacketManager {
             PacketMessage::Assign4m(a4m)=>{
                 match self.packet_id_list.selected {
                     Some(id)=>{
-                        self.m1_cb[id].minus.selected = Some(a4m)
+                        self.m1_cb[id].minus.selected = Some(a4m);
+
+                        self.logger.add_str(format!("Set Assign of Machine1_Minus to {}", a4m))
                     }
                     None=>{
 
@@ -121,7 +138,9 @@ impl PacketManager {
             PacketMessage::Assign5p(a5p)=>{
                 match self.packet_id_list.selected {
                     Some(id)=>{
-                        self.m2_cb[id].plus.selected = Some(a5p)
+                        self.m2_cb[id].plus.selected = Some(a5p);
+
+                        self.logger.add_str(format!("Set Assign of Machine2_Plus to {}", a5p))
                     }
                     None=>{
 
@@ -131,7 +150,9 @@ impl PacketManager {
             PacketMessage::Assign5m(a5m)=>{
                 match self.packet_id_list.selected {
                     Some(id)=>{
-                        self.m2_cb[id].minus.selected = Some(a5m)
+                        self.m2_cb[id].minus.selected = Some(a5m);
+
+                        self.logger.add_str(format!("Set Assign of Machine2_Minus to {}", a5m))
                     }
                     None=>{
 
@@ -141,7 +162,9 @@ impl PacketManager {
             PacketMessage::PowerRateX(x)=>{
                 match self.packet_id_list.selected {
                     Some(id)=>{
-                        self.x_pow_rate[id] = x
+                        self.x_pow_rate[id] = x;
+
+                        self.logger.add_str(format!("Set Power rate X to {}", x))
                     }
                     None=>{
 
@@ -151,7 +174,9 @@ impl PacketManager {
             PacketMessage::PowerRateY(y)=>{
                 match self.packet_id_list.selected {
                     Some(id)=>{
-                        self.y_pow_rate[id] = y
+                        self.y_pow_rate[id] = y;
+
+                        self.logger.add_str(format!("Set Power rate Y to {}", y))
                     }
                     None=>{
 
@@ -161,7 +186,9 @@ impl PacketManager {
             PacketMessage::PowerRateRotation(rotation)=>{
                 match self.packet_id_list.selected {
                     Some(id)=>{
-                        self.ro_pow_rate[id] = rotation
+                        self.ro_pow_rate[id] = rotation;
+
+                        self.logger.add_str(format!("Set Power rate Rotation to {}", rotation))
                     }
                     None=>{
 
@@ -171,7 +198,9 @@ impl PacketManager {
             PacketMessage::PowerRateM1(m1)=>{
                 match self.packet_id_list.selected {
                     Some(id)=>{
-                        self.m1_pow_rate[id] = m1
+                        self.m1_pow_rate[id] = m1;
+
+                        self.logger.add_str(format!("Set Power rate Machine1 to {}", m1))
                     }
                     None=>{
 
@@ -181,7 +210,9 @@ impl PacketManager {
             PacketMessage::PowerRateM2(m2)=>{
                 match self.packet_id_list.selected {
                     Some(id)=>{
-                        self.m2_pow_rate[id] = m2
+                        self.m2_pow_rate[id] = m2;
+
+                        self.logger.add_str(format!("Set Power rate Machine2 to {}", m2))
                     }
                     None=>{
 
@@ -189,7 +220,7 @@ impl PacketManager {
                 }
             }
             PacketMessage::FileSelect(name)=>{
-                self.selected_file_name = name;
+                self.selected_file_name = name.clone();
 
                 self.sdm.load_from_file(self.selected_file_name.clone());
 
@@ -230,9 +261,13 @@ impl PacketManager {
                         self.m2_pow_rate[0] = self.sdm.m2_rate.unwrap();
                     }
                 }
+
+                self.logger.add_str(format!("Load YAML file : {}", name.clone()));
             }
             PacketMessage::PacketID(selected_)=>{
-                self.packet_id_list.selected = Some(selected_)
+                self.packet_id_list.selected = Some(selected_);
+
+                self.logger.add_str(format!("Set Packet ID to {}", selected_));
             }
         }
     }
@@ -350,6 +385,8 @@ impl PacketManager {
 
                 let sdm_menu = self.sdm.menu_view(self.selected_file_name.clone());
 
+                let log = self.logger.view().size(50);
+
                 use iced::widget::container::Container;
                 let container:iced::Element<'_, PacketMessage> = Container::new(
                     column![
@@ -366,7 +403,8 @@ impl PacketManager {
                             p_text,
                             sdm_menu,
                             id_title,
-                            combo_id
+                            combo_id,
+                            log
                     ].align_items(iced::Alignment::Center)
                 )
                 .align_x(iced::alignment::Horizontal::Center)
@@ -485,6 +523,8 @@ impl PacketManager {
                     PacketMessage::PacketID
                 );
 
+                let log = self.logger.view().size(50);
+
                 use iced::widget::container::Container;
                 let container:iced::Element<'_, PacketMessage> = Container::new(
                     column![
@@ -501,7 +541,8 @@ impl PacketManager {
                             p_text,
                             sdm_menu,
                             id_title,
-                            combo_id
+                            combo_id,
+                            log
                     ].align_items(iced::Alignment::Center)
                 )
                 .align_x(iced::alignment::Horizontal::Center)
@@ -565,6 +606,7 @@ impl PacketManager {
             m2_pow_rate:m2_rate,
             sdm:save_data_manager::SaveDataManager::new(),
             selected_file_name:String::new(),
+            logger:LogManager::new()
         }
     }
 
@@ -614,7 +656,7 @@ impl PacketManager {
         }
     }
 
-    pub fn new_set(&mut self)
+    pub fn new_set(&mut self, id:usize)
     {
         self.x_cb.push(PlusMinus::new());
         self.y_cb.push(PlusMinus::new());
@@ -628,7 +670,7 @@ impl PacketManager {
         self.m2_pow_rate.push(100);
 
         self.packet_.push(None);
-        self.packet_id.push(1);
+        self.packet_id.push(id);
         self.packet_id_list = ComboBox::new(self.packet_id.clone());
 
         self.packet_num += 1;

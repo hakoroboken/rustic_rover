@@ -5,14 +5,15 @@ mod packet_manager;
 mod utils;
 mod serial_manager;
 mod save_data_manager;
+mod home_manager;
 mod udp_manager;
 
 use controller_manager::DualShock4DriverManager;
+use home_manager::HomeManager;
 use interface::{RRMessage, LifeCycle};
-use serial_manager::SerialManager;
+use serial_manager::SerialManager;  
 
 use iced;
-use iced::widget::{column, text};
 use iced_aw::Tabs;
 
 
@@ -22,6 +23,7 @@ pub struct RusticRover
     packet_creator:packet_manager::PacketManager,
     life_cycle:LifeCycle,
     serial_manager:serial_manager::SerialManager,
+    home_manager:home_manager::HomeManager
 }
 
 impl iced::Application for RusticRover {
@@ -37,6 +39,7 @@ impl iced::Application for RusticRover {
             packet_creator:packet_manager::PacketManager::new(),
             life_cycle:LifeCycle::Home,
             serial_manager:SerialManager::new(),
+            home_manager:HomeManager::new()
         };
 
         (app, iced::Command::none())
@@ -64,47 +67,71 @@ impl iced::Application for RusticRover {
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
         match message {
             interface::RRMessage::ControllerThreadMessage(ds4)=>{
-                self.packet_creator.sdm.search_data_files();
-                for _i in 0..(self.game_controller_manager.controller_num-self.packet_creator.packet_num)
-                {
-                    self.packet_creator.new_set();
-                }
                 self.game_controller_manager.get_value[0] = ds4;
-                for i in 0..self.game_controller_manager.controller_num
+                self.home_manager.conn_viewer[0].set_controller_type(ds4.mode);
+                self.packet_creator.create_packet(ds4, 0);
+                for i in 1..self.game_controller_manager.controller_num
                 {
-                    if i != 0
-                    {
-                        self.game_controller_manager.get_value[i] = self.game_controller_manager.connectors[i].subscriber.recv().unwrap();
-                    }
+                    self.game_controller_manager.get_value[i] = self.game_controller_manager.connectors[i].subscriber.recv().unwrap();
+                    self.home_manager.conn_viewer[i].set_controller_type(self.game_controller_manager.get_value[i].mode);
                     self.packet_creator.create_packet(self.game_controller_manager.get_value[i], i);
                 }
-                
-                for i in 0..self.serial_manager.driver_num
+
+                for i in 0..self.packet_creator.packet_num
                 {
                     match self.packet_creator.packet_.get(i) {
-                        Some(packet)=>{
-                            match packet {
-                                Some(p)=>{
-                                    let _ = self.serial_manager.conn[i].publisher.send(*p);
-                                }
-                                None=>{
-
-                                }
-                            }
+                        Some(p)=>{
+                            self.home_manager.conn_viewer[i].set_packet(*p);
                         }
                         None=>{
 
                         }
                     }
                 }
+                
+                if self.serial_manager.driver_num != 0
+                {
+                    for i in 0..self.serial_manager.driver_num
+                    {
+                        match self.packet_creator.packet_.get(i) {
+                            Some(packet)=>{
+                                match packet {
+                                    Some(p)=>{
+                                        let _ = self.serial_manager.conn[i].publisher.send(*p);
+                                    }
+                                    None=>{
+
+                                    }
+                                }
+                            }
+                            None=>{
+
+                            }
+                        }
+                    }
+                }
             }
             interface::RRMessage::Controller(msg)=>{
-                self.game_controller_manager.update(msg)
+                self.packet_creator.sdm.search_data_files();
+                self.game_controller_manager.update(msg);
+
+                for i in 1..self.game_controller_manager.controller_num
+                {
+                    self.packet_creator.new_set(i);
+                    self.home_manager.add_view();
+                }
             }
             interface::RRMessage::Packet(msg)=>{
                 self.packet_creator.update(msg)
             }
             interface::RRMessage::Serial(msg)=>{
+                match msg {
+                    interface::SerialMessage::SerialStart=>
+                    {
+                        self.home_manager.conn_viewer[self.serial_manager.driver_num].set_external(self.serial_manager.selected.clone())
+                    }
+                    _=>{}
+                }
                 self.serial_manager.update(msg)
             }
             interface::RRMessage::Cycle(cycle)=>{
@@ -119,38 +146,12 @@ impl iced::Application for RusticRover {
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message, Self::Theme, iced::Renderer> {
-        let con_text = text(format!("{} Controller is connected!!", self.game_controller_manager.controller_num)).size(30);
-        let mut p_str = String::new();
-        for i in 0..self.packet_creator.packet_id.len()
-        {
-            match self.packet_creator.packet_.get(i) {
-                Some(packet)=>{
-                    match packet {
-                        Some(p)=>{
-                            let str = format!("packet{} : [x:{:3},y:{:3},ro:{:3},m1:{:3},m2:{:3}]\n", i, p.x, p.y, p.ro, p.m1, p.m2);
-                            p_str += &str;
-                        }
-                        None=>{
-
-                        }
-                    }
-                }
-                None=>{
-                    
-                }
-            }
-            
-        }
-        let serial_text = text(format!("{} serial port open.", self.serial_manager.driver_num)).size(30);
-
-        let p_text = text(p_str).size(30);
-        let home:iced::Element<'_, RRMessage> = column![utils::path_to_image("./rustic_rover.png", 500), con_text, p_text, serial_text].align_items(iced::Alignment::Center).into();
         let tab = Tabs::new(RRMessage::Cycle)
         .tab_icon_position(iced_aw::tabs::Position::Bottom)
         .push(
             LifeCycle::Home, 
-            iced_aw::TabLabel::Text("Home".to_string()), 
-            home
+            self.home_manager.tab_label(), 
+            self.home_manager.view()
         )
         .push(
             LifeCycle::ControllerInfo, 

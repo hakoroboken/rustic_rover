@@ -20,7 +20,7 @@ pub struct DualShock4DriverManager
 impl DualShock4DriverManager {
     fn title(&self)->String
     {
-        String::from("Controller Manager")
+        String::from("コントローラー設定")
     }
     pub fn tab_label(&self)->TabLabel
     {
@@ -33,7 +33,7 @@ impl DualShock4DriverManager {
         use iced::widget::column;
         match self.controller_num {
             0=>{
-                let btn = button("Start").on_press(ControllerMessage::ControllerStart).width(50).height(50);
+                let btn = button(utils::path_to_image("./image/start.png", 200)).on_press(ControllerMessage::ControllerStart).width(500).height(500);
 
                 let err_text = utils::setting_state_logger(self.state).size(100).horizontal_alignment(iced::alignment::Horizontal::Center);
 
@@ -83,7 +83,7 @@ impl DualShock4DriverManager {
             }
             _=>{
                 use iced::widget::text;
-                text("GameControllerManager Error!!").size(300).into()
+                text("壊れた！！").size(300).into()
             }
         }
     }
@@ -93,16 +93,18 @@ impl DualShock4DriverManager {
             ControllerMessage::ControllerStart=>{
                     self.scan_device();
                     if !self.device_list.is_empty()
-                    {
-                        self.scan_device();
-                        
-                        self.spawn_driver(ControllerConnectionType::BLE);
+                    {   
+                        self.spawn_driver(ControllerConnectionType::SERIAL);
+                        self.controller_num += 1;
+                        self.get_value.push(DualShock4::new());
+                        self.device_list.remove(0);
 
-                        while self.controller_num < 3 && !self.device_list.is_empty() {
+                        for i in 0..self.device_list.len() {
                             let new_conn = thread_connection::ThreadConnector::<DualShock4>::new();
                             self.connectors.push(new_conn);
-                            let i = self.controller_num;
-                            self.add_driver(ControllerConnectionType::BLE, self.connectors.get(i).unwrap().publisher.clone());
+
+                            self.add_driver(ControllerConnectionType::SERIAL, self.connectors.get(i+1).unwrap().publisher.clone());
+                            self.device_list.remove(0);
 
                             self.controller_num += 1;
                             self.get_value.push(DualShock4::new());
@@ -168,7 +170,6 @@ impl DualShock4DriverManager {
         match self.device_list.first()
         {
             Some(dr)=>{
-                self.controller_num += 1;
                 match dr.open_device(&self.api) {
                     Ok(device_)=>{
                         let mut dsdr = DualShock4Driver{device:device_,mode:mode_, rgb:RGB::new()};
@@ -187,7 +188,6 @@ impl DualShock4DriverManager {
                                 let _ = publisher_.clone().send(get);
                                 dsdr.color_change();
                         });
-                        self.device_list.remove(0);
                     }
                     Err(_e)=>{
 
@@ -223,7 +223,7 @@ impl DualShock4DriverManager {
                                 let _ = publisher_.clone().send(get);
                                 dsdr.color_change();
                         });
-                        self.device_list.remove(0);
+
                     }
                     Err(_e)=>{
 
@@ -251,8 +251,6 @@ impl DualShock4Driver {
             match self.device.read(&mut buf) {
                 Ok(size)=>{
                     let get_data = &buf[..size];
-                    // println!("{:?}", get_data);
-
                     let (j, btn, d) = convert(get_data, self.mode);
 
                     if j.right_x == -0.9372549 && self.mode == ControllerConnectionType::BLE
@@ -464,7 +462,7 @@ fn input_to_controller_view<'a>(input:DualShock4)->iced::widget::Row<'a,Controll
             };
             use iced::widget::text;
             let state_tex = text(format!("Type:{}\nState:{}\n",input.mode, con_state)).size(40);
-            let joy_tex = text(format!("JoyStick\nleft_x:{:2.5}\nleft_y:{:2.5}\nright_x:{:2.5}\nright_y:{:2.5}", 
+            let joy_tex = text(format!("ジョイスティック\nleft_x:{:2.5}\nleft_y:{:2.5}\nright_x:{:2.5}\nright_y:{:2.5}", 
                 input.sticks.left_x,
                 input.sticks.left_y,
                 input.sticks.right_x,
