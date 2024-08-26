@@ -184,7 +184,11 @@ impl DualShock4DriverManager {
                                 let get = dsdr.task();
                                 
                                 let _ = publisher_.clone().send(get);
-                                dsdr.color_change();
+
+                                if dsdr.mode == ControllerConnectionType::SERIAL
+                                {
+                                    dsdr.color_change()
+                                }
                         });
                     }
                     Err(_e)=>{
@@ -224,7 +228,11 @@ impl DualShock4DriverManager {
                                 let get = dsdr.task();
                                 
                                 let _ = publisher_.clone().send(get);
-                                dsdr.color_change();
+
+                                if dsdr.mode == ControllerConnectionType::SERIAL
+                                {
+                                    dsdr.color_change();
+                                }
                         });
 
                     }
