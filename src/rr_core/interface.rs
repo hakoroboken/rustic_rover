@@ -33,7 +33,7 @@ pub enum SerialMessage
     PortSelected(String),
     ThreadID(usize),
     ThreadStop,
-    SmoothValue(f32),
+    SmoothValue(i32),
 }
 
 #[derive(Debug,Clone)]
@@ -270,14 +270,4 @@ impl Packet {
     {
         format!("[x:{:3},y:{:3},ro:{:3},m1:{:3},m2:{:3}]", self.x, self.y, self.ro, self.m1, self.m2)
     }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct FloatPacket
-{
-    pub x:f32,
-    pub y:f32,
-    pub ro:f32,
-    pub m1:f32,
-    pub m2:f32,
 }
