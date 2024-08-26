@@ -40,7 +40,9 @@ impl HomeManager {
                 let e_btn = button(path_to_image("./image/emergency_stop.png", 300)).on_press(HomeMessage::EmergencyStop);
                 let ok_btn = button(path_to_image("./image/ok.png", 300)).on_press(HomeMessage::OK);
 
-                let cont:iced::Element<'_, HomeMessage> = Container::new(column![self.conn_viewer[0].create_view(0, self.stop), e_btn, ok_btn]).center_x().center_y().width(iced::Length::Fill).height(iced::Length::Fill).into();
+                let ro = iced::widget::row![e_btn, ok_btn];
+
+                let cont:iced::Element<'_, HomeMessage> = Container::new(column![self.conn_viewer[0].create_view(0, self.stop), ro]).center_x().center_y().width(iced::Length::Fill).height(iced::Length::Fill).into();
 
                 cont.map(RRMessage::Home)
             }
@@ -48,10 +50,13 @@ impl HomeManager {
                 let e_btn = button(path_to_image("./image/emergency_stop.png", 300)).on_press(HomeMessage::EmergencyStop);
                 let ok_btn = button(path_to_image("./image/ok.png", 300)).on_press(HomeMessage::OK);
 
+
+                let ro = iced::widget::row![e_btn, ok_btn];
+
                 let cont:iced::Element<'_, HomeMessage> = Container::new(column![
                     self.conn_viewer[0].create_view(0, self.stop), 
                     self.conn_viewer[1].create_view(1, self.stop),
-                    e_btn, ok_btn]).center_x().center_y().width(iced::Length::Fill).height(iced::Length::Fill).into();
+                    ro]).center_x().center_y().width(iced::Length::Fill).height(iced::Length::Fill).into();
 
                 cont.map(RRMessage::Home)
             }
@@ -59,11 +64,13 @@ impl HomeManager {
                 let e_btn = button(path_to_image("./image/emergency_stop.png", 300)).on_press(HomeMessage::EmergencyStop);
                 let ok_btn = button(path_to_image("./image/ok.png", 300)).on_press(HomeMessage::OK);
 
+                let ro = iced::widget::row![e_btn, ok_btn];
+
                 let cont:iced::Element<'_, HomeMessage> = Container::new(column![
                     self.conn_viewer[0].create_view(0, self.stop), 
                     self.conn_viewer[1].create_view(1, self.stop),
                     self.conn_viewer[2].create_view(2, self.stop),
-                    e_btn, ok_btn]).center_x().center_y().width(iced::Length::Fill).height(iced::Length::Fill).into();
+                    ro]).center_x().center_y().width(iced::Length::Fill).height(iced::Length::Fill).into();
 
                 cont.map(RRMessage::Home)
             }

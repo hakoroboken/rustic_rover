@@ -1,5 +1,5 @@
 use crate::rr_core::interface::{Packet, DualShock4, AssignController, PacketMessage, RRMessage};
-use crate::rr_core::utils::{ComboBox, LogManager};
+use crate::rr_core::utils::{self, ComboBox, LogManager};
 
 use iced::widget::{text, slider, column, row, combo_box};
 use iced_aw::TabLabel;
@@ -375,7 +375,7 @@ impl PacketManager {
                     }
                 };
 
-                let id_title = text("Select Packet ID").size(30);
+                let id_title = utils::path_to_image("./image/packet_erabe.png", 400).height(40);
                 let combo_id = combo_box(
                     &self.packet_id_list.all, 
                     "Select Packet ID", 
@@ -390,6 +390,8 @@ impl PacketManager {
                 use iced::widget::container::Container;
                 let container:iced::Element<'_, PacketMessage> = Container::new(
                     column![
+                            id_title,
+                            combo_id,
                             x_title,
                             row_x,
                             y_title,
@@ -402,8 +404,6 @@ impl PacketManager {
                             row_m2,
                             p_text,
                             sdm_menu,
-                            id_title,
-                            combo_id,
                             log
                     ].align_items(iced::Alignment::Center)
                 )
@@ -515,7 +515,7 @@ impl PacketManager {
 
                 let sdm_menu = self.sdm.menu_view(self.selected_file_name.clone());
 
-                let id_title = text("Select Packet ID").size(30);
+                let id_title = utils::path_to_image("./image/packet_erabe.png", 400).height(40);
                 let combo_id = combo_box(
                     &self.packet_id_list.all, 
                     "Select Packet ID", 
@@ -528,6 +528,8 @@ impl PacketManager {
                 use iced::widget::container::Container;
                 let container:iced::Element<'_, PacketMessage> = Container::new(
                     column![
+                            id_title,
+                            combo_id,
                             x_title,
                             row_x,
                             y_title,
@@ -540,8 +542,6 @@ impl PacketManager {
                             row_m2,
                             p_text,
                             sdm_menu,
-                            id_title,
-                            combo_id,
                             log
                     ].align_items(iced::Alignment::Center)
                 )
