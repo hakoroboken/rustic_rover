@@ -1,5 +1,4 @@
 mod controller_driver;
-mod controller_manager;
 mod interface;
 mod thread_connection;
 mod packet_manager;
@@ -20,7 +19,7 @@ use iced_aw::Tabs;
 
 pub struct RusticRover
 {
-    game_controller_manager:controller_manager::ControllerManager,
+    game_controller_manager:controller_driver::ControllerManager,
     packet_creator:packet_manager::PacketManager,
     life_cycle:LifeCycle,
     serial_manager:serial_manager::SerialManager,
@@ -36,7 +35,7 @@ impl iced::Application for RusticRover {
     fn new(_flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
         let app = RusticRover
         {
-            game_controller_manager:controller_manager::ControllerManager::new(),
+            game_controller_manager:controller_driver::ControllerManager::new(),
             packet_creator:packet_manager::PacketManager::new(),
             life_cycle:LifeCycle::Home,
             serial_manager:SerialManager::new(),
