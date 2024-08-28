@@ -1,3 +1,4 @@
+mod controller_driver;
 mod controller_manager;
 mod interface;
 mod thread_connection;
@@ -8,7 +9,7 @@ mod save_data_manager;
 mod home_manager;
 mod udp_manager;
 
-use controller_manager::DualShock4DriverManager;
+
 use home_manager::HomeManager;
 use interface::{LifeCycle, Packet, RRMessage};
 use serial_manager::SerialManager;  
@@ -19,7 +20,7 @@ use iced_aw::Tabs;
 
 pub struct RusticRover
 {
-    game_controller_manager:controller_manager::DualShock4DriverManager,
+    game_controller_manager:controller_manager::ControllerManager,
     packet_creator:packet_manager::PacketManager,
     life_cycle:LifeCycle,
     serial_manager:serial_manager::SerialManager,
@@ -35,7 +36,7 @@ impl iced::Application for RusticRover {
     fn new(_flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
         let app = RusticRover
         {
-            game_controller_manager:DualShock4DriverManager::new(),
+            game_controller_manager:controller_manager::ControllerManager::new(),
             packet_creator:packet_manager::PacketManager::new(),
             life_cycle:LifeCycle::Home,
             serial_manager:SerialManager::new(),
