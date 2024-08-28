@@ -1,5 +1,6 @@
-use crate::rr_core::interface::{Packet, DualShock4, AssignController, PacketMessage, RRMessage};
+use crate::rr_core::interface::{Packet, AssignController, PacketMessage, RRMessage};
 use crate::rr_core::utils::{self, ComboBox, LogManager};
+use super::controller_driver::interface::Controller;
 
 use iced::widget::{text, slider, column, row, combo_box};
 use iced_aw::TabLabel;
@@ -610,7 +611,7 @@ impl PacketManager {
         }
     }
 
-    pub fn create_packet(&mut self, controller_input:DualShock4, id:usize)
+    pub fn create_packet(&mut self, controller_input:Controller, id:usize)
     {
                 match assign_to_controller(self.x_cb[id].clone(), controller_input)
                 {
@@ -690,7 +691,7 @@ impl PlusMinus {
     }
 }
 
-fn assign_to_controller(cb:PlusMinus, input:DualShock4)->Option<f32>
+fn assign_to_controller(cb:PlusMinus, input:Controller)->Option<f32>
     {
         match cb.plus.selected
         {
@@ -728,7 +729,7 @@ fn assign_to_controller(cb:PlusMinus, input:DualShock4)->Option<f32>
         }
     }
 
-fn assign_btns(assign:AssignController, input:DualShock4)->bool
+fn assign_btns(assign:AssignController, input:Controller)->bool
 {
     match assign {
         AssignController::BtnCircle=>input.btns.circle,

@@ -1,8 +1,9 @@
 use iced_aw::TabLabel;
 use iced::widget::text;
 
-use crate::rr_core::interface::{RRMessage, ControllerConnectionType, Packet, HomeMessage};
+use crate::rr_core::interface::{RRMessage, Packet, HomeMessage};
 use crate::rr_core::utils::path_to_image;
+use super::controller_driver::interface::ControllerConnectionType;
 
 pub struct HomeManager
 {

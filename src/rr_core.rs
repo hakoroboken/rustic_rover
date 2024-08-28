@@ -1,3 +1,4 @@
+mod controller_driver;
 mod controller_manager;
 mod interface;
 mod thread_connection;
@@ -8,9 +9,9 @@ mod save_data_manager;
 mod home_manager;
 mod udp_manager;
 
-use controller_manager::DualShock4DriverManager;
+
 use home_manager::HomeManager;
-use interface::{RRMessage, LifeCycle};
+use interface::{LifeCycle, Packet, RRMessage};
 use serial_manager::SerialManager;  
 
 use iced;
@@ -19,7 +20,7 @@ use iced_aw::Tabs;
 
 pub struct RusticRover
 {
-    game_controller_manager:controller_manager::DualShock4DriverManager,
+    game_controller_manager:controller_manager::ControllerManager,
     packet_creator:packet_manager::PacketManager,
     life_cycle:LifeCycle,
     serial_manager:serial_manager::SerialManager,
@@ -35,7 +36,7 @@ impl iced::Application for RusticRover {
     fn new(_flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
         let app = RusticRover
         {
-            game_controller_manager:DualShock4DriverManager::new(),
+            game_controller_manager:controller_manager::ControllerManager::new(),
             packet_creator:packet_manager::PacketManager::new(),
             life_cycle:LifeCycle::Home,
             serial_manager:SerialManager::new(),
@@ -89,24 +90,28 @@ impl iced::Application for RusticRover {
                     }
                 }
                 
-                if !self.home_manager.stop
+                for i in 0..self.serial_manager.driver_num
                 {
-                    for i in 0..self.serial_manager.driver_num
-                    {
-                        match self.packet_creator.packet_.get(i) {
-                            Some(packet)=>{
-                                match packet {
-                                    Some(p)=>{
+                    match self.packet_creator.packet_.get(i) {
+                        Some(packet)=>{
+                            match packet {
+                                Some(p)=>{
+                                    if self.home_manager.stop
+                                    {
+                                        let _ = self.serial_manager.conn[i].publisher.send(Packet{x:0, y:0, ro:0, m1:0, m2:0});
+                                    }
+                                    else 
+                                    {
                                         let _ = self.serial_manager.conn[i].publisher.send(*p);
                                     }
-                                    None=>{
+                                }
+                                None=>{
 
-                                    }
                                 }
                             }
-                            None=>{
+                        }
+                        None=>{
 
-                            }
                         }
                     }
                 }

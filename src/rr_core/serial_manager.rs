@@ -1,4 +1,4 @@
-use crate::rr_core::interface::{FloatPacket, Packet, SerialMessage, RRMessage};
+use crate::rr_core::interface::{Packet, SerialMessage, RRMessage};
 use crate::rr_core::thread_connection::{ThreadConnector, ThreadManager};
 use crate::rr_core::utils::{ComboBox, LogManager};
 
@@ -15,7 +15,7 @@ pub struct SerialManager
     pub thread_manager:Vec<ThreadManager>,
     pub path_list:Option<ComboBox<String>>,
     pub selected:String,
-    pub smooth_value:f32,
+    pub smooth_value:i32,
     pub logger:LogManager
 }
 
@@ -34,7 +34,7 @@ impl SerialManager {
 
                 let sm_gain_item = if self.is_smooth
                 {
-                    Some(number_input(self.smooth_value, 2.0, SerialMessage::SmoothValue).step(0.1))
+                    Some(number_input(self.smooth_value, 20, SerialMessage::SmoothValue).step(1))
                 }
                 else
                 {
@@ -200,7 +200,7 @@ impl SerialManager {
             thread_manager:manager_vec, 
             id:id_v.clone(), 
             id_box:ComboBox::<usize>::new(id_v.clone()), 
-            smooth_value:1.0, 
+            smooth_value:1, 
             is_smooth:false,
             logger:LogManager::new()
         }
@@ -290,7 +290,7 @@ impl SerialManager {
             }
         });
     }
-    pub fn spawn_smooth_serial(&mut self, smooth_value:f32)
+    pub fn spawn_smooth_serial(&mut self, smooth_value:i32)
     {
         let selected_port = self.selected.clone();
         let node = ThreadConnector::<Packet>::new();
@@ -309,8 +309,8 @@ impl SerialManager {
             .timeout(std::time::Duration::from_millis(1000))
             .open().unwrap();
 
-            let mut send = FloatPacket{x:10.0, y:10.0, ro:10.0, m1:10.0, m2:10.0};
-            let mut history = Packet{x:10, y:10, ro:10, m1:10, m2:10};
+            let mut send = Packet{x:100, y:100, ro:100, m1:100, m2:100};
+            let mut history = Packet{x:100, y:100, ro:100, m1:100, m2:100};
             while !clone_.load(std::sync::atomic::Ordering::Relaxed) 
             {
                 let target = match node.subscriber.recv()
@@ -319,7 +319,7 @@ impl SerialManager {
                         ok
                     }
                     Err(_e)=>{
-                        let p = Packet{x:10, y:10, ro:10, m1:10, m2:10};
+                        let p = Packet{x:0, y:0, ro:0, m1:0, m2:0};
 
                         p
                     }
@@ -381,19 +381,19 @@ impl SerialManager {
                 let write_buf = if is_
                 {
                     format!("s{},{},{},{}e",
-                            (send.x/10.0) as i32+10,
-                            (send.y/10.0) as i32+10,
-                            (send.ro/10.0) as i32+10,
-                            (send.m1/10.0) as i32+10)
+                            (send.x/10) as i32+10,
+                            (send.y/10) as i32+10,
+                            (send.ro/10) as i32+10,
+                            (send.m1/10) as i32+10)
                 }
                 else
                 {
                     format!("s{},{},{},{},{}e",
-                            (send.x/10.0) as i32+10,
-                            (send.y/10.0) as i32+10,
-                            (send.ro/10.0) as i32+10,
-                            (send.m1/10.0) as i32+10,
-                            (send.m2/10.0) as i32+10)
+                            (send.x/10) as i32+10,
+                            (send.y/10) as i32+10,
+                            (send.ro/10) as i32+10,
+                            (send.m1/10) as i32+10,
+                            (send.m2/10) as i32+10)
                 };
 
                 match port_.write(write_buf.as_bytes()) {
