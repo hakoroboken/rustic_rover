@@ -10,7 +10,7 @@ mod udp_manager;
 
 use controller_manager::DualShock4DriverManager;
 use home_manager::HomeManager;
-use interface::{RRMessage, LifeCycle};
+use interface::{LifeCycle, Packet, RRMessage};
 use serial_manager::SerialManager;  
 
 use iced;
@@ -89,24 +89,28 @@ impl iced::Application for RusticRover {
                     }
                 }
                 
-                if !self.home_manager.stop
+                for i in 0..self.serial_manager.driver_num
                 {
-                    for i in 0..self.serial_manager.driver_num
-                    {
-                        match self.packet_creator.packet_.get(i) {
-                            Some(packet)=>{
-                                match packet {
-                                    Some(p)=>{
+                    match self.packet_creator.packet_.get(i) {
+                        Some(packet)=>{
+                            match packet {
+                                Some(p)=>{
+                                    if self.home_manager.stop
+                                    {
+                                        let _ = self.serial_manager.conn[i].publisher.send(Packet{x:0, y:0, ro:0, m1:0, m2:0});
+                                    }
+                                    else 
+                                    {
                                         let _ = self.serial_manager.conn[i].publisher.send(*p);
                                     }
-                                    None=>{
+                                }
+                                None=>{
 
-                                    }
                                 }
                             }
-                            None=>{
+                        }
+                        None=>{
 
-                            }
                         }
                     }
                 }

@@ -200,7 +200,7 @@ impl SerialManager {
             thread_manager:manager_vec, 
             id:id_v.clone(), 
             id_box:ComboBox::<usize>::new(id_v.clone()), 
-            smooth_value:10, 
+            smooth_value:1, 
             is_smooth:false,
             logger:LogManager::new()
         }
@@ -326,11 +326,11 @@ impl SerialManager {
                 };
 
                 let vec = Packet{
-                    x: 100 + target.x - history.x,
-                    y: 100 + target.y - history.y,
-                    ro: 100 + target.ro - history.ro,
-                    m1: 100 + target.m1 - history.m1,
-                    m2: 100 + target.m2 - history.m2,
+                    x: target.x - history.x,
+                    y: target.y - history.y,
+                    ro: target.ro - history.ro,
+                    m1: target.m1 - history.m1,
+                    m2: target.m2 - history.m2,
                 };
 
                 if vec.x > 0
@@ -381,19 +381,19 @@ impl SerialManager {
                 let write_buf = if is_
                 {
                     format!("s{},{},{},{}e",
-                            (send.x/10) as i32,
-                            (send.y/10) as i32,
-                            (send.ro/10) as i32,
-                            (send.m1/10) as i32)
+                            (send.x/10) as i32+10,
+                            (send.y/10) as i32+10,
+                            (send.ro/10) as i32+10,
+                            (send.m1/10) as i32+10)
                 }
                 else
                 {
                     format!("s{},{},{},{},{}e",
-                            (send.x/10) as i32,
-                            (send.y/10) as i32,
-                            (send.ro/10) as i32,
-                            (send.m1/10) as i32,
-                            (send.m2/10) as i32)
+                            (send.x/10) as i32+10,
+                            (send.y/10) as i32+10,
+                            (send.ro/10) as i32+10,
+                            (send.m1/10) as i32+10,
+                            (send.m2/10) as i32+10)
                 };
 
                 match port_.write(write_buf.as_bytes()) {
