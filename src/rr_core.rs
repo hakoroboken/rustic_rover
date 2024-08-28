@@ -20,6 +20,7 @@ use iced_aw::Tabs;
 pub struct RusticRover
 {
     game_controller_manager:controller_driver::ControllerManager,
+    controller_info_recv:bool,
     packet_creator:packet_manager::PacketManager,
     life_cycle:LifeCycle,
     serial_manager:serial_manager::SerialManager,
@@ -35,6 +36,7 @@ impl iced::Application for RusticRover {
     fn new(_flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
         let app = RusticRover
         {
+            controller_info_recv:false,
             game_controller_manager:controller_driver::ControllerManager::new(),
             packet_creator:packet_manager::PacketManager::new(),
             life_cycle:LifeCycle::Home,
@@ -68,12 +70,31 @@ impl iced::Application for RusticRover {
         match message {
             interface::RRMessage::ControllerThreadMessage(ds4)=>{
                 self.game_controller_manager.get_value[0] = ds4;
-                self.home_manager.conn_viewer[0].set_controller_type(ds4.mode);
+                if !self.controller_info_recv
+                {
+                    self.home_manager.conn_viewer[0].set_controller_type(ds4.mode);
+                    self.home_manager.conn_viewer[0].set_controller_name(self.game_controller_manager.controller_names[0]);
+                }
+                
                 self.packet_creator.create_packet(ds4, 0);
                 for i in 1..self.game_controller_manager.controller_num
                 {
-                    self.game_controller_manager.get_value[i] = self.game_controller_manager.connectors[i].subscriber.recv().unwrap();
-                    self.home_manager.conn_viewer[i].set_controller_type(self.game_controller_manager.get_value[i].mode);
+                    self.game_controller_manager.get_value[i] = match self.game_controller_manager.connectors[i].subscriber.recv_timeout(std::time::Duration::from_millis(100))
+                    {
+                        Ok(get)=>{
+                            get
+                        }
+                        Err(_e)=>{
+                            controller_driver::interface::Controller::new()
+                        }
+                    };
+                    if !self.controller_info_recv
+                    {
+                        self.home_manager.conn_viewer[i].set_controller_type(self.game_controller_manager.get_value[i].mode);
+                        self.home_manager.conn_viewer[i].set_controller_name(self.game_controller_manager.controller_names[i]);
+
+                        self.controller_info_recv = true
+                    }
                     self.packet_creator.create_packet(self.game_controller_manager.get_value[i], i);
                 }
 
@@ -119,10 +140,14 @@ impl iced::Application for RusticRover {
                 self.packet_creator.sdm.search_data_files();
                 self.game_controller_manager.update(msg);
 
-                for i in 1..self.game_controller_manager.controller_num
+                for i in 0..self.game_controller_manager.controller_num
                 {
-                    self.packet_creator.new_set(i);
+                    if i != 0
+                    {
+                        self.packet_creator.new_set(i);
+                    }
                     self.home_manager.add_view();
+                    
                 }
             }
             interface::RRMessage::Packet(msg)=>{

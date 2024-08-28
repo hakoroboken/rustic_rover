@@ -8,29 +8,29 @@ pub struct DualShock4Driver
     pub device:HidDevice,
     pub mode:ControllerConnectionType,
     pub rgb:RGB,
+    pub buf:[u8;256],
+    pub result:Controller
 }
 
 impl DualShock4Driver {
     pub fn task(&mut self)->Controller
     {
-            let mut buf = [0_u8;256];
+            match self.device.read_timeout(&mut self.buf, 100) {
+                Ok(_size)=>{
+                    let get_data = &self.buf[..10];
+                    self.result = convert(get_data, self.mode);
 
-            match self.device.read(&mut buf) {
-                Ok(size)=>{
-                    let get_data = &buf[..size];
-                    let (j, btn, d) = convert(get_data, self.mode);
-
-                    if j.right_x == -0.9372549 && self.mode == ControllerConnectionType::BLE
+                    if self.result.sticks.right_x == -0.9372549 && self.mode == ControllerConnectionType::BLE
                     {
                         self.mode = ControllerConnectionType::SERIAL
                     }
 
-                    if j.left_x == 0.5058824 && self.mode == ControllerConnectionType::SERIAL
+                    if self.result.sticks.left_x == 0.5058824 && self.mode == ControllerConnectionType::SERIAL
                     {
                         self.mode = ControllerConnectionType::BLE
                     }
 
-                    Controller {mode:self.mode, state:true, sticks: j, btns: btn, dpad: d }
+                    self.result
                 }
                 Err(_)=>{
                     Controller {mode:self.mode,state:false, sticks:JoyStick::new(), btns:Buttons::new(), dpad:Dpad::new()}
@@ -63,7 +63,7 @@ impl DualShock4Driver {
     }
 }
 
-fn convert(buf:&[u8], mode:ControllerConnectionType)->(JoyStick, Buttons, Dpad)
+fn convert(buf:&[u8], mode:ControllerConnectionType)->Controller
 {
     if mode == ControllerConnectionType::BLE
     {
@@ -114,7 +114,7 @@ fn convert(buf:&[u8], mode:ControllerConnectionType)->(JoyStick, Buttons, Dpad)
             128=>btns.right_push = true,
             _=>(),
         }
-        (joy, btns, dpad)
+        Controller{mode:mode, state:true, sticks:joy, btns:btns, dpad:dpad}
     }
     else if mode == ControllerConnectionType::SERIAL
     {
@@ -176,7 +176,7 @@ fn convert(buf:&[u8], mode:ControllerConnectionType)->(JoyStick, Buttons, Dpad)
             192=>{btns.left_push = true; btns.right_push=true}
             _=>(),
         }
-        (joy, btns, dpad)
+        Controller{mode:mode, state:true, sticks:joy, btns:btns, dpad:dpad}
     }
     else {
 
@@ -201,7 +201,7 @@ fn convert(buf:&[u8], mode:ControllerConnectionType)->(JoyStick, Buttons, Dpad)
             left_key:false
         };
 
-        (joy, btns, dpad)
+        Controller{mode:mode, state:true, sticks:joy, btns:btns, dpad:dpad}
     }
 }   
 

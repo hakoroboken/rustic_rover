@@ -10,6 +10,9 @@ use crate::rr_core::interface::{RRMessage,AppState,ControllerMessage};
 use crate::rr_core::{utils, thread_connection};
 
 use iced_aw::TabLabel;
+use iced::widget::{row, column, button};
+use iced::widget::container::Container;
+
 
 pub struct ControllerManager
 {
@@ -35,9 +38,7 @@ impl ControllerManager {
     }
     pub fn view(&self)->iced::Element<'_, RRMessage>
     {
-        use iced::widget::button;
-        use iced::widget::container::Container;
-        use iced::widget::column;
+        
         match self.controller_num {
             0=>{
                 let btn = button(utils::path_to_image("./image/start.png", 200)).on_press(ControllerMessage::ControllerStart).width(500).height(500);
@@ -102,7 +103,6 @@ impl ControllerManager {
                     if !self.device_list.is_empty()
                     {   
                         self.spawn_driver(ControllerConnectionType::SERIAL);
-                        self.controller_num += 1;
                         self.get_value.push(Controller::new());
                         self.device_list.remove(0);
 
@@ -112,8 +112,6 @@ impl ControllerManager {
 
                             self.add_driver(ControllerConnectionType::SERIAL, self.connectors.get(i+1).unwrap().publisher.clone());
                             self.device_list.remove(0);
-
-                            self.controller_num += 1;
                             self.get_value.push(Controller::new());
 
                             self.state = AppState::OK;
@@ -121,7 +119,6 @@ impl ControllerManager {
                     }
                     else {
                         println!("Not found device");
-                        self.scan_device();
                         self.state = AppState::NoReady;
                     }
             }
@@ -162,20 +159,21 @@ impl ControllerManager {
             {
                 let s = i.clone();
                 dev_vec.push(s);
+                self.controller_names.push(ControllerName::DualShock4);
+                println!("{}", ControllerName::DualShock4)
             }
             else if i.vendor_id() == 1356 && i.product_id() == 3302
             {
                 let s = i.clone();
                 dev_vec.push(s);
+                self.controller_names.push(ControllerName::DualSense);
+                println!("{}", ControllerName::DualSense)
             }
         }
 
-        for d_i in dev_vec.clone()
-        {
-            println!("{:?}", d_i);
-        }
-
+        self.controller_num = dev_vec.clone().len();
         self.device_list = dev_vec;
+        println!("{}", self.controller_num)
     }
 
     pub fn spawn_driver(&mut self, mode_:ControllerConnectionType)
@@ -189,7 +187,7 @@ impl ControllerManager {
                         match dr.product_id()
                         {
                             2508=>{
-                                let mut controller = dualshock4::DualShock4Driver{device:device_, mode:mode_, rgb:RGB::new()};
+                                let mut controller = dualshock4::DualShock4Driver{device:device_, mode:mode_, rgb:RGB::new(), buf:[0_u8;256], result:Controller::new()};
 
                                 controller.rgb = RGB::blue();
 
@@ -197,7 +195,7 @@ impl ControllerManager {
                                     loop {
                                         let get = controller.task();
 
-                                        let _ = publisher_.clone().send(get);
+                                        let _ = publisher_.send(get);
 
                                         if controller.mode == ControllerConnectionType::SERIAL
                                         {
@@ -205,11 +203,9 @@ impl ControllerManager {
                                         }
                                     }
                                 });
-
-                                self.controller_names.push(ControllerName::DualShock4)
                             }
                             3302=>{
-                                let mut controller = dualsense::DualSenseDriver{device:device_, mode:ControllerConnectionType::BLE, rgb:RGB::new()};
+                                let mut controller = dualsense::DualSenseDriver{device:device_, mode:mode_, rgb:RGB::new()};
 
                                 controller.rgb = RGB::blue();
 
@@ -217,11 +213,9 @@ impl ControllerManager {
                                     loop {
                                         let get = controller.task();
 
-                                        let _ = publisher_.clone().send(get);
+                                        let _ = publisher_.send(get);
                                     }
                                 });
-
-                                self.controller_names.push(ControllerName::DualSense)
                             }
                             _=>{
 
@@ -249,7 +243,7 @@ impl ControllerManager {
                         match dr.product_id()
                         {
                             2508=>{
-                                let mut controller = dualshock4::DualShock4Driver{device:device_, mode:mode_, rgb:RGB::new()};
+                                let mut controller = dualshock4::DualShock4Driver{device:device_, mode:mode_, rgb:RGB::new(), buf:[0_u8;256], result:Controller::new()};
 
                                 if self.green_flag
                                 {
@@ -264,7 +258,7 @@ impl ControllerManager {
                                     loop {
                                         let get = controller.task();
 
-                                        let _ = publisher_.clone().send(get);
+                                        let _ = publisher_.send(get);
 
                                         if controller.mode == ControllerConnectionType::SERIAL
                                         {
@@ -289,12 +283,7 @@ impl ControllerManager {
                                     loop {
                                         let get = controller.task();
 
-                                        let _ = publisher_.clone().send(get);
-
-                                        if controller.mode == ControllerConnectionType::SERIAL
-                                        {
-                                            controller.color_change()
-                                        }
+                                        let _ = publisher_.send(get);
                                     }
                                 });
                             }
@@ -335,16 +324,15 @@ fn input_to_controller_view<'a>(input:Controller)->iced::widget::Row<'a,Controll
                 input.sticks.left_y,
                 input.sticks.right_x,
                 input.sticks.right_y)).size(40);
-            let dpad_tex = text(format!("DPad\nup:{:5}\ndown:{:5}\nright:{:5}\nleft:{:5}", 
+            let dpad_tex = text(format!("DPad\nup:{}\ndown:{}\nright:{}\nleft:{}", 
                 input.dpad.up_key,
                 input.dpad.down_key,
                 input.dpad.right_key,
                 input.dpad.left_key)).size(40);
-            let btn_tex = text(format!("Buttons\ncircle:{:5},cross:{:5}\ncube:{:5},triangle:{:5}\nR1:{},R2:{}\nL1:{},L2:{}", 
+            let btn_tex = text(format!("Buttons\ncircle:{},cross:{}\ncube:{},triangle:{}\nR1:{},R2:{}\nL1:{},L2:{}", 
                 input.btns.circle,input.btns.cross,
                 input.btns.cube,input.btns.triangle,
                 input.btns.r1,input.btns.r2,
                 input.btns.l1,input.btns.l2)).size(40);
-            use iced::widget::row;
             row![state_tex, joy_tex, dpad_tex, btn_tex].padding(10).spacing(30)
 }

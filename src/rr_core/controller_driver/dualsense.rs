@@ -15,13 +15,16 @@ impl DualSenseDriver {
     {
             let mut buf = [0_u8;256];
 
-            match self.device.read(&mut buf) {
-                Ok(size)=>{
-                    let get_data = &buf[..size];
+            match self.device.read_timeout(&mut buf, 100) {
+                Ok(_size)=>{
+                    let get_data = &buf[..11];
                     let (j, btn, d) = convert(get_data, self.mode);
 
-                    if d.up_key && j.right_y == 1.0 && self.mode == ControllerConnectionType::BLE
+                    if get_data[0] == 49
                     {
+                        self.mode = ControllerConnectionType::BLE
+                    }
+                    else if get_data[0] == 1{
                         self.mode = ControllerConnectionType::SERIAL
                     }
 
@@ -32,30 +35,30 @@ impl DualSenseDriver {
                 }
             }
     }
-    pub fn color_change(&mut self)
-    {
-        if self.rgb.red == 0 && self.rgb.blue == 0 && self.rgb.grenn == 0
-        {
-            self.rgb.blue = 255;
-        }
+    // pub fn color_change(&mut self)
+    // {
+    //     if self.rgb.red == 0 && self.rgb.blue == 0 && self.rgb.grenn == 0
+    //     {
+    //         self.rgb.blue = 255;
+    //     }
 
-        let mut buf = [0u8; 32];
-        buf[0] = 0x05;
-        buf[1] = 0xFF;
-        buf[2] = 0x04;
-        buf[6] = self.rgb.red;
-        buf[7] = self.rgb.grenn;
-        buf[8] = self.rgb.blue;
+    //     let mut buf = [0u8; 32];
+    //     buf[0] = 0x05;
+    //     buf[1] = 0xFF;
+    //     buf[2] = 0x04;
+    //     buf[6] = self.rgb.red;
+    //     buf[7] = self.rgb.grenn;
+    //     buf[8] = self.rgb.blue;
 
-        match self.device.write(&buf) {
-            Ok(_d)=>{
+    //     match self.device.write(&buf) {
+    //         Ok(_d)=>{
 
-            }
-            Err(_e)=>{
+    //         }
+    //         Err(_e)=>{
 
-            }
-        }
-    }
+    //         }
+    //     }
+    // }
 }
 
 fn convert(buf:&[u8], mode:ControllerConnectionType)->(JoyStick, Buttons, Dpad)

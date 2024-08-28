@@ -1,5 +1,7 @@
 use iced_aw::TabLabel;
 use iced::widget::text;
+use iced::widget::container::Container;
+use iced::widget::{column, button};
 
 use crate::rr_core::interface::{RRMessage, Packet, HomeMessage};
 use crate::rr_core::utils::path_to_image;
@@ -14,8 +16,7 @@ pub struct HomeManager
 impl HomeManager {
     pub fn new()->HomeManager
     {
-        let mut v = Vec::<ConnectionViewer>::new();
-        v.push(ConnectionViewer::new());
+        let v = Vec::<ConnectionViewer>::new();
         HomeManager { conn_viewer: v , stop:false}
     }
     pub fn update(&mut self, message:HomeMessage)
@@ -31,8 +32,6 @@ impl HomeManager {
     }
     pub fn view(&self)->iced::Element<'_, RRMessage>
     {
-        use iced::widget::container::Container;
-        use iced::widget::{column, button};
         match self.conn_viewer.len() {
             0=>{
                 text("").into()
@@ -212,6 +211,10 @@ impl ConnectionViewer {
         else {
             self.external_type = ExternalType::None
         }
+    }
+    pub fn set_controller_name(&mut self, name:ControllerName)
+    {
+        self.controller_name = name
     }
 }
 
