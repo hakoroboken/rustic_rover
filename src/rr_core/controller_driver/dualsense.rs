@@ -20,14 +20,9 @@ impl DualSenseDriver {
                     let get_data = &buf[..size];
                     let (j, btn, d) = convert(get_data, self.mode);
 
-                    if j.right_x == -0.9372549 && self.mode == ControllerConnectionType::BLE
+                    if d.up_key && j.right_y == 1.0 && self.mode == ControllerConnectionType::BLE
                     {
                         self.mode = ControllerConnectionType::SERIAL
-                    }
-
-                    if j.left_x == 0.5058824 && self.mode == ControllerConnectionType::SERIAL
-                    {
-                        self.mode = ControllerConnectionType::BLE
                     }
 
                     Controller {mode:self.mode, state:true, sticks: j, btns: btn, dpad: d }
