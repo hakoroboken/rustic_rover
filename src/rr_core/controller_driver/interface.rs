@@ -1,4 +1,24 @@
 #[derive(Debug, PartialEq, Clone, Copy, Eq)]
+pub enum ControllerName
+{
+    DualShock4,
+    DualSense
+}
+
+impl std::fmt::Display for ControllerName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                ControllerName::DualSense=>"DualSense",
+                ControllerName::DualShock4=>"DualShock4"
+            }
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Copy, Eq)]
 pub enum ControllerConnectionType
 {
     BLE,

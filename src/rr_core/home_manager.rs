@@ -3,7 +3,7 @@ use iced::widget::text;
 
 use crate::rr_core::interface::{RRMessage, Packet, HomeMessage};
 use crate::rr_core::utils::path_to_image;
-use super::controller_driver::interface::ControllerConnectionType;
+use super::controller_driver::interface::{ControllerConnectionType, ControllerName};
 
 pub struct HomeManager
 {
@@ -96,6 +96,7 @@ impl HomeManager {
 
 pub struct ConnectionViewer
 {
+    controller_name: ControllerName,
     controller_connection_type: ExternalType,
     packet: Option<Packet>,
     external_path:String,
@@ -105,7 +106,7 @@ pub struct ConnectionViewer
 impl ConnectionViewer {
     pub fn new()->ConnectionViewer
     {
-        ConnectionViewer { controller_connection_type: ExternalType::None, packet: None, external_path: String::new() , external_type:ExternalType::None}
+        ConnectionViewer {controller_name:ControllerName::DualShock4, controller_connection_type: ExternalType::None, packet: None, external_path: String::new() , external_type:ExternalType::None}
     }
     pub fn create_view(&self, controller_number:usize, stop:bool)->iced::Element<'_, HomeMessage>
     {
@@ -126,7 +127,7 @@ impl ConnectionViewer {
 
         let controller_connection: iced::Element<'_, HomeMessage> = if self.controller_connection_type == ExternalType::BLE
         {
-            let te = text("Controller").style(set_rgb).size(40);
+            let te = text(self.controller_name).style(set_rgb).size(40);
             let controller = path_to_image("./image/controller.png", 200);
             let line = path_to_image("./image/wireless.png", 100);
 
@@ -134,7 +135,7 @@ impl ConnectionViewer {
         }
         else if self.controller_connection_type == ExternalType::Serial
         {
-            let te = text("Controller").style(set_rgb).size(40);
+            let te = text(self.controller_name).style(set_rgb).size(40);
             let controller = path_to_image("./image/controller.png", 200);
             let line = path_to_image("./image/wired.png", 100);
 

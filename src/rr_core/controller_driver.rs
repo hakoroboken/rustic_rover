@@ -5,7 +5,7 @@ pub mod dualshock4;
 extern crate hidapi;
 use hidapi::{HidApi, DeviceInfo};
 
-use super::controller_driver::{interface::{Controller, ControllerConnectionType, RGB}, self};
+use interface::{Controller, ControllerConnectionType, ControllerName, RGB};
 use crate::rr_core::interface::{RRMessage,AppState,ControllerMessage};
 use crate::rr_core::{utils, thread_connection};
 
@@ -13,6 +13,7 @@ use iced_aw::TabLabel;
 
 pub struct ControllerManager
 {
+    pub controller_names:Vec<ControllerName>,
     pub first_connector:thread_connection::AsyncThreadConnector<Controller>,
     pub connectors:Vec<thread_connection::ThreadConnector<Controller>>,
     pub controller_num:usize,
@@ -139,6 +140,7 @@ impl ControllerManager {
         let ds4 = Controller::new();
         in_v.push(ds4);
         ControllerManager {
+            controller_names: Vec::<ControllerName>::new(),
             first_connector:ds4_conn, 
             connectors:ds4_conn_vec,
             controller_num:0, 
@@ -187,7 +189,7 @@ impl ControllerManager {
                         match dr.product_id()
                         {
                             2508=>{
-                                let mut controller = controller_driver::dualshock4::DualShock4Driver{device:device_, mode:mode_, rgb:RGB::new()};
+                                let mut controller = dualshock4::DualShock4Driver{device:device_, mode:mode_, rgb:RGB::new()};
 
                                 controller.rgb = RGB::blue();
 
@@ -203,9 +205,11 @@ impl ControllerManager {
                                         }
                                     }
                                 });
+
+                                self.controller_names.push(ControllerName::DualShock4)
                             }
                             3302=>{
-                                let mut controller = controller_driver::dualsense::DualSenseDriver{device:device_, mode:ControllerConnectionType::BLE, rgb:RGB::new()};
+                                let mut controller = dualsense::DualSenseDriver{device:device_, mode:ControllerConnectionType::BLE, rgb:RGB::new()};
 
                                 controller.rgb = RGB::blue();
 
@@ -214,13 +218,10 @@ impl ControllerManager {
                                         let get = controller.task();
 
                                         let _ = publisher_.clone().send(get);
-
-                                        if controller.mode == ControllerConnectionType::SERIAL
-                                        {
-                                            controller.color_change()
-                                        }
                                     }
                                 });
+
+                                self.controller_names.push(ControllerName::DualSense)
                             }
                             _=>{
 
@@ -248,7 +249,7 @@ impl ControllerManager {
                         match dr.product_id()
                         {
                             2508=>{
-                                let mut controller = controller_driver::dualshock4::DualShock4Driver{device:device_, mode:mode_, rgb:RGB::new()};
+                                let mut controller = dualshock4::DualShock4Driver{device:device_, mode:mode_, rgb:RGB::new()};
 
                                 if self.green_flag
                                 {
@@ -273,7 +274,7 @@ impl ControllerManager {
                                 });
                             }
                             3302=>{
-                                let mut controller = controller_driver::dualsense::DualSenseDriver{device:device_, mode:ControllerConnectionType::BLE, rgb:RGB::new()};
+                                let mut controller = dualsense::DualSenseDriver{device:device_, mode:ControllerConnectionType::BLE, rgb:RGB::new()};
 
                                 if self.green_flag
                                 {
