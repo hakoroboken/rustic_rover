@@ -104,13 +104,12 @@ impl ControllerManager {
                     if !self.device_list.is_empty()
                     {   
                         self.spawn_driver(ControllerConnectionType::BLE);
-                        self.get_value.push(Controller::new());
                         self.device_list.remove(0);
 
                         for _i in 0..(self.controller_num-1) {
                             let new_conn = thread_connection::ThreadConnector::<Controller>::new();
                             
-                            self.add_driver(ControllerConnectionType::BLE, new_conn.publisher.clone());
+                            self.add_driver(ControllerConnectionType::SERIAL, new_conn.publisher.clone());
                             self.connectors.push(new_conn);
 
                             self.device_list.remove(0);
@@ -178,8 +177,8 @@ impl ControllerManager {
                 if x_box_ok
                 {
                     let s = i.clone();
-                    dev_vec.push(s);
-                    self.controller_names.push(ControllerName::XBox);
+                    dev_vec.insert(0,s);
+                    self.controller_names.insert(0, ControllerName::XBox);
                     println!("{}", ControllerName::XBox);
 
                     x_box_ok = false
@@ -209,7 +208,6 @@ impl ControllerManager {
                         {
                             2508=>{
                                 let mut controller = dualshock4::DualShock4Driver{device:device_, mode:mode_, rgb:RGB::new(), buf:[0_u8;256], result:Controller::new()};
-                                let _ = controller.device.set_blocking_mode(false);
                                 controller.rgb = RGB::blue();
 
                                 std::thread::spawn(move ||{
@@ -227,7 +225,6 @@ impl ControllerManager {
                             }
                             3302=>{
                                 let mut controller = dualsense::DualSenseDriver{device:device_, mode:mode_, rgb:RGB::new()};
-                                let _ = controller.device.set_blocking_mode(false);
                                 controller.rgb = RGB::blue();
 
                                 std::thread::spawn(move ||{
@@ -278,7 +275,6 @@ impl ControllerManager {
                         {
                             2508=>{
                                 let mut controller = dualshock4::DualShock4Driver{device:device_, mode:mode_, rgb:RGB::new(), buf:[0_u8;256], result:Controller::new()};
-                                let _ = controller.device.set_blocking_mode(false);
                                 if self.green_flag
                                 {
                                     controller.rgb = RGB::green()
@@ -302,8 +298,7 @@ impl ControllerManager {
                                 });
                             }
                             3302=>{
-                                let mut controller = dualsense::DualSenseDriver{device:device_, mode:ControllerConnectionType::BLE, rgb:RGB::new()};
-                                let _ = controller.device.set_blocking_mode(false);
+                                let mut controller = dualsense::DualSenseDriver{device:device_, mode:mode_, rgb:RGB::new()};
                                 if self.green_flag
                                 {
                                     controller.rgb = RGB::green()
@@ -323,7 +318,6 @@ impl ControllerManager {
                             }
                             2835=>{
                                 let mut controller = xbox::XBoxDriver{mode:mode_, device:device_, rgb:RGB::new()};
-                                let _ = controller.device.set_blocking_mode(false);
                                 controller.rgb = RGB::blue();
 
                                 std::thread::spawn(move ||{
