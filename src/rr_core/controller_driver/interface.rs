@@ -1,4 +1,26 @@
 #[derive(Debug, PartialEq, Clone, Copy, Eq)]
+pub enum ControllerName
+{
+    DualShock4,
+    DualSense,
+    XBox
+}
+
+impl std::fmt::Display for ControllerName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                ControllerName::DualSense=>"DualSense",
+                ControllerName::DualShock4=>"DualShock4",
+                ControllerName::XBox=>"XBox"
+            }
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Copy, Eq)]
 pub enum ControllerConnectionType
 {
     BLE,
@@ -46,7 +68,7 @@ impl RGB {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Controller
 {
     pub mode:ControllerConnectionType,
@@ -63,7 +85,7 @@ impl Controller {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct JoyStick
 {
     pub left_x:f32,
@@ -78,7 +100,7 @@ impl JoyStick {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Dpad
 {
     pub up_key:bool,
@@ -93,7 +115,7 @@ impl Dpad {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Buttons
 {
     pub circle:bool,
