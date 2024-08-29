@@ -152,6 +152,7 @@ impl ControllerManager {
 
     pub fn scan_device(&mut self)
     {
+        let mut x_box_ok = true;
         self.api = HidApi::new().unwrap();
         let mut dev_vec = Vec::<DeviceInfo>::new();
         for i in self.api.device_list()
@@ -173,10 +174,15 @@ impl ControllerManager {
             }
             else if i.vendor_id() == 1118 && i.product_id() == 2835
             {
-                let s = i.clone();
-                dev_vec.push(s);
-                self.controller_names.push(ControllerName::XBox);
-                println!("{}", ControllerName::XBox)
+                if x_box_ok
+                {
+                    let s = i.clone();
+                    dev_vec.push(s);
+                    self.controller_names.push(ControllerName::XBox);
+                    println!("{}", ControllerName::XBox);
+
+                    x_box_ok = false
+                }
             }
         }
 
