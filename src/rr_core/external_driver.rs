@@ -1,3 +1,6 @@
+pub mod serial;
+pub mod udp;
+
 use crate::rr_core::interface::{Packet, SerialMessage, RRMessage};
 use crate::rr_core::thread_connection::{ThreadConnector, ThreadManager};
 use crate::rr_core::utils::{ComboBox, LogManager};
