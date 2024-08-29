@@ -17,8 +17,8 @@ impl XBoxDriver {
 
             match self.device.read_timeout(&mut buf, 100) {
                 Ok(_size)=>{
-                    let get_data = &buf[..15];
-                    let (j, btn, d) = convert(get_data, self.mode);
+                    let get_data = &buf[..20];
+                    let (mut j, btn, d) = convert(get_data, self.mode);
 
                     if get_data[0] == 49
                     {
@@ -26,6 +26,11 @@ impl XBoxDriver {
                     }
                     else if get_data[0] == 1{
                         self.mode = ControllerConnectionType::BLE
+                    }
+
+                    if j.left_x == -1.0 && j.left_y == 1.0 && j.right_x == -1.0 && j.right_y == 1.0
+                    {
+                        j = JoyStick::new()
                     }
 
                     Controller {mode:self.mode, state:true, sticks: j, btns: btn, dpad: d }
@@ -109,13 +114,18 @@ fn convert(buf:&[u8], mode:ControllerConnectionType)->(JoyStick, Buttons, Dpad)
             1=>buttons.cross = true,
             3=>{buttons.cross = true; buttons.circle = true}
             9=>{buttons.cube = true; buttons.cross = true}
-            17=>{buttons.cross = true; buttons.triangle = true}
+            17=>{buttons.cross = true; buttons.triangle = true},
+            65=>{buttons.cross = true; buttons.l1= true},
+            129=>{buttons.cross = true; buttons.r1 = true}
             2=>buttons.circle = true,
             10=>{buttons.cube = true; buttons.circle = true}
             18=>{buttons.circle = true; buttons.triangle = true}
             8=>buttons.cube = true,
             24=>{buttons.cube = true; buttons.triangle = true}
             16=>buttons.triangle = true,
+            64=>buttons.l1 = true,
+            128=>buttons.r1 = true,
+            192=>{buttons.l1 = true; buttons.r1 = true}
             _=>{}
         }
 
