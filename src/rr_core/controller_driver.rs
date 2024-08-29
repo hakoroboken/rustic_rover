@@ -234,7 +234,6 @@ impl ControllerManager {
                             }
                             2835=>{
                                 let mut controller = xbox::XBoxDriver{mode:mode_, device:device_, rgb:RGB::new()};
-                                let _ = controller.device.set_blocking_mode(false);
                                 controller.rgb = RGB::blue();
 
                                 std::thread::spawn(move ||{
