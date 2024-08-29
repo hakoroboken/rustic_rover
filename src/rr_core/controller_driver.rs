@@ -107,11 +107,12 @@ impl ControllerManager {
                         self.get_value.push(Controller::new());
                         self.device_list.remove(0);
 
-                        for i in 0..(self.controller_num-1) {
+                        for _i in 0..(self.controller_num-1) {
                             let new_conn = thread_connection::ThreadConnector::<Controller>::new();
+                            
+                            self.add_driver(ControllerConnectionType::BLE, new_conn.publisher.clone());
                             self.connectors.push(new_conn);
 
-                            self.add_driver(ControllerConnectionType::BLE, self.connectors.get(i+1).unwrap().publisher.clone());
                             self.device_list.remove(0);
                             self.get_value.push(Controller::new());
 
@@ -184,6 +185,11 @@ impl ControllerManager {
                     x_box_ok = false
                 }
             }
+        }
+
+        for i in &dev_vec
+        {
+            println!("{:?}", i)
         }
 
         self.controller_num = dev_vec.clone().len();
@@ -262,10 +268,11 @@ impl ControllerManager {
 
     pub fn add_driver(&mut self, mode_:ControllerConnectionType, publisher_:std::sync::mpsc::Sender<Controller>)
     {
+        let api = HidApi::new().unwrap();
         match self.device_list.first()
         {
             Some(dr)=>{
-                match dr.open_device(&self.api) {
+                match dr.open_device(&api) {
                     Ok(device_)=>{
                         match dr.product_id()
                         {

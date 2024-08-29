@@ -3,15 +3,14 @@ mod interface;
 mod thread_connection;
 mod packet_manager;
 mod utils;
-mod serial_manager;
+mod external_driver;
 mod save_data_manager;
 mod home_manager;
-mod udp_manager;
 
 
 use home_manager::HomeManager;
 use interface::{LifeCycle, Packet, RRMessage};
-use serial_manager::SerialManager;  
+use external_driver::SerialManager;  
 
 use iced;
 use iced_aw::Tabs;
@@ -22,7 +21,7 @@ pub struct RusticRover
     game_controller_manager:controller_driver::ControllerManager,
     packet_creator:packet_manager::PacketManager,
     life_cycle:LifeCycle,
-    serial_manager:serial_manager::SerialManager,
+    serial_manager:external_driver::SerialManager,
     home_manager:home_manager::HomeManager
 }
 
