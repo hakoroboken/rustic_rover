@@ -386,6 +386,7 @@ impl PacketManager {
                 );
 
                 let sdm_menu = self.sdm.menu_view(self.selected_file_name.clone());
+                let sdm_picture = utils::path_to_image("./image/choose_save_data.png", 400).height(40);
 
                 let log = self.logger.view().size(50);
 
@@ -394,6 +395,7 @@ impl PacketManager {
                     column![
                             id_title,
                             combo_id,
+                            sdm_picture,
                             sdm_menu,
                             x_title,
                             row_x,
@@ -516,6 +518,7 @@ impl PacketManager {
                 };
 
                 let sdm_menu = self.sdm.menu_view(self.selected_file_name.clone());
+                let sdm_picture = utils::path_to_image("./image/choose_save_data.png", 400).height(40);
 
                 let id_title = utils::path_to_image("./image/packet_erabe.png", 400).height(40);
                 let combo_id = combo_box(
@@ -532,6 +535,7 @@ impl PacketManager {
                     column![
                             id_title,
                             combo_id,
+                            sdm_picture,
                             sdm_menu,
                             x_title,
                             row_x,
