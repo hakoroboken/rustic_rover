@@ -15,7 +15,7 @@ impl XBoxDriver {
     {
             let mut buf = [0_u8;256];
 
-            match self.device.read_timeout(&mut buf, 100) {
+            match self.device.read_timeout(&mut buf, 1000) {
                 Ok(_size)=>{
                     let get_data = &buf[..20];
                     let (mut j, btn, d) = convert(get_data, self.mode);
