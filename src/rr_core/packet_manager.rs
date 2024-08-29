@@ -1,6 +1,7 @@
-use crate::rr_core::interface::{Packet, AssignController, PacketMessage, RRMessage};
+use crate::rr_core::interface::{AssignController, PacketMessage, RRMessage};
 use crate::rr_core::utils::{self, ComboBox, LogManager};
 use super::controller_driver::interface::Controller;
+use super::external_driver::interface::Packet;
 
 use iced::widget::{text, slider, column, row, combo_box};
 use iced_aw::TabLabel;

@@ -9,8 +9,9 @@ mod home_manager;
 
 
 use home_manager::HomeManager;
-use interface::{LifeCycle, Packet, RRMessage};
-use external_driver::SerialManager;  
+use interface::{LifeCycle, RRMessage};
+use external_driver::SerialManager; 
+use external_driver::interface::Packet; 
 
 use iced;
 use iced_aw::Tabs;
