@@ -20,12 +20,12 @@ impl DualShock4Driver {
                     let get_data = &self.buf[..10];
                     self.result = convert(get_data, self.mode);
 
-                    if self.result.sticks.right_x == -0.9372549 && self.mode == ControllerConnectionType::BLE
+                    if get_data[0] == 1
                     {
                         self.mode = ControllerConnectionType::SERIAL
                     }
 
-                    if self.result.sticks.left_x == 0.5058824 && self.mode == ControllerConnectionType::SERIAL
+                    if get_data[0] == 17
                     {
                         self.mode = ControllerConnectionType::BLE
                     }
