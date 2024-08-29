@@ -394,6 +394,7 @@ impl PacketManager {
                     column![
                             id_title,
                             combo_id,
+                            sdm_menu,
                             x_title,
                             row_x,
                             y_title,
@@ -405,7 +406,6 @@ impl PacketManager {
                             m2_title,
                             row_m2,
                             p_text,
-                            sdm_menu,
                             log
                     ].align_items(iced::Alignment::Center)
                 )
@@ -532,6 +532,7 @@ impl PacketManager {
                     column![
                             id_title,
                             combo_id,
+                            sdm_menu,
                             x_title,
                             row_x,
                             y_title,
@@ -543,7 +544,6 @@ impl PacketManager {
                             m2_title,
                             row_m2,
                             p_text,
-                            sdm_menu,
                             log
                     ].align_items(iced::Alignment::Center)
                 )
