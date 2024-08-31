@@ -3,7 +3,7 @@ use crate::rr_core::utils::{self, ComboBox, LogManager};
 use super::controller_driver::interface::Controller;
 use super::external_driver::interface::Packet;
 
-use iced::widget::{text, slider, column, row, combo_box};
+use iced::widget::{button, column, combo_box, row, slider, text};
 use iced_aw::TabLabel;
 
 use crate::rr_core::save_data_manager;
@@ -13,7 +13,7 @@ pub struct PacketManager
     pub packet_:Vec<Option<Packet>>,
     pub packet_num:usize,
     pub packet_id:Vec<usize>,
-    pub packet_id_list:ComboBox<usize>,
+    pub view_packet_id: usize,
     pub x_cb:Vec<PlusMinus>,
     pub y_cb:Vec<PlusMinus>,
     pub ro_cb:Vec<PlusMinus>,
@@ -42,333 +42,240 @@ impl PacketManager {
     {
         match message {
             PacketMessage::Assign1p(a1p)=>{
-                match self.packet_id_list.selected {
-                    Some(id)=>{
-                        self.x_cb[id].plus.selected = Some(a1p);
+                        self.x_cb[self.view_packet_id].plus.selected = Some(a1p);
 
-                        self.logger.add_str(format!("Set Assign of X_Plus to {}", a1p))
-                    }
-                    None=>{
-
-                    }
-                }                
+                        self.logger.add_str(format!("Set Assign of X_Plus to {}", a1p))                
             }
             PacketMessage::Assign1m(a1m)=>{
-                match self.packet_id_list.selected {
-                    Some(id)=>{
-                        self.x_cb[id].minus.selected = Some(a1m);
+                        self.x_cb[self.view_packet_id].minus.selected = Some(a1m);
 
                         self.logger.add_str(format!("Set Assign of X_Minus to {}", a1m))
-                    }
-                    None=>{
-
-                    }
-                }     
             }
             PacketMessage::Assign2p(a2p)=>{
-                match self.packet_id_list.selected {
-                    Some(id)=>{
-                        self.y_cb[id].plus.selected = Some(a2p);
+                        self.y_cb[self.view_packet_id].plus.selected = Some(a2p);
 
                         self.logger.add_str(format!("Set Assign of Y_Plus to {}", a2p))
-                    }
-                    None=>{
-
-                    }
-                }
             }
             PacketMessage::Assign2m(a2m)=>{
-                match self.packet_id_list.selected {
-                    Some(id)=>{
-                        self.y_cb[id].minus.selected = Some(a2m);
+                        self.y_cb[self.view_packet_id].minus.selected = Some(a2m);
 
                         self.logger.add_str(format!("Set Assign of Y_Minus to {}", a2m))
-                    }
-                    None=>{
-
-                    }
-                }
             }
             PacketMessage::Assign3p(a3p)=>{
-                match self.packet_id_list.selected {
-                    Some(id)=>{
-                        self.ro_cb[id].plus.selected = Some(a3p);
+                        self.ro_cb[self.view_packet_id].plus.selected = Some(a3p);
 
                         self.logger.add_str(format!("Set Assign of Rotation_Plus to {}", a3p))
-                    }
-                    None=>{
-
-                    }
-                }
             }
             PacketMessage::Assign3m(a3m)=>{
-                match self.packet_id_list.selected {
-                    Some(id)=>{
-                        self.ro_cb[id].minus.selected = Some(a3m);
+                        self.ro_cb[self.view_packet_id].minus.selected = Some(a3m);
 
                         self.logger.add_str(format!("Set Assign of Rotation_Minus to {}", a3m))
-                    }
-                    None=>{
-
-                    }
-                }
             }
             PacketMessage::Assign4p(a4p)=>{
-                match self.packet_id_list.selected {
-                    Some(id)=>{
-                        self.m1_cb[id].plus.selected = Some(a4p);
+                        self.m1_cb[self.view_packet_id].plus.selected = Some(a4p);
 
                         self.logger.add_str(format!("Set Assign of Machine1_Plus to {}", a4p))
-                    }
-                    None=>{
-
-                    }
-                }
             }
             PacketMessage::Assign4m(a4m)=>{
-                match self.packet_id_list.selected {
-                    Some(id)=>{
-                        self.m1_cb[id].minus.selected = Some(a4m);
+                        self.m1_cb[self.view_packet_id].minus.selected = Some(a4m);
 
                         self.logger.add_str(format!("Set Assign of Machine1_Minus to {}", a4m))
-                    }
-                    None=>{
-
-                    }
-                }
             }
             PacketMessage::Assign5p(a5p)=>{
-                match self.packet_id_list.selected {
-                    Some(id)=>{
-                        self.m2_cb[id].plus.selected = Some(a5p);
+                        self.m2_cb[self.view_packet_id].plus.selected = Some(a5p);
 
                         self.logger.add_str(format!("Set Assign of Machine2_Plus to {}", a5p))
-                    }
-                    None=>{
-
-                    }
-                }
             }
             PacketMessage::Assign5m(a5m)=>{
-                match self.packet_id_list.selected {
-                    Some(id)=>{
-                        self.m2_cb[id].minus.selected = Some(a5m);
+                        self.m2_cb[self.view_packet_id].minus.selected = Some(a5m);
 
                         self.logger.add_str(format!("Set Assign of Machine2_Minus to {}", a5m))
-                    }
-                    None=>{
-
-                    }
-                }
             },
             PacketMessage::PowerRateX(x)=>{
-                match self.packet_id_list.selected {
-                    Some(id)=>{
-                        self.x_pow_rate[id] = x;
+                        self.x_pow_rate[self.view_packet_id] = x;
 
                         self.logger.add_str(format!("Set Power rate X to {}", x))
-                    }
-                    None=>{
-
-                    }
-                }
             }
             PacketMessage::PowerRateY(y)=>{
-                match self.packet_id_list.selected {
-                    Some(id)=>{
-                        self.y_pow_rate[id] = y;
+                        self.y_pow_rate[self.view_packet_id] = y;
 
                         self.logger.add_str(format!("Set Power rate Y to {}", y))
-                    }
-                    None=>{
-
-                    }
-                }
             }
             PacketMessage::PowerRateRotation(rotation)=>{
-                match self.packet_id_list.selected {
-                    Some(id)=>{
-                        self.ro_pow_rate[id] = rotation;
+                        self.ro_pow_rate[self.view_packet_id] = rotation;
 
                         self.logger.add_str(format!("Set Power rate Rotation to {}", rotation))
-                    }
-                    None=>{
-
-                    }
-                }
             }
             PacketMessage::PowerRateM1(m1)=>{
-                match self.packet_id_list.selected {
-                    Some(id)=>{
-                        self.m1_pow_rate[id] = m1;
+                        self.m1_pow_rate[self.view_packet_id] = m1;
 
                         self.logger.add_str(format!("Set Power rate Machine1 to {}", m1))
-                    }
-                    None=>{
-
-                    }
-                }
             }
             PacketMessage::PowerRateM2(m2)=>{
-                match self.packet_id_list.selected {
-                    Some(id)=>{
-                        self.m2_pow_rate[id] = m2;
+                        self.m2_pow_rate[self.view_packet_id] = m2;
 
                         self.logger.add_str(format!("Set Power rate Machine2 to {}", m2))
-                    }
-                    None=>{
-
-                    }
-                }
             }
             PacketMessage::FileSelect(name)=>{
                 self.selected_file_name = name.clone();
 
                 self.sdm.load_from_file(self.selected_file_name.clone());
+                        self.x_cb[self.view_packet_id].plus.selected = self.sdm.xp_assign;
+                        self.x_cb[self.view_packet_id].minus.selected = self.sdm.xm_assign;
+                        self.x_pow_rate[self.view_packet_id] = self.sdm.x_rate.unwrap();
+                        self.y_cb[self.view_packet_id].plus.selected = self.sdm.yp_assign;
+                        self.y_cb[self.view_packet_id].minus.selected = self.sdm.ym_assign;
+                        self.y_pow_rate[self.view_packet_id] = self.sdm.y_rate.unwrap();
+                        self.ro_cb[self.view_packet_id].plus.selected = self.sdm.rop_assign;
+                        self.ro_cb[self.view_packet_id].minus.selected = self.sdm.rom_assign;
+                        self.ro_pow_rate[self.view_packet_id] = self.sdm.ro_rate.unwrap();
+                        self.m1_cb[self.view_packet_id].plus.selected = self.sdm.m1p_assign;
+                        self.m1_cb[self.view_packet_id].minus.selected = self.sdm.m1m_assign;
+                        self.m1_pow_rate[self.view_packet_id] = self.sdm.m1_rate.unwrap();
+                        self.m2_cb[self.view_packet_id].plus.selected = self.sdm.m2p_assign;
+                        self.m2_cb[self.view_packet_id].minus.selected = self.sdm.m2m_assign;
+                        self.m2_pow_rate[self.view_packet_id] = self.sdm.m2_rate.unwrap();
 
-                match self.packet_id_list.selected
-                {
-                    Some(id)=>{
-                        self.x_cb[id].plus.selected = self.sdm.xp_assign;
-                        self.x_cb[id].minus.selected = self.sdm.xm_assign;
-                        self.x_pow_rate[id] = self.sdm.x_rate.unwrap();
-                        self.y_cb[id].plus.selected = self.sdm.yp_assign;
-                        self.y_cb[id].minus.selected = self.sdm.ym_assign;
-                        self.y_pow_rate[id] = self.sdm.y_rate.unwrap();
-                        self.ro_cb[id].plus.selected = self.sdm.rop_assign;
-                        self.ro_cb[id].minus.selected = self.sdm.rom_assign;
-                        self.ro_pow_rate[id] = self.sdm.ro_rate.unwrap();
-                        self.m1_cb[id].plus.selected = self.sdm.m1p_assign;
-                        self.m1_cb[id].minus.selected = self.sdm.m1m_assign;
-                        self.m1_pow_rate[id] = self.sdm.m1_rate.unwrap();
-                        self.m2_cb[id].plus.selected = self.sdm.m2p_assign;
-                        self.m2_cb[id].minus.selected = self.sdm.m2m_assign;
-                        self.m2_pow_rate[id] = self.sdm.m2_rate.unwrap();
-                    }
-                    None=>{
-                        self.x_cb[0].plus.selected = self.sdm.xp_assign;
-                        self.x_cb[0].minus.selected = self.sdm.xm_assign;
-                        self.x_pow_rate[0] = self.sdm.x_rate.unwrap();
-                        self.y_cb[0].plus.selected = self.sdm.yp_assign;
-                        self.y_cb[0].minus.selected = self.sdm.ym_assign;
-                        self.y_pow_rate[0] = self.sdm.y_rate.unwrap();
-                        self.ro_cb[0].plus.selected = self.sdm.rop_assign;
-                        self.ro_cb[0].minus.selected = self.sdm.rom_assign;
-                        self.ro_pow_rate[0] = self.sdm.ro_rate.unwrap();
-                        self.m1_cb[0].plus.selected = self.sdm.m1p_assign;
-                        self.m1_cb[0].minus.selected = self.sdm.m1m_assign;
-                        self.m1_pow_rate[0] = self.sdm.m1_rate.unwrap();
-                        self.m2_cb[0].plus.selected = self.sdm.m2p_assign;
-                        self.m2_cb[0].minus.selected = self.sdm.m2m_assign;
-                        self.m2_pow_rate[0] = self.sdm.m2_rate.unwrap();
-                    }
-                }
-
+                        self.packet_id[self.view_packet_id] = self.sdm.packet_id.unwrap() as usize;
                 self.logger.add_str(format!("Load YAML file : {}", name.clone()));
             }
-            PacketMessage::PacketID(selected_)=>{
-                self.packet_id_list.selected = Some(selected_);
+            PacketMessage::NextPacket=>{
+                let new_id = self.view_packet_id as i8 + 1;
+                let max_id = self.packet_num as i8 -1;
 
-                self.logger.add_str(format!("Set Packet ID to {}", selected_));
+                if new_id > max_id
+                {
+                    self.view_packet_id = 0;
+                }
+                else {
+                    self.view_packet_id = new_id as usize
+                }
+
+                self.logger.add_str(format!("Set Packet ID to {}", self.view_packet_id));
+            }
+            PacketMessage::BackPacket=>{
+                let new_id = self.view_packet_id as i8 - 1;
+
+                if new_id < 0
+                {
+                    self.view_packet_id = self.packet_num -1 ;
+                }
+                else {
+                    self.view_packet_id = new_id as usize
+                }
+
+                self.logger.add_str(format!("Set Packet ID to {}", self.view_packet_id));
+            }
+            PacketMessage::FirstPacketID(id)=>{
+                self.packet_id[0] = id;
+            }
+            PacketMessage::SecondPacketID(id)=>{
+                self.packet_id[1] = id;
+            }
+            PacketMessage::ThirdPacketID(id)=>{
+                self.packet_id[2] = id;
             }
         }
     }
     pub fn view(&self)->iced::Element<'_, RRMessage>
     {
-        match self.packet_id_list.selected {
-            Some(id)=>{
-                let x_text = text(format!("Select X (Rate : {})", self.x_pow_rate[id])).size(30);
+        let next_button = button(utils::path_to_image("./image/next_packet.png", 100)).width(250).height(250).on_press(PacketMessage::NextPacket);
+        let back_button = button(utils::path_to_image("./image/back_packet.png", 100)).width(250).height(250).on_press(PacketMessage::BackPacket);
+
+        let packet_button_row = row![back_button, next_button].spacing(100);
+
+                let x_text = text(format!("Select X (Rate : {})", self.x_pow_rate[self.view_packet_id])).size(30);
                 let x_sc = slider(
                     0..=100, 
-                    self.x_pow_rate[id], 
+                    self.x_pow_rate[self.view_packet_id], 
                     PacketMessage::PowerRateX).width(500);
                 let x_title = row![x_text, x_sc];
                 let combo_xp = combo_box(
-                    &self.x_cb[id].plus.all, 
+                    &self.x_cb[self.view_packet_id].plus.all, 
                     "Selecct assign of x plus value", 
-                    self.x_cb[id].plus.selected.as_ref(), 
+                    self.x_cb[self.view_packet_id].plus.selected.as_ref(), 
                     PacketMessage::Assign1p);
                 let combo_xm = combo_box(
-                    &self.x_cb[id].minus.all, 
+                    &self.x_cb[self.view_packet_id].minus.all, 
                     "Selecct assign of x minus value", 
-                    self.x_cb[id].minus.selected.as_ref(), 
+                    self.x_cb[self.view_packet_id].minus.selected.as_ref(), 
                     PacketMessage::Assign1m);
                 let row_x = row![combo_xp, combo_xm].spacing(30);
 
-                let y_text = text(format!("Select Y (Rate : {})", self.y_pow_rate[id])).size(30);
+                let y_text = text(format!("Select Y (Rate : {})", self.y_pow_rate[self.view_packet_id])).size(30);
                 let y_sc = slider(
                     0..=100, 
-                    self.y_pow_rate[id], 
+                    self.y_pow_rate[self.view_packet_id], 
                     PacketMessage::PowerRateY).width(500);
                 let y_title = row![y_text, y_sc];
                 let combo_yp = combo_box(
-                    &self.y_cb[id].plus.all, 
+                    &self.y_cb[self.view_packet_id].plus.all, 
                     "Selecct assign of y plus value", 
-                    self.y_cb[id].plus.selected.as_ref(), 
+                    self.y_cb[self.view_packet_id].plus.selected.as_ref(), 
                     PacketMessage::Assign2p);
                 let combo_ym = combo_box(
-                    &self.y_cb[id].minus.all, 
+                    &self.y_cb[self.view_packet_id].minus.all, 
                     "Selecct assign of y minus value", 
-                    self.y_cb[id].minus.selected.as_ref(), 
+                    self.y_cb[self.view_packet_id].minus.selected.as_ref(), 
                     PacketMessage::Assign2m);
                 let row_y = row![combo_yp, combo_ym].spacing(30);
 
-                let ro_text = text(format!("Select Rotation (Rate : {})", self.ro_pow_rate[id])).size(30);
+                let ro_text = text(format!("Select Rotation (Rate : {})", self.ro_pow_rate[self.view_packet_id])).size(30);
                 let ro_sc = slider(
                     0..=100, 
-                    self.ro_pow_rate[id], 
+                    self.ro_pow_rate[self.view_packet_id], 
                     PacketMessage::PowerRateRotation).width(500);
                 let ro_title = row![ro_text, ro_sc];
 
                 let combo_rop = combo_box(
-                    &self.ro_cb[id].plus.all, 
+                    &self.ro_cb[self.view_packet_id].plus.all, 
                     "Selecct assign of rotation plus value", 
-                    self.ro_cb[id].plus.selected.as_ref(), 
+                    self.ro_cb[self.view_packet_id].plus.selected.as_ref(), 
                     PacketMessage::Assign3p);
                 let combo_rom = combo_box(
-                    &self.ro_cb[id].minus.all, 
+                    &self.ro_cb[self.view_packet_id].minus.all, 
                     "Selecct assign of rotation minus value", 
-                    self.ro_cb[id].minus.selected.as_ref(), 
+                    self.ro_cb[self.view_packet_id].minus.selected.as_ref(), 
                     PacketMessage::Assign3m);
                 let row_ro = row![combo_rop, combo_rom].spacing(30);
 
-                let m1_text = text(format!("Select Machine1 (Rate : {})", self.m1_pow_rate[id])).size(30);
+                let m1_text = text(format!("Select Machine1 (Rate : {})", self.m1_pow_rate[self.view_packet_id])).size(30);
                 let m1_sc = slider(
                     0..=100, 
-                    self.m1_pow_rate[id], 
+                    self.m1_pow_rate[self.view_packet_id], 
                     PacketMessage::PowerRateM1).width(500);
                 let m1_title = row![m1_text, m1_sc];
                 let combo_m1p = combo_box(
-                    &self.m1_cb[id].plus.all, 
+                    &self.m1_cb[self.view_packet_id].plus.all, 
                     "Selecct assign of machine1 plus value", 
-                    self.m1_cb[id].plus.selected.as_ref(), 
+                    self.m1_cb[self.view_packet_id].plus.selected.as_ref(), 
                     PacketMessage::Assign4p);
                 let combo_m1m = combo_box(
-                    &self.m1_cb[id].minus.all, 
+                    &self.m1_cb[self.view_packet_id].minus.all, 
                     "Selecct assign of machine1 minus value", 
-                    self.m1_cb[id].minus.selected.as_ref(), 
+                    self.m1_cb[self.view_packet_id].minus.selected.as_ref(), 
                     PacketMessage::Assign4m);
                 let row_m1 = row![combo_m1p, combo_m1m].spacing(30);
 
-                let m2_text = text(format!("Select Machine2 (Rate : {})", self.m2_pow_rate[id])).size(30);
+                let m2_text = text(format!("Select Machine2 (Rate : {})", self.m2_pow_rate[self.view_packet_id])).size(30);
                 let m2_sc = slider(
                     0..=100, 
-                    self.m2_pow_rate[id], 
+                    self.m2_pow_rate[self.view_packet_id], 
                     PacketMessage::PowerRateM2).width(500);
                 let m2_title = row![m2_text, m2_sc];
                 let combo_m2p = combo_box(
-                    &self.m2_cb[id].plus.all, 
+                    &self.m2_cb[self.view_packet_id].plus.all, 
                     "Selecct assign of machine2 plus value", 
-                    self.m2_cb[id].plus.selected.as_ref(), 
+                    self.m2_cb[self.view_packet_id].plus.selected.as_ref(), 
                     PacketMessage::Assign5p);
                 let combo_m2m = combo_box(
-                    &self.m2_cb[id].minus.all, 
+                    &self.m2_cb[self.view_packet_id].minus.all, 
                     "Selecct assign of machine2 minus value", 
-                    self.m2_cb[id].minus.selected.as_ref(), 
+                    self.m2_cb[self.view_packet_id].minus.selected.as_ref(), 
                     PacketMessage::Assign5m);
                 let row_m2 = row![combo_m2p, combo_m2m].spacing(30);
 
-                let p_text = match self.packet_[id] {
+                let p_text = match self.packet_[self.view_packet_id] {
                     Some(p)=>{
                         text(format!("[x:{:3},y:{:3},ro:{:3},m1:{:3},m2:{:3}]", p.x, p.y, p.ro, p.m1, p.m2)).size(50)
                     }
@@ -377,24 +284,42 @@ impl PacketManager {
                     }
                 };
 
-                let id_title = utils::path_to_image("./image/packet_erabe.png", 400).height(40);
-                let combo_id = combo_box(
-                    &self.packet_id_list.all, 
-                    "Select Packet ID", 
-                    self.packet_id_list.selected.as_ref(), 
-                    PacketMessage::PacketID
-                );
-
                 let sdm_menu = self.sdm.menu_view(self.selected_file_name.clone());
                 let sdm_picture = utils::path_to_image("./image/choose_save_data.png", 400).height(40);
+
+                let send_id_list = if self.packet_num == 1
+                {
+                    let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+
+                    iced::widget::row![_1]
+                }
+                else if self.packet_num == 2
+                {
+                    let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1).size(50.0);
+                    let _2 = iced_aw::number_input(self.packet_id[1], 9999, PacketMessage::SecondPacketID).step(1).size(50.0);
+
+                    iced::widget::row![_1, _2].spacing(30)
+                }
+                else if self.packet_num == 3
+                {
+                    let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1).size(50.0);
+                    let _2 = iced_aw::number_input(self.packet_id[1], 9999, PacketMessage::SecondPacketID).step(1).size(50.0);
+                    let _3 = iced_aw::number_input(self.packet_id[2], 9999, PacketMessage::SecondPacketID).step(1).size(50.0);
+
+                    iced::widget::row![_1, _2, _3].spacing(30)
+                }
+                else
+                {
+                    iced::widget::row![text("")]
+                };
+
 
                 let log = self.logger.view().size(50);
 
                 use iced::widget::container::Container;
                 let container:iced::Element<'_, PacketMessage> = Container::new(
                     column![
-                            id_title,
-                            combo_id,
+                            packet_button_row,
                             sdm_picture,
                             sdm_menu,
                             x_title,
@@ -408,6 +333,7 @@ impl PacketManager {
                             m2_title,
                             row_m2,
                             p_text,
+                            send_id_list,
                             log
                     ].align_items(iced::Alignment::Center)
                 )
@@ -415,149 +341,6 @@ impl PacketManager {
                 .align_y(iced::alignment::Vertical::Center).into();
 
                 container.map(RRMessage::Packet)
-            }
-            None=>{
-                let x_text = text(format!("Select X (Rate : {})", self.x_pow_rate[0])).size(30);
-                let x_sc = slider(
-                    0..=100, 
-                    self.x_pow_rate[0], 
-                    PacketMessage::PowerRateX).width(500);
-                let x_title = row![x_text, x_sc];
-                let combo_xp = combo_box(
-                    &self.x_cb[0].plus.all, 
-                    "Selecct assign of x plus value", 
-                    self.x_cb[0].plus.selected.as_ref(), 
-                    PacketMessage::Assign1p);
-                let combo_xm = combo_box(
-                    &self.x_cb[0].minus.all, 
-                    "Selecct assign of x minus value", 
-                    self.x_cb[0].minus.selected.as_ref(), 
-                    PacketMessage::Assign1m);
-                let row_x = row![combo_xp, combo_xm].spacing(30);
-
-                let y_text = text(format!("Select Y (Rate : {})", self.y_pow_rate[0])).size(30);
-                let y_sc = slider(
-                    0..=100, 
-                    self.y_pow_rate[0], 
-                    PacketMessage::PowerRateY).width(500);
-                let y_title = row![y_text, y_sc];
-                let combo_yp = combo_box(
-                    &self.y_cb[0].plus.all, 
-                    "Selecct assign of y plus value", 
-                    self.y_cb[0].plus.selected.as_ref(), 
-                    PacketMessage::Assign2p);
-                let combo_ym = combo_box(
-                    &self.y_cb[0].minus.all, 
-                    "Selecct assign of y minus value", 
-                    self.y_cb[0].minus.selected.as_ref(), 
-                    PacketMessage::Assign2m);
-                let row_y = row![combo_yp, combo_ym].spacing(30);
-
-                let ro_text = text(format!("Select Rotation (Rate : {})", self.ro_pow_rate[0])).size(30);
-                let ro_sc = slider(
-                    0..=100, 
-                    self.ro_pow_rate[0], 
-                    PacketMessage::PowerRateRotation).width(500);
-                let ro_title = row![ro_text, ro_sc];
-
-                let combo_rop = combo_box(
-                    &self.ro_cb[0].plus.all, 
-                    "Selecct assign of rotation plus value", 
-                    self.ro_cb[0].plus.selected.as_ref(), 
-                    PacketMessage::Assign3p);
-                let combo_rom = combo_box(
-                    &self.ro_cb[0].minus.all, 
-                    "Selecct assign of rotation minus value", 
-                    self.ro_cb[0].minus.selected.as_ref(), 
-                    PacketMessage::Assign3m);
-                let row_ro = row![combo_rop, combo_rom].spacing(30);
-
-                let m1_text = text(format!("Select Machine1 (Rate : {})", self.m1_pow_rate[0])).size(30);
-                let m1_sc = slider(
-                    0..=100, 
-                    self.m1_pow_rate[0], 
-                    PacketMessage::PowerRateM1).width(500);
-                let m1_title = row![m1_text, m1_sc];
-                let combo_m1p = combo_box(
-                    &self.m1_cb[0].plus.all, 
-                    "Selecct assign of machine1 plus value", 
-                    self.m1_cb[0].plus.selected.as_ref(), 
-                    PacketMessage::Assign4p);
-                let combo_m1m = combo_box(
-                    &self.m1_cb[0].minus.all, 
-                    "Selecct assign of machine1 minus value", 
-                    self.m1_cb[0].minus.selected.as_ref(), 
-                    PacketMessage::Assign4m);
-                let row_m1 = row![combo_m1p, combo_m1m].spacing(30);
-
-                let m2_text = text(format!("Select Machine2 (Rate : {})", self.m2_pow_rate[0])).size(30);
-                let m2_sc = slider(
-                    0..=100, 
-                    self.m2_pow_rate[0], 
-                    PacketMessage::PowerRateM2).width(500);
-                let m2_title = row![m2_text, m2_sc];
-                let combo_m2p = combo_box(
-                    &self.m2_cb[0].plus.all, 
-                    "Selecct assign of machine2 plus value", 
-                    self.m2_cb[0].plus.selected.as_ref(), 
-                    PacketMessage::Assign5p);
-                let combo_m2m = combo_box(
-                    &self.m2_cb[0].minus.all, 
-                    "Selecct assign of machine2 minus value", 
-                    self.m2_cb[0].minus.selected.as_ref(), 
-                    PacketMessage::Assign5m);
-                let row_m2 = row![combo_m2p, combo_m2m].spacing(30);
-
-                let p_text = match self.packet_[0] {
-                    Some(p)=>{
-                        text(format!("[x:{:3},y:{:3},ro:{:3},m1:{:3},m2:{:3}]", p.x, p.y, p.ro, p.m1, p.m2)).size(50)
-                    }
-                    None=>{
-                        text("Failed to Create Packet").size(50)
-                    }
-                };
-
-                let sdm_menu = self.sdm.menu_view(self.selected_file_name.clone());
-                let sdm_picture = utils::path_to_image("./image/choose_save_data.png", 400).height(40);
-
-                let id_title = utils::path_to_image("./image/packet_erabe.png", 400).height(40);
-                let combo_id = combo_box(
-                    &self.packet_id_list.all, 
-                    "Select Packet ID", 
-                    self.packet_id_list.selected.as_ref(), 
-                    PacketMessage::PacketID
-                );
-
-                let log = self.logger.view().size(50);
-
-                use iced::widget::container::Container;
-                let container:iced::Element<'_, PacketMessage> = Container::new(
-                    column![
-                            id_title,
-                            combo_id,
-                            sdm_picture,
-                            sdm_menu,
-                            x_title,
-                            row_x,
-                            y_title,
-                            row_y,
-                            ro_title,
-                            row_ro,
-                            m1_title,
-                            row_m1,
-                            m2_title,
-                            row_m2,
-                            p_text,
-                            log
-                    ].align_items(iced::Alignment::Center)
-                )
-                .align_x(iced::alignment::Horizontal::Center)
-                .align_y(iced::alignment::Vertical::Center).into();
-
-                container.map(RRMessage::Packet)
-            }
-        }
-        
     }
 }
 
@@ -593,13 +376,11 @@ impl PacketManager {
         let mut packet_id_ = Vec::<usize>::new();
         packet_id_.push(0);
 
-        let packet_id_list_ = ComboBox::<usize>::new(packet_id_.clone());
-
         PacketManager { 
             packet_:none,
             packet_num:1,
             packet_id:packet_id_,
-            packet_id_list:packet_id_list_,
+            view_packet_id: 0,
             x_cb: x_cb_, 
             y_cb: y_cb_, 
             ro_cb: ro_cb_, 
@@ -630,6 +411,7 @@ impl PacketManager {
                                                 match assign_to_controller(self.m2_cb[id].clone(), controller_input) {
                                                     Some(m2_)=>{
                                                         self.packet_[id] = Some(Packet {
+                                                            id : self.packet_id[id] as u16,
                                                             x: (x_  *self.x_pow_rate[id] as f32) as i32, 
                                                             y: (y_  *self.y_pow_rate[id] as f32) as i32, 
                                                             ro: (ro_  *self.ro_pow_rate[id] as f32) as i32, 
@@ -662,7 +444,7 @@ impl PacketManager {
         }
     }
 
-    pub fn new_set(&mut self, id:usize)
+    pub fn new_set(&mut self)
     {
         self.x_cb.push(PlusMinus::new());
         self.y_cb.push(PlusMinus::new());
@@ -676,8 +458,6 @@ impl PacketManager {
         self.m2_pow_rate.push(100);
 
         self.packet_.push(None);
-        self.packet_id.push(id);
-        self.packet_id_list = ComboBox::new(self.packet_id.clone());
 
         self.packet_num += 1;
     }

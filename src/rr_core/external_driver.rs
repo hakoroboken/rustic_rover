@@ -215,6 +215,7 @@ impl SerialManager {
         match serialport::available_ports()
         {
             Ok(vec)=>{
+                
                 let mut path_list_ = Vec::<String>::new();
 
                 for i in 0..vec.len()
@@ -258,7 +259,7 @@ impl SerialManager {
                         ok
                     }
                     Err(_e)=>{
-                        let p = Packet{x:10, y:10, ro:10, m1:10, m2:10};
+                        let p = Packet{id:0, x:10, y:10, ro:10, m1:10, m2:10};
 
                         p
                     }
@@ -314,8 +315,8 @@ impl SerialManager {
             .timeout(std::time::Duration::from_millis(1000))
             .open().unwrap();
 
-            let mut send = Packet{x:100, y:100, ro:100, m1:100, m2:100};
-            let mut history = Packet{x:100, y:100, ro:100, m1:100, m2:100};
+            let mut send = Packet{id:0, x:100, y:100, ro:100, m1:100, m2:100};
+            let mut history = Packet{id:0, x:100, y:100, ro:100, m1:100, m2:100};
             while !clone_.load(std::sync::atomic::Ordering::Relaxed) 
             {
                 let target = match node.subscriber.recv()
@@ -324,13 +325,14 @@ impl SerialManager {
                         ok
                     }
                     Err(_e)=>{
-                        let p = Packet{x:0, y:0, ro:0, m1:0, m2:0};
+                        let p = Packet{id:0, x:0, y:0, ro:0, m1:0, m2:0};
 
                         p
                     }
                 };
 
                 let vec = Packet{
+                    id: target.id, 
                     x: target.x - history.x,
                     y: target.y - history.y,
                     ro: target.ro - history.ro,
@@ -383,9 +385,11 @@ impl SerialManager {
                     send.m2 -= smooth_value;
                 }
 
+                send.id = target.id;
+
                 let write_buf = if is_
                 {
-                    format!("s{},{},{},{}e",
+                    format!("TXDU0002,{},{},{},{}e",
                             (send.x/10) as i32+10,
                             (send.y/10) as i32+10,
                             (send.ro/10) as i32+10,
@@ -393,7 +397,7 @@ impl SerialManager {
                 }
                 else
                 {
-                    format!("s{},{},{},{},{}e",
+                    format!("TXDU000{},{},{},{},{},{}e", send.id,
                             (send.x/10) as i32+10,
                             (send.y/10) as i32+10,
                             (send.ro/10) as i32+10,

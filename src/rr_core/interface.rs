@@ -39,7 +39,8 @@ pub enum SerialMessage
 #[derive(Debug,Clone)]
 pub enum PacketMessage
 {
-    PacketID(usize),
+    NextPacket,
+    BackPacket,
     FileSelect(String),
     PowerRateX(u16),
     PowerRateY(u16),
@@ -56,6 +57,9 @@ pub enum PacketMessage
     Assign4m(AssignController),
     Assign5p(AssignController),
     Assign5m(AssignController),
+    FirstPacketID(usize),
+    SecondPacketID(usize),
+    ThirdPacketID(usize)
 }
 
 #[derive(Debug,Clone)]
