@@ -39,7 +39,7 @@ pub enum SerialMessage
 #[derive(Debug,Clone)]
 pub enum PacketMessage
 {
-    PacketID(usize),
+    ViewPacketID,
     FileSelect(String),
     PowerRateX(u16),
     PowerRateY(u16),

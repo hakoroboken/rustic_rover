@@ -215,6 +215,7 @@ impl SerialManager {
         match serialport::available_ports()
         {
             Ok(vec)=>{
+                
                 let mut path_list_ = Vec::<String>::new();
 
                 for i in 0..vec.len()
@@ -385,7 +386,7 @@ impl SerialManager {
 
                 let write_buf = if is_
                 {
-                    format!("s{},{},{},{}e",
+                    format!("TXDU0002,{},{},{},{}e",
                             (send.x/10) as i32+10,
                             (send.y/10) as i32+10,
                             (send.ro/10) as i32+10,
@@ -393,7 +394,7 @@ impl SerialManager {
                 }
                 else
                 {
-                    format!("s{},{},{},{},{}e",
+                    format!("TXDU0002,{},{},{},{},{}e",
                             (send.x/10) as i32+10,
                             (send.y/10) as i32+10,
                             (send.ro/10) as i32+10,
