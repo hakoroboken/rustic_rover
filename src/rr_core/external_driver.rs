@@ -332,7 +332,7 @@ impl SerialManager {
                 };
 
                 let vec = Packet{
-                    id:0, 
+                    id: target.id, 
                     x: target.x - history.x,
                     y: target.y - history.y,
                     ro: target.ro - history.ro,
@@ -385,6 +385,8 @@ impl SerialManager {
                     send.m2 -= smooth_value;
                 }
 
+                send.id = target.id;
+
                 let write_buf = if is_
                 {
                     format!("TXDU0002,{},{},{},{}e",
@@ -395,7 +397,7 @@ impl SerialManager {
                 }
                 else
                 {
-                    format!("TXDU0002,{},{},{},{},{}e",
+                    format!("TXDU000{},{},{},{},{},{}e", send.id,
                             (send.x/10) as i32+10,
                             (send.y/10) as i32+10,
                             (send.ro/10) as i32+10,
