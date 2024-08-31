@@ -217,7 +217,5 @@ impl ExternalManager {
 
             println!("Closed SerialDriver");
         });
-
-
     }
 }

@@ -58,6 +58,8 @@ impl SerialDriver {
                         self.state = false;
                     }
                 }
+
+                self.prev_packet = self.send_packet;
             }
             else {
                 self.send_packet = target;
@@ -75,6 +77,8 @@ impl SerialDriver {
                         self.state = false;
                     }
                 }
+
+                self.prev_packet = self.send_packet;
             }
         }
         else {
@@ -95,6 +99,8 @@ impl SerialDriver {
                         self.state = false;
                     }
                 }
+
+                self.prev_packet = self.send_packet;
             }
             else {
                 self.send_packet = target;
@@ -112,6 +118,8 @@ impl SerialDriver {
                         self.state = false;
                     }
                 }
+
+                self.prev_packet = self.send_packet;
             }
         }
     }
@@ -171,11 +179,11 @@ impl SerialDriver {
     fn im920_string(&self)->String
     {
         let content = format!("{},{},{},{},{}", 
-            self.send_packet.x,
-            self.send_packet.y,
-            self.send_packet.ro,
-            self.send_packet.m1,
-            self.send_packet.m2);
+            self.send_packet.x / 10 + 10,
+            self.send_packet.y / 10 + 10,
+            self.send_packet.ro / 10 + 10,
+            self.send_packet.m1 / 10 + 10,
+            self.send_packet.m2 / 10 + 10);
 
         let id = self.id_to_str(self.send_packet.id);
 
@@ -184,11 +192,11 @@ impl SerialDriver {
     fn normal_string(&self)->String
     {
         let content = format!("{},{},{},{},{}", 
-            self.send_packet.x,
-            self.send_packet.y,
-            self.send_packet.ro,
-            self.send_packet.m1,
-            self.send_packet.m2);
+            self.send_packet.x / 10 + 10,
+            self.send_packet.y / 10 + 10,
+            self.send_packet.ro / 10 + 10,
+            self.send_packet.m1 / 10 + 10,
+            self.send_packet.m2 / 10 + 10);
 
         format!("{}e", content)
     }
