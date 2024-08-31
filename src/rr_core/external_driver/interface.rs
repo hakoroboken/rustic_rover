@@ -1,3 +1,16 @@
+#[derive(Debug, Clone)]
+pub enum SerialMessage
+{
+    SetPacketSize(bool),
+    SetSmooth(bool),
+    SerialScan,
+    SerialStart,
+    PortSelected(String),
+    ThreadID(usize),
+    ThreadStop,
+    SmoothValue(i32),
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct Packet
 {

@@ -1,4 +1,5 @@
 use crate::rr_core::controller_driver::interface::Controller;
+use super::external_driver::interface::SerialMessage;
 
 #[derive(Debug, Clone)]
 pub enum RRMessage
@@ -22,19 +23,6 @@ pub enum HomeMessage {
 // pub enum UDPMessage {
 //     SpawnUDPDriver
 // }
-
-#[derive(Debug, Clone)]
-pub enum SerialMessage
-{
-    SetPacketSize(bool),
-    SetSmooth(bool),
-    SerialScan,
-    SerialStart,
-    PortSelected(String),
-    ThreadID(usize),
-    ThreadStop,
-    SmoothValue(i32),
-}
 
 #[derive(Debug,Clone)]
 pub enum PacketMessage
