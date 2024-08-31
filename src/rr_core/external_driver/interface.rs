@@ -1,13 +1,11 @@
 #[derive(Debug, Clone)]
 pub enum SerialMessage
 {
-    SetPacketSize(bool),
+    SetIM920(bool),
     SetSmooth(bool),
     SerialScan,
     SerialStart,
     PortSelected(String),
-    ThreadID(usize),
-    ThreadStop,
     SmoothValue(i32),
 }
 

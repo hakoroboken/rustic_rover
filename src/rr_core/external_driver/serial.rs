@@ -7,8 +7,8 @@ pub struct SerialDriver
     is_im920:bool,
     enable_smoother:bool,
     smooth_gain:i32,
-    state:bool,
-    path:String,
+    pub state:bool,
+    pub path:String,
     port:Box<dyn serialport::SerialPort>,
     send_packet : Packet,
     prev_packet : Packet
@@ -29,7 +29,8 @@ impl SerialDriver {
             is_im920: is_im920_, 
             enable_smoother: enable_smother_, 
             smooth_gain : 1,
-            path: port_name, port:port_ , 
+            path: port_name, 
+            port:port_ , 
             state: true,
             send_packet : send_,
             prev_packet: prev_
