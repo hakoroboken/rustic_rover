@@ -1,11 +1,6 @@
 use std::cell::RefCell;
 use tokio::sync::mpsc;
 use std::sync::mpsc::{channel, Sender, Receiver};
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc
-};
-
 
 pub type Publisher<T> = Sender<T>;
 pub type Subscriber<T> = Receiver<T>;
@@ -36,28 +31,5 @@ impl<T> ThreadConnector<T> {
         let (t,r) = channel::<T>();
 
         ThreadConnector { publisher: t, subscriber: r }
-    }
-}
-
-pub struct ThreadManager
-{
-    stop_flag_ : Arc<AtomicBool>,
-}
-
-impl ThreadManager {
-    pub fn new()->ThreadManager
-    {
-        let stop_flag = Arc::new(AtomicBool::new(false));
-
-        ThreadManager { stop_flag_: stop_flag}
-    }
-    pub fn get_clone(&self)->Arc<AtomicBool>
-    {
-        Arc::clone(&self.stop_flag_)
-    }
-
-    pub fn thread_stop(&self)
-    {
-        self.stop_flag_.store(true, Ordering::Relaxed);
     }
 }

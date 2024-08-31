@@ -7,8 +7,8 @@ pub struct SerialDriver
     is_im920:bool,
     enable_smoother:bool,
     smooth_gain:i32,
-    state:bool,
-    path:String,
+    pub state:bool,
+    pub path:String,
     port:Box<dyn serialport::SerialPort>,
     send_packet : Packet,
     prev_packet : Packet
@@ -21,31 +21,97 @@ impl SerialDriver {
         .timeout(std::time::Duration::from_millis(100))
         .open().unwrap();
 
-        let send_ = Packet{id : 0,x:100, y:100, ro:100, m1:100, m2:100};
-        let prev_ = Packet{id : 0,x:100, y:100, ro:100, m1:100, m2:100};
+        let send_ = Packet::new(0, 100, 100, 100, 100, 100);
+        let prev_ = Packet::new(0, 100, 100, 100, 100, 100);
 
 
         Self { 
             is_im920: is_im920_, 
             enable_smoother: enable_smother_, 
             smooth_gain : 1,
-            path: port_name, port:port_ , 
+            path: port_name, 
+            port:port_ , 
             state: true,
             send_packet : send_,
             prev_packet: prev_
         }
     }
 
-    pub fn task(&mut self, id:u16, target:Packet)
+    pub fn task(&mut self, target:Packet)
     {
         if self.is_im920
         {
+            if self.enable_smoother
+            {
+                self.smooth(target);
 
+                let send_str = self.im920_string();
+
+                match self.port.write(send_str.as_bytes()) {
+                    Ok(_size)=>{
+                        println!("Write:{}", send_str.clone());
+
+                        let _ = self.port.clear(serialport::ClearBuffer::Input);
+                    }
+                    Err(_e)=>{
+                        let _ = self.port.clear(serialport::ClearBuffer::Output);
+                        self.state = false;
+                    }
+                }
+            }
+            else {
+                self.send_packet = target;
+
+                let send_str = self.im920_string();
+
+                match self.port.write(send_str.as_bytes()) {
+                    Ok(_size)=>{
+                        println!("Write:{}", send_str.clone());
+
+                        let _ = self.port.clear(serialport::ClearBuffer::Input);
+                    }
+                    Err(_e)=>{
+                        let _ = self.port.clear(serialport::ClearBuffer::Output);
+                        self.state = false;
+                    }
+                }
+            }
         }
         else {
             if self.enable_smoother
             {
-                
+                self.smooth(target);
+
+                let send_str = self.normal_string();
+
+                match self.port.write(send_str.as_bytes()) {
+                    Ok(_size)=>{
+                        println!("Write:{}", send_str.clone());
+
+                        let _ = self.port.clear(serialport::ClearBuffer::Input);
+                    }
+                    Err(_e)=>{
+                        let _ = self.port.clear(serialport::ClearBuffer::Output);
+                        self.state = false;
+                    }
+                }
+            }
+            else {
+                self.send_packet = target;
+
+                let send_str = self.normal_string();
+
+                match self.port.write(send_str.as_bytes()) {
+                    Ok(_size)=>{
+                        println!("Write:{}", send_str.clone());
+
+                        let _ = self.port.clear(serialport::ClearBuffer::Input);
+                    }
+                    Err(_e)=>{
+                        let _ = self.port.clear(serialport::ClearBuffer::Output);
+                        self.state = false;
+                    }
+                }
             }
         }
     }
@@ -64,6 +130,67 @@ impl SerialDriver {
         {
             self.send_packet.x += self.smooth_gain
         }
+        else if vec.x < 0{
+            self.send_packet.x -= self.smooth_gain
+        }
+
+        if vec.y > 0
+        {
+            self.send_packet.y += self.smooth_gain
+        }
+        else if vec.y < 0{
+            self.send_packet.y -= self.smooth_gain
+        }
+
+        if vec.ro > 0
+        {
+            self.send_packet.ro += self.smooth_gain
+        }
+        else if vec.ro < 0{
+            self.send_packet.ro -= self.smooth_gain
+        }
+
+        if vec.m1 > 0
+        {
+            self.send_packet.m1 += self.smooth_gain
+        }
+        else if vec.m1 < 0{
+            self.send_packet.m1 -= self.smooth_gain
+        }
+
+        if vec.m2 > 0
+        {
+            self.send_packet.m2 += self.smooth_gain
+        }
+        else if vec.m2 < 0{
+            self.send_packet.m2 -= self.smooth_gain
+        }
+
+        self.send_packet.id = target.id;
+    }
+    fn im920_string(&self)->String
+    {
+        let content = format!("{},{},{},{},{}", 
+            self.send_packet.x,
+            self.send_packet.y,
+            self.send_packet.ro,
+            self.send_packet.m1,
+            self.send_packet.m2);
+
+        let id = self.id_to_str(self.send_packet.id);
+
+        format!("TXDU{},{}e", id, content)
+    }
+    fn normal_string(&self)->String
+    {
+        let content = format!("{},{},{},{},{}", 
+            self.send_packet.x,
+            self.send_packet.y,
+            self.send_packet.ro,
+            self.send_packet.m1,
+            self.send_packet.m2);
+
+        format!("{}e", content)
     }
     fn id_to_str(&self, id:u16)->String
     {

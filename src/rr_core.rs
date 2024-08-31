@@ -145,7 +145,7 @@ impl iced::Application for RusticRover {
             }
             interface::RRMessage::Serial(msg)=>{
                 match msg {
-                    interface::SerialMessage::SerialStart=>
+                    external_driver::interface::SerialMessage::SerialStart=>
                     {
                         self.home_manager.conn_viewer[self.serial_manager.driver_num].set_external(self.serial_manager.selected.clone())
                     }
