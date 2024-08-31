@@ -9,6 +9,7 @@ use super::interface::PacketMessage;
 
 pub struct SaveDataManager
 {
+    pub packet_id : Option<u16>,
     pub xp_assign:Option<AssignController>,
     pub xm_assign:Option<AssignController>,
     pub yp_assign:Option<AssignController>,
@@ -31,6 +32,7 @@ impl SaveDataManager {
     pub fn new()->SaveDataManager
     {
         SaveDataManager { 
+            packet_id : None,
             xp_assign: None, 
             xm_assign: None, 
             yp_assign: None, 
@@ -99,6 +101,8 @@ impl SaveDataManager {
                         self.m2p_assign = str_to_assign(doc["/**"]["m2"]["plus"].as_str().unwrap());
                         self.m2m_assign = str_to_assign(doc["/**"]["m2"]["minus"].as_str().unwrap());
                         self.m2_rate = Some(doc["/**"]["m2"]["rate"].as_i64().unwrap() as u16);
+
+                        self.packet_id = Some(doc["/**"]["id"].as_i64().unwrap() as u16);
                     }
                     Err(_e)=>{
 
