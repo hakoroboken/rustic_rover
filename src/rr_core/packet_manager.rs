@@ -157,6 +157,15 @@ impl PacketManager {
 
                 self.logger.add_str(format!("Set Packet ID to {}", self.view_packet_id));
             }
+            PacketMessage::FirstPacketID(id)=>{
+                self.packet_[0].unwrap().id = id as u16;
+            }
+            PacketMessage::SecondPacketID(id)=>{
+                self.packet_[1].unwrap().id = id as u16;
+            }
+            PacketMessage::ThirdPacketID(id)=>{
+                self.packet_[2].unwrap().id = id as u16;
+            }
         }
     }
     pub fn view(&self)->iced::Element<'_, RRMessage>
@@ -165,6 +174,7 @@ impl PacketManager {
         let back_button = button(utils::path_to_image("./image/back_packet.png", 100)).width(250).height(250).on_press(PacketMessage::BackPacket);
 
         let packet_button_row = row![back_button, next_button].spacing(100);
+
                 let x_text = text(format!("Select X (Rate : {})", self.x_pow_rate[self.view_packet_id])).size(30);
                 let x_sc = slider(
                     0..=100, 
@@ -265,10 +275,35 @@ impl PacketManager {
                     }
                 };
 
-                
-
                 let sdm_menu = self.sdm.menu_view(self.selected_file_name.clone());
                 let sdm_picture = utils::path_to_image("./image/choose_save_data.png", 400).height(40);
+
+                let send_id_list = if self.packet_num == 1
+                {
+                    let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1);
+
+                    iced::widget::row![_1]
+                }
+                else if self.packet_num == 2
+                {
+                    let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1);
+                    let _2 = iced_aw::number_input(self.packet_id[1], 9999, PacketMessage::SecondPacketID).step(1);
+
+                    iced::widget::row![_1, _2].spacing(30)
+                }
+                else if self.packet_num == 3
+                {
+                    let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1);
+                    let _2 = iced_aw::number_input(self.packet_id[1], 9999, PacketMessage::SecondPacketID).step(1);
+                    let _3 = iced_aw::number_input(self.packet_id[2], 9999, PacketMessage::SecondPacketID).step(1);
+
+                    iced::widget::row![_1, _2, _3].spacing(30)
+                }
+                else
+                {
+                    iced::widget::row![text("")]
+                };
+
 
                 let log = self.logger.view().size(50);
 
@@ -289,6 +324,7 @@ impl PacketManager {
                             m2_title,
                             row_m2,
                             p_text,
+                            send_id_list,
                             log
                     ].align_items(iced::Alignment::Center)
                 )

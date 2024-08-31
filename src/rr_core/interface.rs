@@ -57,6 +57,9 @@ pub enum PacketMessage
     Assign4m(AssignController),
     Assign5p(AssignController),
     Assign5m(AssignController),
+    FirstPacketID(usize),
+    SecondPacketID(usize),
+    ThirdPacketID(usize)
 }
 
 #[derive(Debug,Clone)]

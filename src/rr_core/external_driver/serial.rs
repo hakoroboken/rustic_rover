@@ -6,6 +6,7 @@ pub struct SerialDriver
 {
     is_im920:bool,
     enable_smoother:bool,
+    smooth_gain:i32,
     state:bool,
     path:String,
     port:Box<dyn serialport::SerialPort>,
@@ -20,13 +21,14 @@ impl SerialDriver {
         .timeout(std::time::Duration::from_millis(100))
         .open().unwrap();
 
-        let send_ = Packet{x:100, y:100, ro:100, m1:100, m2:100};
-        let prev_ = Packet{x:100, y:100, ro:100, m1:100, m2:100};
+        let send_ = Packet{id : 0,x:100, y:100, ro:100, m1:100, m2:100};
+        let prev_ = Packet{id : 0,x:100, y:100, ro:100, m1:100, m2:100};
 
 
         Self { 
             is_im920: is_im920_, 
             enable_smoother: enable_smother_, 
+            smooth_gain : 1,
             path: port_name, port:port_ , 
             state: true,
             send_packet : send_,
@@ -50,6 +52,7 @@ impl SerialDriver {
     fn smooth(&mut self, target:Packet)
     {
         let vec = Packet{
+            id : target.id,
             x: target.x - self.prev_packet.x,
             y: target.y - self.prev_packet.y,
             ro: target.ro - self.prev_packet.ro,
@@ -59,7 +62,7 @@ impl SerialDriver {
 
         if vec.x > 0
         {
-            self.send_packet 
+            self.send_packet.x += self.smooth_gain
         }
     }
     fn id_to_str(&self, id:u16)->String
