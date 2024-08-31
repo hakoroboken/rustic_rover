@@ -36,17 +36,14 @@ impl SerialDriver {
         }
     }
 
-    pub fn task(&mut self, id:u16, target:Packet)
+    pub fn task(&mut self, target:Packet)
     {
         if self.is_im920
         {
 
         }
         else {
-            if self.enable_smoother
-            {
-                
-            }
+            
         }
     }
     fn smooth(&mut self, target:Packet)
@@ -63,6 +60,41 @@ impl SerialDriver {
         if vec.x > 0
         {
             self.send_packet.x += self.smooth_gain
+        }
+        else if vec.x < 0{
+            self.send_packet.x -= self.smooth_gain
+        }
+
+        if vec.y > 0
+        {
+            self.send_packet.y += self.smooth_gain
+        }
+        else if vec.y < 0{
+            self.send_packet.y -= self.smooth_gain
+        }
+
+        if vec.ro > 0
+        {
+            self.send_packet.ro += self.smooth_gain
+        }
+        else if vec.ro < 0{
+            self.send_packet.ro -= self.smooth_gain
+        }
+
+        if vec.m1 > 0
+        {
+            self.send_packet.m1 += self.smooth_gain
+        }
+        else if vec.m1 < 0{
+            self.send_packet.m1 -= self.smooth_gain
+        }
+
+        if vec.m2 > 0
+        {
+            self.send_packet.m2 += self.smooth_gain
+        }
+        else if vec.m2 < 0{
+            self.send_packet.m2 -= self.smooth_gain
         }
     }
     fn id_to_str(&self, id:u16)->String
