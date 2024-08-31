@@ -195,7 +195,7 @@ impl ExternalManager {
     {
         self.conn.push(ThreadConnector::<Packet>::new());
         let mut serial_driver = serial::SerialDriver::new(self.is_im920, self.is_smooth, self.selected.clone());
-        let selected_index = self.port_list.iter().position(|x| x == &self.selected.clone()).unwrap();
+        let selected_index = self.port_list.iter().position(|x| x == &serial_driver.path).unwrap();
 
         self.port_list.remove(selected_index);
         self.path_list = Some(ComboBox::new(self.port_list.clone()));
