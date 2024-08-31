@@ -130,6 +130,7 @@ impl iced::Application for RusticRover {
                     else {
                         self.serial_manager.conn.remove(i);
                         self.serial_manager.driver_num -= 1;
+                        self.home_manager.conn_viewer[i].set_external("ERROR".to_string());
 
                         break;
                     }

@@ -119,10 +119,10 @@ impl ExternalManager {
 
                 if changed
                 {
-                    self.logger.add_str(format!("Set small packet is enable."));
+                    self.logger.add_str(format!("Set IM920 is enable."));
                 }
                 else {
-                    self.logger.add_str(format!("Set small packet is disable."));
+                    self.logger.add_str(format!("Set IM920 is disable."));
                 }
             }
             SerialMessage::SmoothValue(val)=>{
