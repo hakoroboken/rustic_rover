@@ -17,6 +17,7 @@ pub struct ExternalManager
     pub is_im920:bool,
     pub is_smooth:bool,
     pub conn:Vec<ThreadConnector<Packet>>,
+    pub thread_reporter: Vec<ThreadConnector<bool>>,
     pub path_list:Option<ComboBox<String>>,
     pub port_list:Vec<String>,
     pub selected:String,
@@ -110,6 +111,8 @@ impl ExternalManager {
             SerialMessage::SerialStart=>{
                     self.spawn_serial();
                     self.logger.add_str(format!("Start Serial at {}", self.selected.clone()));
+
+                    self.selected = String::new()
             }
             SerialMessage::SetIM920(changed)=>{
                 self.is_im920 = changed;
@@ -165,7 +168,8 @@ impl ExternalManager {
             smooth_value:1, 
             is_smooth:false,
             logger:LogManager::new(),
-            port_list: p_list
+            port_list: p_list,
+            thread_reporter: Vec::<ThreadConnector<bool>>::new()
         }
     }
     pub fn search_port(&mut self)
@@ -194,8 +198,11 @@ impl ExternalManager {
     pub fn spawn_serial(&mut self)
     {
         self.conn.push(ThreadConnector::<Packet>::new());
+        self.thread_reporter.push(ThreadConnector::<bool>::new());
         let mut serial_driver = serial::SerialDriver::new(self.is_im920, self.is_smooth, self.selected.clone());
         let selected_index = self.port_list.iter().position(|x| x == &serial_driver.path).unwrap();
+
+        let new_reporter = self.thread_reporter[self.driver_num].publisher.clone();
 
         self.port_list.remove(selected_index);
         self.path_list = Some(ComboBox::new(self.port_list.clone()));
@@ -208,12 +215,16 @@ impl ExternalManager {
 
         std::thread::spawn(move ||{
             while serial_driver.state {
+                let _ = new_reporter.send(true);
                 let recv_packet = node.subscriber.recv().unwrap();
 
                 serial_driver.task(recv_packet);
+
+                
             }
 
             drop(serial_driver);
+            let _ = new_reporter.send(false);
 
             println!("Closed SerialDriver");
         });
