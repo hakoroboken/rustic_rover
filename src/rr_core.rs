@@ -108,7 +108,7 @@ impl iced::Application for RusticRover {
                                 Some(p)=>{
                                     if self.home_manager.stop
                                     {
-                                        let _ = self.serial_manager.conn[i].publisher.send(Packet{x:0, y:0, ro:0, m1:0, m2:0});
+                                        let _ = self.serial_manager.conn[i].publisher.send(Packet{id:0,x:0, y:0, ro:0, m1:0, m2:0});
                                     }
                                     else 
                                     {
@@ -134,7 +134,7 @@ impl iced::Application for RusticRover {
                 {
                     if i != 0
                     {
-                        self.packet_creator.new_set(i);
+                        self.packet_creator.new_set();
                     }
                     self.home_manager.add_view();
                     

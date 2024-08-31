@@ -259,7 +259,7 @@ impl SerialManager {
                         ok
                     }
                     Err(_e)=>{
-                        let p = Packet{x:10, y:10, ro:10, m1:10, m2:10};
+                        let p = Packet{id:0, x:10, y:10, ro:10, m1:10, m2:10};
 
                         p
                     }
@@ -315,8 +315,8 @@ impl SerialManager {
             .timeout(std::time::Duration::from_millis(1000))
             .open().unwrap();
 
-            let mut send = Packet{x:100, y:100, ro:100, m1:100, m2:100};
-            let mut history = Packet{x:100, y:100, ro:100, m1:100, m2:100};
+            let mut send = Packet{id:0, x:100, y:100, ro:100, m1:100, m2:100};
+            let mut history = Packet{id:0, x:100, y:100, ro:100, m1:100, m2:100};
             while !clone_.load(std::sync::atomic::Ordering::Relaxed) 
             {
                 let target = match node.subscriber.recv()
@@ -325,13 +325,14 @@ impl SerialManager {
                         ok
                     }
                     Err(_e)=>{
-                        let p = Packet{x:0, y:0, ro:0, m1:0, m2:0};
+                        let p = Packet{id:0, x:0, y:0, ro:0, m1:0, m2:0};
 
                         p
                     }
                 };
 
                 let vec = Packet{
+                    id:0, 
                     x: target.x - history.x,
                     y: target.y - history.y,
                     ro: target.ro - history.ro,

@@ -3,7 +3,7 @@ use crate::rr_core::utils::{self, ComboBox, LogManager};
 use super::controller_driver::interface::Controller;
 use super::external_driver::interface::Packet;
 
-use iced::widget::{text, slider, column, row, combo_box};
+use iced::widget::{button, column, combo_box, row, slider, text};
 use iced_aw::TabLabel;
 
 use crate::rr_core::save_data_manager;
@@ -137,7 +137,7 @@ impl PacketManager {
                         self.m2_pow_rate[self.view_packet_id] = self.sdm.m2_rate.unwrap();    
                 self.logger.add_str(format!("Load YAML file : {}", name.clone()));
             }
-            PacketMessage::ViewPacketID=>{
+            PacketMessage::NextPacket=>{
                 self.view_packet_id += 1;
 
                 if (self.packet_num-1) > self.view_packet_id
@@ -147,102 +147,116 @@ impl PacketManager {
 
                 self.logger.add_str(format!("Set Packet ID to {}", self.view_packet_id));
             }
+            PacketMessage::BackPacket=>{
+                self.view_packet_id -= 1;
+
+                if self.view_packet_id < 0
+                {
+                    self.view_packet_id = self.packet_num -1 ;
+                }
+
+                self.logger.add_str(format!("Set Packet ID to {}", self.view_packet_id));
+            }
         }
     }
     pub fn view(&self)->iced::Element<'_, RRMessage>
     {
-                let x_text = text(format!("Select X (Rate : {})", self.x_pow_rate[id])).size(30);
+        let next_button = button(utils::path_to_image("./image/next_packet.png", 100)).width(250).height(250).on_press(PacketMessage::NextPacket);
+        let back_button = button(utils::path_to_image("./image/back_packet.png", 100)).width(250).height(250).on_press(PacketMessage::BackPacket);
+
+        let packet_button_row = row![back_button, next_button].spacing(100);
+                let x_text = text(format!("Select X (Rate : {})", self.x_pow_rate[self.view_packet_id])).size(30);
                 let x_sc = slider(
                     0..=100, 
-                    self.x_pow_rate[id], 
+                    self.x_pow_rate[self.view_packet_id], 
                     PacketMessage::PowerRateX).width(500);
                 let x_title = row![x_text, x_sc];
                 let combo_xp = combo_box(
-                    &self.x_cb[id].plus.all, 
+                    &self.x_cb[self.view_packet_id].plus.all, 
                     "Selecct assign of x plus value", 
-                    self.x_cb[id].plus.selected.as_ref(), 
+                    self.x_cb[self.view_packet_id].plus.selected.as_ref(), 
                     PacketMessage::Assign1p);
                 let combo_xm = combo_box(
-                    &self.x_cb[id].minus.all, 
+                    &self.x_cb[self.view_packet_id].minus.all, 
                     "Selecct assign of x minus value", 
-                    self.x_cb[id].minus.selected.as_ref(), 
+                    self.x_cb[self.view_packet_id].minus.selected.as_ref(), 
                     PacketMessage::Assign1m);
                 let row_x = row![combo_xp, combo_xm].spacing(30);
 
-                let y_text = text(format!("Select Y (Rate : {})", self.y_pow_rate[id])).size(30);
+                let y_text = text(format!("Select Y (Rate : {})", self.y_pow_rate[self.view_packet_id])).size(30);
                 let y_sc = slider(
                     0..=100, 
-                    self.y_pow_rate[id], 
+                    self.y_pow_rate[self.view_packet_id], 
                     PacketMessage::PowerRateY).width(500);
                 let y_title = row![y_text, y_sc];
                 let combo_yp = combo_box(
-                    &self.y_cb[id].plus.all, 
+                    &self.y_cb[self.view_packet_id].plus.all, 
                     "Selecct assign of y plus value", 
-                    self.y_cb[id].plus.selected.as_ref(), 
+                    self.y_cb[self.view_packet_id].plus.selected.as_ref(), 
                     PacketMessage::Assign2p);
                 let combo_ym = combo_box(
-                    &self.y_cb[id].minus.all, 
+                    &self.y_cb[self.view_packet_id].minus.all, 
                     "Selecct assign of y minus value", 
-                    self.y_cb[id].minus.selected.as_ref(), 
+                    self.y_cb[self.view_packet_id].minus.selected.as_ref(), 
                     PacketMessage::Assign2m);
                 let row_y = row![combo_yp, combo_ym].spacing(30);
 
-                let ro_text = text(format!("Select Rotation (Rate : {})", self.ro_pow_rate[id])).size(30);
+                let ro_text = text(format!("Select Rotation (Rate : {})", self.ro_pow_rate[self.view_packet_id])).size(30);
                 let ro_sc = slider(
                     0..=100, 
-                    self.ro_pow_rate[id], 
+                    self.ro_pow_rate[self.view_packet_id], 
                     PacketMessage::PowerRateRotation).width(500);
                 let ro_title = row![ro_text, ro_sc];
 
                 let combo_rop = combo_box(
-                    &self.ro_cb[id].plus.all, 
+                    &self.ro_cb[self.view_packet_id].plus.all, 
                     "Selecct assign of rotation plus value", 
-                    self.ro_cb[id].plus.selected.as_ref(), 
+                    self.ro_cb[self.view_packet_id].plus.selected.as_ref(), 
                     PacketMessage::Assign3p);
                 let combo_rom = combo_box(
-                    &self.ro_cb[id].minus.all, 
+                    &self.ro_cb[self.view_packet_id].minus.all, 
                     "Selecct assign of rotation minus value", 
-                    self.ro_cb[id].minus.selected.as_ref(), 
+                    self.ro_cb[self.view_packet_id].minus.selected.as_ref(), 
                     PacketMessage::Assign3m);
                 let row_ro = row![combo_rop, combo_rom].spacing(30);
 
-                let m1_text = text(format!("Select Machine1 (Rate : {})", self.m1_pow_rate[id])).size(30);
+                let m1_text = text(format!("Select Machine1 (Rate : {})", self.m1_pow_rate[self.view_packet_id])).size(30);
                 let m1_sc = slider(
                     0..=100, 
-                    self.m1_pow_rate[id], 
+                    self.m1_pow_rate[self.view_packet_id], 
                     PacketMessage::PowerRateM1).width(500);
                 let m1_title = row![m1_text, m1_sc];
                 let combo_m1p = combo_box(
-                    &self.m1_cb[id].plus.all, 
+                    &self.m1_cb[self.view_packet_id].plus.all, 
                     "Selecct assign of machine1 plus value", 
-                    self.m1_cb[id].plus.selected.as_ref(), 
+                    self.m1_cb[self.view_packet_id].plus.selected.as_ref(), 
                     PacketMessage::Assign4p);
                 let combo_m1m = combo_box(
-                    &self.m1_cb[id].minus.all, 
+                    &self.m1_cb[self.view_packet_id].minus.all, 
                     "Selecct assign of machine1 minus value", 
-                    self.m1_cb[id].minus.selected.as_ref(), 
+                    self.m1_cb[self.view_packet_id].minus.selected.as_ref(), 
                     PacketMessage::Assign4m);
                 let row_m1 = row![combo_m1p, combo_m1m].spacing(30);
 
-                let m2_text = text(format!("Select Machine2 (Rate : {})", self.m2_pow_rate[id])).size(30);
+                let m2_text = text(format!("Select Machine2 (Rate : {})", self.m2_pow_rate[self.view_packet_id])).size(30);
                 let m2_sc = slider(
                     0..=100, 
-                    self.m2_pow_rate[id], 
+                    self.m2_pow_rate[self.view_packet_id], 
                     PacketMessage::PowerRateM2).width(500);
                 let m2_title = row![m2_text, m2_sc];
                 let combo_m2p = combo_box(
-                    &self.m2_cb[id].plus.all, 
+                    &self.m2_cb[self.view_packet_id].plus.all, 
                     "Selecct assign of machine2 plus value", 
-                    self.m2_cb[id].plus.selected.as_ref(), 
+                    self.m2_cb[self.view_packet_id].plus.selected.as_ref(), 
                     PacketMessage::Assign5p);
                 let combo_m2m = combo_box(
-                    &self.m2_cb[id].minus.all, 
+                    &self.m2_cb[self.view_packet_id].minus.all, 
                     "Selecct assign of machine2 minus value", 
-                    self.m2_cb[id].minus.selected.as_ref(), 
+                    self.m2_cb[self.view_packet_id].minus.selected.as_ref(), 
                     PacketMessage::Assign5m);
                 let row_m2 = row![combo_m2p, combo_m2m].spacing(30);
 
-                let p_text = match self.packet_[id] {
+                let p_text = match self.packet_[self.view_packet_id] {
                     Some(p)=>{
                         text(format!("[x:{:3},y:{:3},ro:{:3},m1:{:3},m2:{:3}]", p.x, p.y, p.ro, p.m1, p.m2)).size(50)
                     }
@@ -251,13 +265,7 @@ impl PacketManager {
                     }
                 };
 
-                let id_title = utils::path_to_image("./image/packet_erabe.png", 400).height(40);
-                let combo_id = combo_box(
-                    &self.packet_id_list.all, 
-                    "Select Packet ID", 
-                    self.packet_id_list.selected.as_ref(), 
-                    PacketMessage::PacketID
-                );
+                
 
                 let sdm_menu = self.sdm.menu_view(self.selected_file_name.clone());
                 let sdm_picture = utils::path_to_image("./image/choose_save_data.png", 400).height(40);
@@ -267,8 +275,7 @@ impl PacketManager {
                 use iced::widget::container::Container;
                 let container:iced::Element<'_, PacketMessage> = Container::new(
                     column![
-                            id_title,
-                            combo_id,
+                            packet_button_row,
                             sdm_picture,
                             sdm_menu,
                             x_title,
@@ -324,13 +331,11 @@ impl PacketManager {
         let mut packet_id_ = Vec::<usize>::new();
         packet_id_.push(0);
 
-        let packet_id_list_ = ComboBox::<usize>::new(packet_id_.clone());
-
         PacketManager { 
             packet_:none,
             packet_num:1,
             packet_id:packet_id_,
-            packet_id_list:packet_id_list_,
+            view_packet_id: 0,
             x_cb: x_cb_, 
             y_cb: y_cb_, 
             ro_cb: ro_cb_, 
@@ -361,6 +366,7 @@ impl PacketManager {
                                                 match assign_to_controller(self.m2_cb[id].clone(), controller_input) {
                                                     Some(m2_)=>{
                                                         self.packet_[id] = Some(Packet {
+                                                            id : 0,
                                                             x: (x_  *self.x_pow_rate[id] as f32) as i32, 
                                                             y: (y_  *self.y_pow_rate[id] as f32) as i32, 
                                                             ro: (ro_  *self.ro_pow_rate[id] as f32) as i32, 
@@ -393,7 +399,7 @@ impl PacketManager {
         }
     }
 
-    pub fn new_set(&mut self, id:usize)
+    pub fn new_set(&mut self)
     {
         self.x_cb.push(PlusMinus::new());
         self.y_cb.push(PlusMinus::new());
@@ -407,8 +413,6 @@ impl PacketManager {
         self.m2_pow_rate.push(100);
 
         self.packet_.push(None);
-        self.packet_id.push(id);
-        self.packet_id_list = ComboBox::new(self.packet_id.clone());
 
         self.packet_num += 1;
     }
