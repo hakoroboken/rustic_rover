@@ -295,16 +295,16 @@ impl PacketManager {
                 }
                 else if self.packet_num == 2
                 {
-                    let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1).size(50.0);
-                    let _2 = iced_aw::number_input(self.packet_id[1], 9999, PacketMessage::SecondPacketID).step(1).size(50.0);
+                    let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let _2 = iced_aw::number_input(self.packet_id[1], 9999, PacketMessage::SecondPacketID).step(1).size(25.0);
 
                     iced::widget::row![_1, _2].spacing(30)
                 }
                 else if self.packet_num == 3
                 {
-                    let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1).size(50.0);
-                    let _2 = iced_aw::number_input(self.packet_id[1], 9999, PacketMessage::SecondPacketID).step(1).size(50.0);
-                    let _3 = iced_aw::number_input(self.packet_id[2], 9999, PacketMessage::SecondPacketID).step(1).size(50.0);
+                    let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let _2 = iced_aw::number_input(self.packet_id[1], 9999, PacketMessage::SecondPacketID).step(1).size(25.0);
+                    let _3 = iced_aw::number_input(self.packet_id[2], 9999, PacketMessage::SecondPacketID).step(1).size(25.0);
 
                     iced::widget::row![_1, _2, _3].spacing(30)
                 }
@@ -458,6 +458,7 @@ impl PacketManager {
         self.m2_pow_rate.push(100);
 
         self.packet_.push(None);
+        self.packet_id.push(0);
 
         self.packet_num += 1;
     }

@@ -215,11 +215,6 @@ impl ControllerManager {
                                         let get = controller.task();
 
                                         let _ = publisher_.send(get);
-
-                                        if controller.mode == ControllerConnectionType::SERIAL
-                                        {
-                                            controller.color_change()
-                                        }
                                     }
                                 });
                             }
