@@ -212,7 +212,12 @@ impl ExternalManager {
 
                 serial_driver.task(recv_packet);
             }
+
+            drop(serial_driver);
+
+            println!("Closed SerialDriver");
         });
+
 
     }
 }
