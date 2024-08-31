@@ -11,19 +11,20 @@ use iced_aw::TabLabel;
 
 use super::thread_connection;
 
-pub struct SerialManager
+pub struct ExternalManager
 {
     pub driver_num:usize,
     pub is_im920:bool,
     pub is_smooth:bool,
     pub conn:Vec<ThreadConnector<Packet>>,
     pub path_list:Option<ComboBox<String>>,
+    pub port_list:Vec<String>,
     pub selected:String,
     pub smooth_value:i32,
     pub logger:LogManager
 }
 
-impl SerialManager {
+impl ExternalManager {
     pub fn view(&self)->iced::Element<'_, RRMessage>
     {
         use iced::widget::{button, column, text, container::Container};
@@ -149,12 +150,13 @@ impl SerialManager {
     }
 }
 
-impl SerialManager {
-    pub fn new()->SerialManager
+impl ExternalManager {
+    pub fn new()->ExternalManager
     {
         let v = Vec::<ThreadConnector<Packet>>::new();
+        let p_list = Vec::<String>::new();
         
-        SerialManager {
+        ExternalManager {
             driver_num:0, 
             is_im920: false,
             conn: v, 
@@ -162,7 +164,8 @@ impl SerialManager {
             selected:String::new(), 
             smooth_value:1, 
             is_smooth:false,
-            logger:LogManager::new()
+            logger:LogManager::new(),
+            port_list: p_list
         }
     }
     pub fn search_port(&mut self)
@@ -171,17 +174,17 @@ impl SerialManager {
         {
             Ok(vec)=>{
                 
-                let mut path_list_ = Vec::<String>::new();
+                self.port_list = Vec::<String>::new();
 
                 for i in 0..vec.len()
                 {
                     if !vec.get(i).unwrap().port_name.contains("/dev/ttyS")
                     {
-                        path_list_.push(vec.get(i).unwrap().port_name.clone())
+                        self.port_list.push(vec.get(i).unwrap().port_name.clone())
                     }
                 }
 
-                self.path_list = Some(ComboBox::new(path_list_));
+                self.path_list = Some(ComboBox::new(self.port_list.clone()));
             }
             Err(_e)=>{
                 self.path_list = None
@@ -192,6 +195,10 @@ impl SerialManager {
     {
         self.conn.push(ThreadConnector::<Packet>::new());
         let mut serial_driver = serial::SerialDriver::new(self.is_im920, self.is_smooth, self.selected.clone());
+        let selected_index = self.port_list.iter().position(|x| x == &serial_driver.path).unwrap();
+
+        self.port_list.remove(selected_index);
+        self.path_list = Some(ComboBox::new(self.port_list.clone()));
 
         let node = thread_connection::ThreadConnector::<Packet>::new();
 
@@ -205,6 +212,12 @@ impl SerialManager {
 
                 serial_driver.task(recv_packet);
             }
+
+            drop(serial_driver);
+
+            println!("Closed SerialDriver");
         });
+
+
     }
 }

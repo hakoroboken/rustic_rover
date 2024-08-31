@@ -10,7 +10,7 @@ mod home_manager;
 
 use home_manager::HomeManager;
 use interface::{LifeCycle, RRMessage};
-use external_driver::SerialManager; 
+use external_driver::ExternalManager; 
 use external_driver::interface::Packet; 
 
 use iced;
@@ -22,7 +22,7 @@ pub struct RusticRover
     game_controller_manager:controller_driver::ControllerManager,
     packet_creator:packet_manager::PacketManager,
     life_cycle:LifeCycle,
-    serial_manager:external_driver::SerialManager,
+    serial_manager:external_driver::ExternalManager,
     home_manager:home_manager::HomeManager
 }
 
@@ -38,7 +38,7 @@ impl iced::Application for RusticRover {
             game_controller_manager:controller_driver::ControllerManager::new(),
             packet_creator:packet_manager::PacketManager::new(),
             life_cycle:LifeCycle::Home,
-            serial_manager:SerialManager::new(),
+            serial_manager:ExternalManager::new(),
             home_manager:HomeManager::new()
         };
 
