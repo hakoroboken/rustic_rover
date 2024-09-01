@@ -1,5 +1,6 @@
 /**:
   id : 2
+  second: 60
   x:
     plus: "Right_Key"
     minus: "Left_Key"

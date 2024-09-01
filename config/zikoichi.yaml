@@ -1,5 +1,6 @@
 /**:
   id: 0
+  second: 0
   x:
     plus: "Down_Key"
     minus: "Up_Key"
