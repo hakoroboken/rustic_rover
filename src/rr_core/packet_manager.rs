@@ -291,23 +291,36 @@ impl PacketManager {
                 let send_id_list = if self.packet_num == 1
                 {
                     let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let _1f = iced_aw::number_input(self.packet_second[0], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let clm1 = iced::widget::column![_1, _1f].spacing(10);
 
-                    iced::widget::row![_1]
+                    iced::widget::row![clm1]
                 }
                 else if self.packet_num == 2
                 {
                     let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
-                    let _2 = iced_aw::number_input(self.packet_id[1], 9999, PacketMessage::SecondPacketID).step(1).size(25.0);
+                    let _1f = iced_aw::number_input(self.packet_second[0], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let clm1 = iced::widget::column![_1, _1f].spacing(10);
+                    let _2 = iced_aw::number_input(self.packet_id[1], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let _2f = iced_aw::number_input(self.packet_second[1], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let clm2= iced::widget::column![_2, _2f].spacing(10);
 
-                    iced::widget::row![_1, _2].spacing(30)
+                    iced::widget::row![clm1, clm2].spacing(30)
                 }
                 else if self.packet_num == 3
                 {
                     let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
-                    let _2 = iced_aw::number_input(self.packet_id[1], 9999, PacketMessage::SecondPacketID).step(1).size(25.0);
-                    let _3 = iced_aw::number_input(self.packet_id[2], 9999, PacketMessage::SecondPacketID).step(1).size(25.0);
+                    let _1f = iced_aw::number_input(self.packet_second[0], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let clm1 = iced::widget::column![_1, _1f].spacing(10);
+                    let _2 = iced_aw::number_input(self.packet_id[1], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let _2f = iced_aw::number_input(self.packet_second[1], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let clm2= iced::widget::column![_2, _2f].spacing(10);
 
-                    iced::widget::row![_1, _2, _3].spacing(30)
+                    let _3 = iced_aw::number_input(self.packet_id[2], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let _3f = iced_aw::number_input(self.packet_second[2], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let clm3= iced::widget::column![_3, _3f].spacing(10);
+
+                    iced::widget::row![clm1, clm2, clm3].spacing(30)
                 }
                 else
                 {
@@ -404,14 +417,14 @@ impl PacketManager {
 
     pub fn create_packet(&mut self, controller_input:Controller, id:usize)
     {
-        if controller_input.option
+        let use_id = if !controller_input.option
         {
-            let next = self.packet_id[id];
-
-            self.packet_id[id] = self.packet_second[id];
-
-            self.packet_second[id] = next;
+            self.packet_id[id]
         }
+        else
+        {
+            self.packet_second[id]
+        };
                 match assign_to_controller(self.x_cb[id].clone(), controller_input)
                 {
                     Some(x_)=>{
@@ -424,7 +437,7 @@ impl PacketManager {
                                                 match assign_to_controller(self.m2_cb[id].clone(), controller_input) {
                                                     Some(m2_)=>{
                                                         self.packet_[id] = Some(Packet {
-                                                            id : self.packet_id[id] as u16,
+                                                            id : use_id as u16,
                                                             x: (x_  *self.x_pow_rate[id] as f32) as i32, 
                                                             y: (y_  *self.y_pow_rate[id] as f32) as i32, 
                                                             ro: (ro_  *self.ro_pow_rate[id] as f32) as i32, 
