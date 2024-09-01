@@ -75,13 +75,14 @@ pub struct Controller
     pub state:bool,
     pub sticks:JoyStick,
     pub btns:Buttons,
-    pub dpad:Dpad
+    pub dpad:Dpad,
+    pub option:bool
 }
 
 impl Controller {
     pub fn new()->Controller
     {
-        Controller { mode:ControllerConnectionType::BLE,state:true, sticks: JoyStick::new(), btns: Buttons::new(), dpad: Dpad::new() }
+        Controller { mode:ControllerConnectionType::BLE,state:true, sticks: JoyStick::new(), btns: Buttons::new(), dpad: Dpad::new() , option:false}
     }
 }
 

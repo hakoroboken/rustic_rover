@@ -13,6 +13,7 @@ pub struct PacketManager
     pub packet_:Vec<Option<Packet>>,
     pub packet_num:usize,
     pub packet_id:Vec<usize>,
+    pub packet_second:Vec<usize>,
     pub view_packet_id: usize,
     pub x_cb:Vec<PlusMinus>,
     pub y_cb:Vec<PlusMinus>,
@@ -137,6 +138,7 @@ impl PacketManager {
                         self.m2_pow_rate[self.view_packet_id] = self.sdm.m2_rate.unwrap();
 
                         self.packet_id[self.view_packet_id] = self.sdm.packet_id.unwrap() as usize;
+                        self.packet_second[self.view_packet_id] = self.sdm.second_id.unwrap() as usize;
                 self.logger.add_str(format!("Load YAML file : {}", name.clone()));
             }
             PacketMessage::NextPacket=>{
@@ -174,6 +176,15 @@ impl PacketManager {
             }
             PacketMessage::ThirdPacketID(id)=>{
                 self.packet_id[2] = id;
+            }
+            PacketMessage::FirstPacketID2(id)=>{
+                self.packet_second[0] = id
+            }
+            PacketMessage::SecondPacketID2(id)=>{
+                self.packet_second[1] = id
+            }
+            PacketMessage::ThirdPacketID2(id)=>{
+                self.packet_second[2] = id
             }
         }
     }
@@ -290,23 +301,36 @@ impl PacketManager {
                 let send_id_list = if self.packet_num == 1
                 {
                     let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let _1f = iced_aw::number_input(self.packet_second[0], 9999, PacketMessage::FirstPacketID2).step(1).size(25.0);
+                    let clm1 = iced::widget::column![_1, _1f].spacing(10);
 
-                    iced::widget::row![_1]
+                    iced::widget::row![clm1]
                 }
                 else if self.packet_num == 2
                 {
                     let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let _1f = iced_aw::number_input(self.packet_second[0], 9999, PacketMessage::FirstPacketID2).step(1).size(25.0);
+                    let clm1 = iced::widget::column![_1, _1f].spacing(10);
                     let _2 = iced_aw::number_input(self.packet_id[1], 9999, PacketMessage::SecondPacketID).step(1).size(25.0);
+                    let _2f = iced_aw::number_input(self.packet_second[1], 9999, PacketMessage::SecondPacketID2).step(1).size(25.0);
+                    let clm2= iced::widget::column![_2, _2f].spacing(10);
 
-                    iced::widget::row![_1, _2].spacing(30)
+                    iced::widget::row![clm1, clm2].spacing(30)
                 }
                 else if self.packet_num == 3
                 {
                     let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let _1f = iced_aw::number_input(self.packet_second[0], 9999, PacketMessage::FirstPacketID2).step(1).size(25.0);
+                    let clm1 = iced::widget::column![_1, _1f].spacing(10);
                     let _2 = iced_aw::number_input(self.packet_id[1], 9999, PacketMessage::SecondPacketID).step(1).size(25.0);
-                    let _3 = iced_aw::number_input(self.packet_id[2], 9999, PacketMessage::SecondPacketID).step(1).size(25.0);
+                    let _2f = iced_aw::number_input(self.packet_second[1], 9999, PacketMessage::SecondPacketID2).step(1).size(25.0);
+                    let clm2= iced::widget::column![_2, _2f].spacing(10);
 
-                    iced::widget::row![_1, _2, _3].spacing(30)
+                    let _3 = iced_aw::number_input(self.packet_id[2], 9999, PacketMessage::ThirdPacketID).step(1).size(25.0);
+                    let _3f = iced_aw::number_input(self.packet_second[2], 9999, PacketMessage::ThirdPacketID2).step(1).size(25.0);
+                    let clm3= iced::widget::column![_3, _3f].spacing(10);
+
+                    iced::widget::row![clm1, clm2, clm3].spacing(30)
                 }
                 else
                 {
@@ -376,10 +400,14 @@ impl PacketManager {
         let mut packet_id_ = Vec::<usize>::new();
         packet_id_.push(0);
 
+        let mut packet_second_id_ = Vec::<usize>::new();
+        packet_second_id_.push(1);
+
         PacketManager { 
             packet_:none,
             packet_num:1,
             packet_id:packet_id_,
+            packet_second:packet_second_id_,
             view_packet_id: 0,
             x_cb: x_cb_, 
             y_cb: y_cb_, 
@@ -399,6 +427,14 @@ impl PacketManager {
 
     pub fn create_packet(&mut self, controller_input:Controller, id:usize)
     {
+        let use_id = if !controller_input.option
+        {
+            self.packet_id[id]
+        }
+        else
+        {
+            self.packet_second[id]
+        };
                 match assign_to_controller(self.x_cb[id].clone(), controller_input)
                 {
                     Some(x_)=>{
@@ -411,12 +447,13 @@ impl PacketManager {
                                                 match assign_to_controller(self.m2_cb[id].clone(), controller_input) {
                                                     Some(m2_)=>{
                                                         self.packet_[id] = Some(Packet {
-                                                            id : self.packet_id[id] as u16,
+                                                            id : use_id as u16,
                                                             x: (x_  *self.x_pow_rate[id] as f32) as i32, 
                                                             y: (y_  *self.y_pow_rate[id] as f32) as i32, 
                                                             ro: (ro_  *self.ro_pow_rate[id] as f32) as i32, 
                                                             m1: (m1_  *self.m1_pow_rate[id] as f32) as i32, 
-                                                            m2: (m2_  *self.m2_pow_rate[id] as f32) as i32})
+                                                            m2: (m2_  *self.m2_pow_rate[id] as f32) as i32});
+
                                                     }
                                                     None=>{
                                                         self.packet_[id] =None
@@ -459,6 +496,7 @@ impl PacketManager {
 
         self.packet_.push(None);
         self.packet_id.push(0);
+        self.packet_second.push(1);
 
         self.packet_num += 1;
     }

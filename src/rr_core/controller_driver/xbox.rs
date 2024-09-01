@@ -33,10 +33,10 @@ impl XBoxDriver {
                         j = JoyStick::new()
                     }
 
-                    Controller {mode:self.mode, state:true, sticks: j, btns: btn, dpad: d }
+                    Controller {mode:self.mode, state:true, sticks: j, btns: btn, dpad: d , option:false}
                 }
                 Err(_)=>{
-                    Controller {mode:self.mode,state:false, sticks:JoyStick::new(), btns:Buttons::new(), dpad:Dpad::new()}
+                    Controller {mode:self.mode,state:false, sticks:JoyStick::new(), btns:Buttons::new(), dpad:Dpad::new(), option:false}
                 }
             }
     }

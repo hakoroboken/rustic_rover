@@ -1,5 +1,6 @@
 /**:
   id: 2
+  second: 30
   x:
     plus: "Left_Stick_X"
     minus: "Left_Stick_X"
