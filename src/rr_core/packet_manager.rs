@@ -138,6 +138,7 @@ impl PacketManager {
                         self.m2_pow_rate[self.view_packet_id] = self.sdm.m2_rate.unwrap();
 
                         self.packet_id[self.view_packet_id] = self.sdm.packet_id.unwrap() as usize;
+                        self.packet_second[self.view_packet_id] = self.sdm.second_id.unwrap() as usize;
                 self.logger.add_str(format!("Load YAML file : {}", name.clone()));
             }
             PacketMessage::NextPacket=>{
