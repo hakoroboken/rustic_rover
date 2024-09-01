@@ -5,7 +5,7 @@ pub mod interface;
 use interface::{Packet, SerialMessage};
 use crate::rr_core::interface::RRMessage;
 use crate::rr_core::thread_connection::ThreadConnector;
-use crate::rr_core::utils::{ComboBox, LogManager};
+use crate::rr_core::utils::{ComboBox, LogManager, path_to_image};
 
 use iced_aw::TabLabel;
 
@@ -31,12 +31,11 @@ impl ExternalManager {
         use iced::widget::{button, column, text, container::Container};
         match &self.path_list {
             Some(get_list)=>{
-                let p_config_text = text("Packet Config").size(80);
                 use iced::widget::checkbox;
                 use iced_aw::number_input;
                 
-                let is_sp = checkbox("Use IM920", self.is_im920).on_toggle(SerialMessage::SetIM920);
-                let is_smooth = checkbox("Use Smooth", self.is_smooth).on_toggle(SerialMessage::SetSmooth);
+                let is_sp = checkbox("Use IM920", self.is_im920).on_toggle(SerialMessage::SetIM920).size(50);
+                let is_smooth = checkbox("Use Smooth", self.is_smooth).on_toggle(SerialMessage::SetSmooth).size(50);
 
                 let sm_gain_item = if self.is_smooth
                 {
@@ -49,16 +48,13 @@ impl ExternalManager {
 
                 let packet_config_clm = match sm_gain_item {
                     Some(sm_gain)=>{
-                        iced::widget::column![p_config_text, is_sp, is_smooth, sm_gain].spacing(30)
+                        iced::widget::column![is_sp, is_smooth, sm_gain].spacing(30)
                     }
                     None=>{
-                        iced::widget::column![p_config_text, is_sp, is_smooth].spacing(30)
+                        iced::widget::column![is_sp, is_smooth].spacing(30)
                     }
                 };
                 
-
-
-                let port_config_text = text("Port Config").size(80);
                 use iced::widget::combo_box;
                 let combo_yp = combo_box(
                     &get_list.all, 
@@ -66,10 +62,10 @@ impl ExternalManager {
                     Some(&self.selected), 
                     SerialMessage::PortSelected);
                 
-                let start_b = button("Start Serial").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::SerialStart);
-                let scan_b = button("Scan Port").width(iced::Length::Shrink).height(iced::Length::Shrink).on_press(SerialMessage::SerialScan);
+                let start_b = button(path_to_image("./image/serial_start.png", 100)).width(250).height(250).on_press(SerialMessage::SerialStart);
+                let scan_b = button(path_to_image("./image/serial_check.png", 100)).width(250).height(250).on_press(SerialMessage::SerialScan);
 
-                let port_config_clm = iced::widget::column![port_config_text, scan_b, combo_yp, start_b].spacing(30);
+                let port_config_clm = iced::widget::column![scan_b, combo_yp, start_b].spacing(30);
 
                 use iced::widget::row;
                 let above_row = row![packet_config_clm, port_config_clm].spacing(400);
