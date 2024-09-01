@@ -13,6 +13,7 @@ pub struct PacketManager
     pub packet_:Vec<Option<Packet>>,
     pub packet_num:usize,
     pub packet_id:Vec<usize>,
+    pub packet_second:Vec<usize>,
     pub view_packet_id: usize,
     pub x_cb:Vec<PlusMinus>,
     pub y_cb:Vec<PlusMinus>,
@@ -376,10 +377,14 @@ impl PacketManager {
         let mut packet_id_ = Vec::<usize>::new();
         packet_id_.push(0);
 
+        let mut packet_second_id_ = Vec::<usize>::new();
+        packet_second_id_.push(1);
+
         PacketManager { 
             packet_:none,
             packet_num:1,
             packet_id:packet_id_,
+            packet_second:packet_second_id_,
             view_packet_id: 0,
             x_cb: x_cb_, 
             y_cb: y_cb_, 
@@ -401,7 +406,11 @@ impl PacketManager {
     {
         if controller_input.option
         {
-            self.packet_id[id] += 1;
+            let next = self.packet_id[id];
+
+            self.packet_id[id] = self.packet_second[id];
+
+            self.packet_second[id] = next;
         }
                 match assign_to_controller(self.x_cb[id].clone(), controller_input)
                 {
@@ -464,6 +473,7 @@ impl PacketManager {
 
         self.packet_.push(None);
         self.packet_id.push(0);
+        self.packet_second.push(1);
 
         self.packet_num += 1;
     }
