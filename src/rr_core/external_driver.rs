@@ -105,10 +105,16 @@ impl ExternalManager {
                 self.logger.add_str(format!("Search available port."));
             }
             SerialMessage::SerialStart=>{
+                if self.selected.contains("/dev/tty")
+                {
                     self.spawn_serial();
                     self.logger.add_str(format!("Start Serial at {}", self.selected.clone()));
 
                     self.selected = String::new()
+                }
+                else {
+                    self.logger.add_str(format!("Port is not selected."));
+                }
             }
             SerialMessage::SetIM920(changed)=>{
                 self.is_im920 = changed;
