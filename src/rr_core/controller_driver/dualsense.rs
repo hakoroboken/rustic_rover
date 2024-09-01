@@ -17,8 +17,8 @@ impl DualSenseDriver {
 
             match self.device.read_timeout(&mut buf, 100) {
                 Ok(_size)=>{
-                    let get_data = &buf[..11];
-                    let (j, btn, d) = convert(get_data, self.mode);
+                    let get_data = &buf[.._size];
+                    let (j, btn, d, main) = convert(get_data, self.mode);
 
                     if get_data[0] == 49
                     {
@@ -28,10 +28,10 @@ impl DualSenseDriver {
                         self.mode = ControllerConnectionType::SERIAL
                     }
 
-                    Controller {mode:self.mode, state:true, sticks: j, btns: btn, dpad: d }
+                    Controller {mode:self.mode, state:true, sticks: j, btns: btn, dpad: d , option: main}
                 }
                 Err(_)=>{
-                    Controller {mode:self.mode,state:false, sticks:JoyStick::new(), btns:Buttons::new(), dpad:Dpad::new()}
+                    Controller {mode:self.mode,state:false, sticks:JoyStick::new(), btns:Buttons::new(), dpad:Dpad::new(), option:false}
                 }
             }
     }
@@ -61,7 +61,7 @@ impl DualSenseDriver {
     // }
 }
 
-fn convert(buf:&[u8], mode:ControllerConnectionType)->(JoyStick, Buttons, Dpad)
+fn convert(buf:&[u8], mode:ControllerConnectionType)->(JoyStick, Buttons, Dpad, bool)
 {
     if mode == ControllerConnectionType::BLE
     {
@@ -121,7 +121,12 @@ fn convert(buf:&[u8], mode:ControllerConnectionType)->(JoyStick, Buttons, Dpad)
             _=>{}
         }
 
-        (joy, buttons, dpad)
+        let main = match buf[10] {
+            32=>true,
+            _=>false
+        };
+
+        (joy, buttons, dpad, main)
     }
     else if mode == ControllerConnectionType::SERIAL
     {
@@ -180,13 +185,19 @@ fn convert(buf:&[u8], mode:ControllerConnectionType)->(JoyStick, Buttons, Dpad)
             _=>{}
         }
 
-        (joy, buttons, dpad)
+        let main = match buf[9] {
+            32=>true,
+            _=>false
+        };
+
+        (joy, buttons, dpad, main)
     }
     else {
         (
             JoyStick{left_x:0.0, left_y:0.0, right_x:0.0, right_y:0.0},
             Buttons{circle:false, triangle:false, cube:false, cross:false, r1:false, r2:false, l1:false, l2:false, right_push:false, left_push:false},
-            Dpad{up_key:false,down_key:false, right_key:false, left_key:false}
+            Dpad{up_key:false,down_key:false, right_key:false, left_key:false},
+            false
         )
     }
 }   

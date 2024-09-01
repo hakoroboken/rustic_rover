@@ -33,7 +33,7 @@ impl DualShock4Driver {
                     self.result
                 }
                 Err(_)=>{
-                    Controller {mode:self.mode,state:false, sticks:JoyStick::new(), btns:Buttons::new(), dpad:Dpad::new()}
+                    Controller {mode:self.mode,state:false, sticks:JoyStick::new(), btns:Buttons::new(), dpad:Dpad::new(), option:false}
                 }
             }
     }
@@ -114,7 +114,13 @@ fn convert(buf:&[u8], mode:ControllerConnectionType)->Controller
             128=>btns.right_push = true,
             _=>(),
         }
-        Controller{mode:mode, state:true, sticks:joy, btns:btns, dpad:dpad}
+
+        let option = match buf[8] {
+            32=>true,
+            _=>false,
+        };
+        
+        Controller{mode:mode, state:true, sticks:joy, btns:btns, dpad:dpad, option:option}
     }
     else if mode == ControllerConnectionType::SERIAL
     {
@@ -176,7 +182,12 @@ fn convert(buf:&[u8], mode:ControllerConnectionType)->Controller
             192=>{btns.left_push = true; btns.right_push=true}
             _=>(),
         }
-        Controller{mode:mode, state:true, sticks:joy, btns:btns, dpad:dpad}
+
+        let option = match buf[6] {
+            32=>true,
+            _=>false
+        };
+        Controller{mode:mode, state:true, sticks:joy, btns:btns, dpad:dpad, option:option}
     }
     else {
 
@@ -201,7 +212,7 @@ fn convert(buf:&[u8], mode:ControllerConnectionType)->Controller
             left_key:false
         };
 
-        Controller{mode:mode, state:true, sticks:joy, btns:btns, dpad:dpad}
+        Controller{mode:mode, state:true, sticks:joy, btns:btns, dpad:dpad, option:false}
     }
 }   
 
