@@ -27,6 +27,6 @@ impl Packet {
     }
     pub fn get_string(&self)->String
     {
-        format!("ID:{} =>[x:{:3},y:{:3},ro:{:3},m1:{:3},m2:{:3}]", self.id,self.x, self.y, self.ro, self.m1, self.m2)
+        format!("ID:{}   [x:{:3},y:{:3},ro:{:3},m1:{:3},m2:{:3}]", self.id,self.x, self.y, self.ro, self.m1, self.m2)
     }
 }
