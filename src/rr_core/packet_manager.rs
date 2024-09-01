@@ -399,6 +399,10 @@ impl PacketManager {
 
     pub fn create_packet(&mut self, controller_input:Controller, id:usize)
     {
+        if controller_input.option
+        {
+            self.packet_id[id] += 1;
+        }
                 match assign_to_controller(self.x_cb[id].clone(), controller_input)
                 {
                     Some(x_)=>{
@@ -416,7 +420,8 @@ impl PacketManager {
                                                             y: (y_  *self.y_pow_rate[id] as f32) as i32, 
                                                             ro: (ro_  *self.ro_pow_rate[id] as f32) as i32, 
                                                             m1: (m1_  *self.m1_pow_rate[id] as f32) as i32, 
-                                                            m2: (m2_  *self.m2_pow_rate[id] as f32) as i32})
+                                                            m2: (m2_  *self.m2_pow_rate[id] as f32) as i32});
+
                                                     }
                                                     None=>{
                                                         self.packet_[id] =None
