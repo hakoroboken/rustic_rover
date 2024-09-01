@@ -177,6 +177,15 @@ impl PacketManager {
             PacketMessage::ThirdPacketID(id)=>{
                 self.packet_id[2] = id;
             }
+            PacketMessage::FirstPacketID2(id)=>{
+                self.packet_second[0] = id
+            }
+            PacketMessage::SecondPacketID2(id)=>{
+                self.packet_second[1] = id
+            }
+            PacketMessage::ThirdPacketID2(id)=>{
+                self.packet_second[2] = id
+            }
         }
     }
     pub fn view(&self)->iced::Element<'_, RRMessage>
@@ -292,7 +301,7 @@ impl PacketManager {
                 let send_id_list = if self.packet_num == 1
                 {
                     let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
-                    let _1f = iced_aw::number_input(self.packet_second[0], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let _1f = iced_aw::number_input(self.packet_second[0], 9999, PacketMessage::FirstPacketID2).step(1).size(25.0);
                     let clm1 = iced::widget::column![_1, _1f].spacing(10);
 
                     iced::widget::row![clm1]
@@ -300,10 +309,10 @@ impl PacketManager {
                 else if self.packet_num == 2
                 {
                     let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
-                    let _1f = iced_aw::number_input(self.packet_second[0], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let _1f = iced_aw::number_input(self.packet_second[0], 9999, PacketMessage::FirstPacketID2).step(1).size(25.0);
                     let clm1 = iced::widget::column![_1, _1f].spacing(10);
-                    let _2 = iced_aw::number_input(self.packet_id[1], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
-                    let _2f = iced_aw::number_input(self.packet_second[1], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let _2 = iced_aw::number_input(self.packet_id[1], 9999, PacketMessage::SecondPacketID).step(1).size(25.0);
+                    let _2f = iced_aw::number_input(self.packet_second[1], 9999, PacketMessage::SecondPacketID2).step(1).size(25.0);
                     let clm2= iced::widget::column![_2, _2f].spacing(10);
 
                     iced::widget::row![clm1, clm2].spacing(30)
@@ -311,14 +320,14 @@ impl PacketManager {
                 else if self.packet_num == 3
                 {
                     let _1 = iced_aw::number_input(self.packet_id[0], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
-                    let _1f = iced_aw::number_input(self.packet_second[0], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let _1f = iced_aw::number_input(self.packet_second[0], 9999, PacketMessage::FirstPacketID2).step(1).size(25.0);
                     let clm1 = iced::widget::column![_1, _1f].spacing(10);
-                    let _2 = iced_aw::number_input(self.packet_id[1], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
-                    let _2f = iced_aw::number_input(self.packet_second[1], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let _2 = iced_aw::number_input(self.packet_id[1], 9999, PacketMessage::SecondPacketID).step(1).size(25.0);
+                    let _2f = iced_aw::number_input(self.packet_second[1], 9999, PacketMessage::SecondPacketID2).step(1).size(25.0);
                     let clm2= iced::widget::column![_2, _2f].spacing(10);
 
-                    let _3 = iced_aw::number_input(self.packet_id[2], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
-                    let _3f = iced_aw::number_input(self.packet_second[2], 9999, PacketMessage::FirstPacketID).step(1).size(25.0);
+                    let _3 = iced_aw::number_input(self.packet_id[2], 9999, PacketMessage::ThirdPacketID).step(1).size(25.0);
+                    let _3f = iced_aw::number_input(self.packet_second[2], 9999, PacketMessage::ThirdPacketID2).step(1).size(25.0);
                     let clm3= iced::widget::column![_3, _3f].spacing(10);
 
                     iced::widget::row![clm1, clm2, clm3].spacing(30)
