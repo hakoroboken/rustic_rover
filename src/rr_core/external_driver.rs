@@ -163,12 +163,12 @@ impl ExternalManager {
         
         ExternalManager {
             driver_num:0, 
-            is_im920: false,
+            is_im920: true,
             conn: v, 
             path_list : None, 
             selected:String::new(), 
             smooth_value:1, 
-            is_smooth:false,
+            is_smooth: true,
             logger:LogManager::new(),
             port_list: p_list,
             thread_reporter: Vec::<ThreadConnector<bool>>::new()

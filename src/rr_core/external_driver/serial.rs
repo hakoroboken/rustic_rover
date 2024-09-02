@@ -198,7 +198,7 @@ impl SerialDriver {
             self.send_packet.m1 / 10 + 10,
             self.send_packet.m2 / 10 + 10);
 
-        format!("{}e", content)
+        format!("s{}e", content)
     }
     fn id_to_str(&self, id:u16)->String
     {

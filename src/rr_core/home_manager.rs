@@ -183,7 +183,7 @@ impl ConnectionViewer {
 
         content.into()
     }
-    pub fn set_controller_type(&mut self, input:ControllerConnectionType)
+    pub fn set_controller_type(&mut self, input:ControllerConnectionType, name:ControllerName, state:bool)
     {
         if input == ControllerConnectionType::BLE{
             self.controller_connection_type = ExternalType::BLE
@@ -191,6 +191,13 @@ impl ConnectionViewer {
         else if input == ControllerConnectionType::SERIAL
         {
             self.controller_connection_type = ExternalType::Serial
+        }
+
+        self.controller_name = name;
+        
+        if !state
+        {
+            self.controller_connection_type = ExternalType::None
         }
     }
     pub fn set_packet(&mut self, input:Option<Packet>)
@@ -213,10 +220,6 @@ impl ConnectionViewer {
         else {
             self.external_type = ExternalType::None
         }
-    }
-    pub fn set_controller_name(&mut self, name:ControllerName)
-    {
-        self.controller_name = name
     }
 }
 
