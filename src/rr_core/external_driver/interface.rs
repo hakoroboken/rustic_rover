@@ -6,22 +6,22 @@ pub enum SerialMessage
     SerialScan,
     SerialStart,
     PortSelected(String),
-    SmoothValue(i32),
+    SmoothValue(f32),
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct Packet
 {
     pub id:u16,
-    pub x:i32,
-    pub y:i32,
-    pub ro:i32,
-    pub m1:i32,
-    pub m2:i32,
+    pub x:f32,
+    pub y:f32,
+    pub ro:f32,
+    pub m1:f32,
+    pub m2:f32,
 }
 
 impl Packet {
-    pub fn new(id_:u16, x_:i32, y_:i32, ro_:i32, m1_:i32, m2_:i32)->Packet
+    pub fn new(id_:u16, x_:f32, y_:f32, ro_:f32, m1_:f32, m2_:f32)->Packet
     {
         Packet { id: id_, x: x_, y: y_, ro: ro_, m1: m1_, m2: m2_ }
     }

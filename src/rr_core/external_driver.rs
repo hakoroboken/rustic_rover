@@ -21,7 +21,7 @@ pub struct ExternalManager
     pub path_list:Option<ComboBox<String>>,
     pub port_list:Vec<String>,
     pub selected:String,
-    pub smooth_value:i32,
+    pub smooth_value:f32,
     pub logger:LogManager
 }
 
@@ -39,7 +39,7 @@ impl ExternalManager {
 
                 let sm_gain_item = if self.is_smooth
                 {
-                    Some(number_input(self.smooth_value, 20, SerialMessage::SmoothValue).step(1))
+                    Some(number_input(self.smooth_value, 1.0, SerialMessage::SmoothValue).step(0.1))
                 }
                 else
                 {
@@ -167,7 +167,7 @@ impl ExternalManager {
             conn: v, 
             path_list : None, 
             selected:String::new(), 
-            smooth_value:1, 
+            smooth_value:1.0, 
             is_smooth: true,
             logger:LogManager::new(),
             port_list: p_list,

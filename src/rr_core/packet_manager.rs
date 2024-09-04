@@ -448,11 +448,11 @@ impl PacketManager {
                                                     Some(m2_)=>{
                                                         self.packet_[id] = Some(Packet {
                                                             id : use_id as u16,
-                                                            x: (x_  *self.x_pow_rate[id] as f32) as i32, 
-                                                            y: (y_  *self.y_pow_rate[id] as f32) as i32, 
-                                                            ro: (ro_  *self.ro_pow_rate[id] as f32) as i32, 
-                                                            m1: (m1_  *self.m1_pow_rate[id] as f32) as i32, 
-                                                            m2: (m2_  *self.m2_pow_rate[id] as f32) as i32});
+                                                            x: (x_  *self.x_pow_rate[id] as f32), 
+                                                            y: (y_  *self.y_pow_rate[id] as f32), 
+                                                            ro: (ro_  *self.ro_pow_rate[id] as f32), 
+                                                            m1: (m1_  *self.m1_pow_rate[id] as f32), 
+                                                            m2: (m2_  *self.m2_pow_rate[id] as f32)});
 
                                                     }
                                                     None=>{

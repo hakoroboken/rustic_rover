@@ -6,7 +6,7 @@ pub struct SerialDriver
 {
     is_im920:bool,
     enable_smoother:bool,
-    smooth_gain:i32,
+    smooth_gain:f32,
     pub state:bool,
     pub path:String,
     port:Box<dyn serialport::SerialPort>,
@@ -21,14 +21,14 @@ impl SerialDriver {
         .timeout(std::time::Duration::from_millis(100))
         .open().unwrap();
 
-        let send_ = Packet::new(0, 100, 100, 100, 100, 100);
-        let prev_ = Packet::new(0, 100, 100, 100, 100, 100);
+        let send_ = Packet::new(0, 100.0, 100.0, 100.0, 100.0, 100.0);
+        let prev_ = Packet::new(0, 100.0, 100.0, 100.0, 100.0, 100.0);
 
 
         Self { 
             is_im920: is_im920_, 
             enable_smoother: enable_smother_, 
-            smooth_gain : 1,
+            smooth_gain : 1.0,
             path: port_name, 
             port:port_ , 
             state: true,
@@ -134,43 +134,43 @@ impl SerialDriver {
             m2: target.m2 - self.prev_packet.m2,
         };
 
-        if vec.x > 0
+        if vec.x > 0.0
         {
             self.send_packet.x += self.smooth_gain
         }
-        else if vec.x < 0{
+        else if vec.x < 0.0{
             self.send_packet.x -= self.smooth_gain
         }
 
-        if vec.y > 0
+        if vec.y > 0.0
         {
             self.send_packet.y += self.smooth_gain
         }
-        else if vec.y < 0{
+        else if vec.y < 0.0{
             self.send_packet.y -= self.smooth_gain
         }
 
-        if vec.ro > 0
+        if vec.ro > 0.0
         {
             self.send_packet.ro += self.smooth_gain
         }
-        else if vec.ro < 0{
+        else if vec.ro < 0.0{
             self.send_packet.ro -= self.smooth_gain
         }
 
-        if vec.m1 > 0
+        if vec.m1 > 0.0
         {
             self.send_packet.m1 += self.smooth_gain
         }
-        else if vec.m1 < 0{
+        else if vec.m1 < 0.0{
             self.send_packet.m1 -= self.smooth_gain
         }
 
-        if vec.m2 > 0
+        if vec.m2 > 0.0
         {
             self.send_packet.m2 += self.smooth_gain
         }
-        else if vec.m2 < 0{
+        else if vec.m2 < 0.0{
             self.send_packet.m2 -= self.smooth_gain
         }
 
@@ -179,11 +179,11 @@ impl SerialDriver {
     fn im920_string(&self)->String
     {
         let content = format!("{},{},{},{},{}", 
-            self.send_packet.x / 10 + 10,
-            self.send_packet.y / 10 + 10,
-            self.send_packet.ro / 10 + 10,
-            self.send_packet.m1 / 10 + 10,
-            self.send_packet.m2 / 10 + 10);
+            self.send_packet.x as i32 / 10 + 10,
+            self.send_packet.y as i32 / 10 + 10,
+            self.send_packet.ro as i32 / 10 + 10,
+            self.send_packet.m1 as i32 / 10 + 10,
+            self.send_packet.m2 as i32 / 10 + 10);
 
         let id = self.id_to_str(self.send_packet.id);
 
@@ -192,11 +192,11 @@ impl SerialDriver {
     fn normal_string(&self)->String
     {
         let content = format!("{},{},{},{},{}", 
-            self.send_packet.x / 10 + 10,
-            self.send_packet.y / 10 + 10,
-            self.send_packet.ro / 10 + 10,
-            self.send_packet.m1 / 10 + 10,
-            self.send_packet.m2 / 10 + 10);
+            self.send_packet.x as i32 / 10 + 10,
+            self.send_packet.y as i32 / 10 + 10,
+            self.send_packet.ro as i32 / 10 + 10,
+            self.send_packet.m1 as i32 / 10 + 10,
+            self.send_packet.m2 as i32 / 10 + 10);
 
         format!("s{}e", content)
     }
