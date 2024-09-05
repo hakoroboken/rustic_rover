@@ -288,7 +288,7 @@ impl PacketManager {
 
                 let p_text = match self.packet_[self.view_packet_id] {
                     Some(p)=>{
-                        text(format!("[x:{:3},y:{:3},ro:{:3},m1:{:3},m2:{:3}]", p.x, p.y, p.ro, p.m1, p.m2)).size(50)
+                        text(p.get_string()).size(50)
                     }
                     None=>{
                         text("Failed to Create Packet").size(50)

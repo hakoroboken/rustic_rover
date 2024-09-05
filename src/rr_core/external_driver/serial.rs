@@ -15,7 +15,7 @@ pub struct SerialDriver
 }
 
 impl SerialDriver {
-    pub fn new(is_im920_:bool, enable_smother_:bool, port_name:String)->Self
+    pub fn new(is_im920_:bool, enable_smother_:bool, port_name:String, smooth_gain:f32)->Self
     {
         let port_ = serialport::new(port_name.as_str(), 115200)
         .timeout(std::time::Duration::from_millis(100))
@@ -28,7 +28,7 @@ impl SerialDriver {
         Self { 
             is_im920: is_im920_, 
             enable_smoother: enable_smother_, 
-            smooth_gain : 1.0,
+            smooth_gain : smooth_gain,
             path: port_name, 
             port:port_ , 
             state: true,

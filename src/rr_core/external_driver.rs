@@ -201,7 +201,7 @@ impl ExternalManager {
     {
         self.conn.push(ThreadConnector::<Packet>::new());
         self.thread_reporter.push(ThreadConnector::<bool>::new());
-        let mut serial_driver = serial::SerialDriver::new(self.is_im920, self.is_smooth, self.selected.clone());
+        let mut serial_driver = serial::SerialDriver::new(self.is_im920, self.is_smooth, self.selected.clone(), self.smooth_value);
         let selected_index = self.port_list.iter().position(|x| x == &serial_driver.path).unwrap();
 
         let new_reporter = self.thread_reporter[self.driver_num].publisher.clone();
