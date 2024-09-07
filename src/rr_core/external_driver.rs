@@ -1,5 +1,4 @@
 pub mod serial;
-pub mod udp;
 pub mod interface;
 
 use interface::{Packet, SerialMessage};
