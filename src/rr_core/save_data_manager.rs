@@ -26,6 +26,11 @@ pub struct SaveDataManager
     pub ro_rate:Option<u16>,
     pub m1_rate:Option<u16>,
     pub m2_rate:Option<u16>,
+    pub x_smooth : Option<bool>,
+    pub y_smooth : Option<bool>,
+    pub ro_smooth : Option<bool>,
+    pub m1_smooth : Option<bool>,
+    pub m2_smooth : Option<bool>,
     pub file_list:Option<ComboBox<String>>
 }
 
@@ -50,6 +55,11 @@ impl SaveDataManager {
             ro_rate:None,
             m1_rate:None,
             m2_rate:None,
+            x_smooth:None,
+            y_smooth:None,
+            ro_smooth:None,
+            m1_smooth:None,
+            m2_smooth:None,
             file_list: None }
     }
     pub fn search_data_files(&mut self)
@@ -105,7 +115,13 @@ impl SaveDataManager {
                         self.m2_rate = Some(doc["/**"]["m2"]["rate"].as_i64().unwrap() as u16);
 
                         self.packet_id = Some(doc["/**"]["id"].as_i64().unwrap() as u16);
-                        self.second_id = Some(doc["/**"]["second"].as_i64().unwrap() as u16)
+                        self.second_id = Some(doc["/**"]["second"].as_i64().unwrap() as u16);
+
+                        self.x_smooth = Some(doc["/**"]["x"]["smooth"].as_bool().unwrap());
+                        self.y_smooth = Some(doc["/**"]["y"]["smooth"].as_bool().unwrap());
+                        self.ro_smooth = Some(doc["/**"]["ro"]["smooth"].as_bool().unwrap());
+                        self.m1_smooth = Some(doc["/**"]["m1"]["smooth"].as_bool().unwrap());
+                        self.m2_smooth = Some(doc["/**"]["m2"]["smooth"].as_bool().unwrap());
                     }
                     Err(_e)=>{
 

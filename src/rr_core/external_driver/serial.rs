@@ -6,7 +6,7 @@ pub struct SerialDriver
 {
     is_im920:bool,
     enable_smoother:bool,
-    smooth_gain:i32,
+    smooth_gain:f32,
     pub state:bool,
     pub path:String,
     port:Box<dyn serialport::SerialPort>,
@@ -15,20 +15,20 @@ pub struct SerialDriver
 }
 
 impl SerialDriver {
-    pub fn new(is_im920_:bool, enable_smother_:bool, port_name:String)->Self
+    pub fn new(is_im920_:bool, enable_smother_:bool, port_name:String, smooth_gain:f32)->Self
     {
         let port_ = serialport::new(port_name.as_str(), 115200)
         .timeout(std::time::Duration::from_millis(100))
         .open().unwrap();
 
-        let send_ = Packet::new(0, 100, 100, 100, 100, 100);
-        let prev_ = Packet::new(0, 100, 100, 100, 100, 100);
+        let send_ = Packet::new(0, 100.0, 100.0, 100.0, 100.0, 100.0);
+        let prev_ = Packet::new(0, 100.0, 100.0, 100.0, 100.0, 100.0);
 
 
         Self { 
             is_im920: is_im920_, 
             enable_smoother: enable_smother_, 
-            smooth_gain : 1,
+            smooth_gain : smooth_gain,
             path: port_name, 
             port:port_ , 
             state: true,
@@ -132,46 +132,66 @@ impl SerialDriver {
             ro: target.ro - self.prev_packet.ro,
             m1: target.m1 - self.prev_packet.m1,
             m2: target.m2 - self.prev_packet.m2,
+            x_smooth : target.x_smooth,
+            y_smooth : target.y_smooth,
+            ro_smooth : target.ro_smooth,
+            m1_smooth : target.m1_smooth,
+            m2_smooth : target.m2_smooth
         };
 
-        if vec.x > 0
+        if vec.x_smooth
         {
-            self.send_packet.x += self.smooth_gain
-        }
-        else if vec.x < 0{
-            self.send_packet.x -= self.smooth_gain
+            if vec.x > 0.0
+            {
+                self.send_packet.x += self.smooth_gain
+            }
+            else if vec.x < 0.0{
+                self.send_packet.x -= self.smooth_gain
+            }
         }
 
-        if vec.y > 0
+        if vec.y_smooth
         {
-            self.send_packet.y += self.smooth_gain
-        }
-        else if vec.y < 0{
-            self.send_packet.y -= self.smooth_gain
+            if vec.y > 0.0
+            {
+                self.send_packet.y += self.smooth_gain
+            }
+            else if vec.y < 0.0{
+                self.send_packet.y -= self.smooth_gain
+            }
         }
 
-        if vec.ro > 0
+        if vec.ro_smooth
         {
-            self.send_packet.ro += self.smooth_gain
-        }
-        else if vec.ro < 0{
-            self.send_packet.ro -= self.smooth_gain
+            if vec.ro > 0.0
+            {
+                self.send_packet.ro += self.smooth_gain
+            }
+            else if vec.ro < 0.0{
+                self.send_packet.ro -= self.smooth_gain
+            }
         }
 
-        if vec.m1 > 0
+        if vec.m1_smooth
         {
-            self.send_packet.m1 += self.smooth_gain
-        }
-        else if vec.m1 < 0{
-            self.send_packet.m1 -= self.smooth_gain
+            if vec.m1 > 0.0
+            {
+                self.send_packet.m1 += self.smooth_gain
+            }
+            else if vec.m1 < 0.0{
+                self.send_packet.m1 -= self.smooth_gain
+            }
         }
 
-        if vec.m2 > 0
+        if vec.m2_smooth
         {
-            self.send_packet.m2 += self.smooth_gain
-        }
-        else if vec.m2 < 0{
-            self.send_packet.m2 -= self.smooth_gain
+            if vec.m2 > 0.0
+            {
+                self.send_packet.m2 += self.smooth_gain
+            }
+            else if vec.m2 < 0.0{
+                self.send_packet.m2 -= self.smooth_gain
+            }
         }
 
         self.send_packet.id = target.id;
@@ -179,11 +199,11 @@ impl SerialDriver {
     fn im920_string(&self)->String
     {
         let content = format!("{},{},{},{},{}", 
-            self.send_packet.x / 10 + 10,
-            self.send_packet.y / 10 + 10,
-            self.send_packet.ro / 10 + 10,
-            self.send_packet.m1 / 10 + 10,
-            self.send_packet.m2 / 10 + 10);
+            self.send_packet.x as i32 / 10 + 10,
+            self.send_packet.y as i32 / 10 + 10,
+            self.send_packet.ro as i32 / 10 + 10,
+            self.send_packet.m1 as i32 / 10 + 10,
+            self.send_packet.m2 as i32 / 10 + 10);
 
         let id = self.id_to_str(self.send_packet.id);
 
@@ -191,12 +211,10 @@ impl SerialDriver {
     }
     fn normal_string(&self)->String
     {
-        let content = format!("{},{},{},{},{}", 
-            self.send_packet.x / 10 + 10,
-            self.send_packet.y / 10 + 10,
-            self.send_packet.ro / 10 + 10,
-            self.send_packet.m1 / 10 + 10,
-            self.send_packet.m2 / 10 + 10);
+        let content = format!("{},{},{}", 
+            self.send_packet.x as f32 / 100.0,
+            self.send_packet.y as f32 / 100.0,
+            self.send_packet.ro as f32 / 100.0);
 
         format!("{}e", content)
     }
