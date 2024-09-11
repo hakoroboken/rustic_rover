@@ -530,6 +530,12 @@ impl PacketManager {
         self.packet_id.push(0);
         self.packet_second.push(1);
 
+        self.x_smooth.push(false);
+        self.y_smooth.push(false);
+        self.ro_smooth.push(false);
+        self.m1_smooth.push(false);
+        self.m2_smooth.push(false);
+
         self.packet_num += 1;
     }
 }
