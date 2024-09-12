@@ -213,16 +213,15 @@ impl SerialDriver {
     }
     fn im920_string(&self)->String
     {
-        let content = format!("{},{},{},{},{}", 
+        let content = format!("{},{},{},{}", 
             self.send_packet.x as i32 / 10 + 10,
             self.send_packet.y as i32 / 10 + 10,
             self.send_packet.ro as i32 / 10 + 10,
-            self.send_packet.m1 as i32 / 10 + 10,
-            self.send_packet.m2 as i32 / 10 + 10);
+            self.send_packet.m1 as i32 / 10 + 10);
 
         let id = self.id_to_str(self.send_packet.id);
 
-        format!("TXDU{},{}e", id, content)
+        format!("{},{}e", id, content)
     }
     fn normal_string(&self)->String
     {
@@ -235,25 +234,6 @@ impl SerialDriver {
     }
     fn id_to_str(&self, id:u16)->String
     {
-        if id < 10
-        {
-            format!("000{}", id)
-        }
-        else if id < 100
-        {
-            format!("00{}", id)
-        }
-        else if id < 1000
-        {
-            format!("0{}", id)
-        }
-        else if id < 10000
-        {
-            format!("{}", id)
-        }
-        else
-        {
-            String::from("ID_ERROR")
-        }
+        format!("{}", id)
     }
 }
