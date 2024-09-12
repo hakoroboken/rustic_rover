@@ -149,6 +149,9 @@ impl SerialDriver {
                 self.send_packet.x -= self.smooth_gain
             }
         }
+        else {
+            self.send_packet.x = target.x
+        }
 
         if vec.y_smooth
         {
@@ -159,6 +162,9 @@ impl SerialDriver {
             else if vec.y < 0.0{
                 self.send_packet.y -= self.smooth_gain
             }
+        }
+        else {
+            self.send_packet.y = target.y
         }
 
         if vec.ro_smooth
@@ -171,6 +177,9 @@ impl SerialDriver {
                 self.send_packet.ro -= self.smooth_gain
             }
         }
+        else {
+            self.send_packet.ro = target.ro
+        }
 
         if vec.m1_smooth
         {
@@ -182,6 +191,9 @@ impl SerialDriver {
                 self.send_packet.m1 -= self.smooth_gain
             }
         }
+        else {
+            self.send_packet.m1 = target.m1
+        }
 
         if vec.m2_smooth
         {
@@ -192,6 +204,9 @@ impl SerialDriver {
             else if vec.m2 < 0.0{
                 self.send_packet.m2 -= self.smooth_gain
             }
+        }
+        else {
+            self.send_packet.m2 = target.m2
         }
 
         self.send_packet.id = target.id;
