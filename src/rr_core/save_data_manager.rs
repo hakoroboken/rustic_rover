@@ -119,7 +119,7 @@ impl SaveDataManager {
 
                         self.x_smooth = Some(doc["/**"]["x"]["smooth"].as_bool().unwrap());
                         self.y_smooth = Some(doc["/**"]["y"]["smooth"].as_bool().unwrap());
-                        self.ro_smooth = Some(doc["/**"]["ro"]["smooth"].as_bool().unwrap());
+                        self.ro_smooth = Some(doc["/**"]["rotation"]["smooth"].as_bool().unwrap());
                         self.m1_smooth = Some(doc["/**"]["m1"]["smooth"].as_bool().unwrap());
                         self.m2_smooth = Some(doc["/**"]["m2"]["smooth"].as_bool().unwrap());
                     }
