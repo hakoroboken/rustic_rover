@@ -25,6 +25,11 @@ pub struct PacketManager
     pub ro_pow_rate:Vec<u16>,
     pub m1_pow_rate:Vec<u16>,
     pub m2_pow_rate:Vec<u16>,
+    pub x_smooth:Vec<bool>,
+    pub y_smooth:Vec<bool>,
+    pub ro_smooth:Vec<bool>,
+    pub m1_smooth:Vec<bool>,
+    pub m2_smooth:Vec<bool>,
     pub sdm:save_data_manager::SaveDataManager,
     selected_file_name:String,
     pub logger:LogManager
@@ -139,6 +144,12 @@ impl PacketManager {
 
                         self.packet_id[self.view_packet_id] = self.sdm.packet_id.unwrap() as usize;
                         self.packet_second[self.view_packet_id] = self.sdm.second_id.unwrap() as usize;
+
+                        self.x_smooth[self.view_packet_id] = self.sdm.x_smooth.unwrap();
+                        self.y_smooth[self.view_packet_id] = self.sdm.y_smooth.unwrap();
+                        self.ro_smooth[self.view_packet_id] = self.sdm.ro_smooth.unwrap();
+                        self.m1_smooth[self.view_packet_id] = self.sdm.m1_smooth.unwrap();
+                        self.m2_smooth[self.view_packet_id] = self.sdm.m2_smooth.unwrap();
                 self.logger.add_str(format!("Load YAML file : {}", name.clone()));
             }
             PacketMessage::NextPacket=>{
@@ -288,7 +299,7 @@ impl PacketManager {
 
                 let p_text = match self.packet_[self.view_packet_id] {
                     Some(p)=>{
-                        text(format!("[x:{:3},y:{:3},ro:{:3},m1:{:3},m2:{:3}]", p.x, p.y, p.ro, p.m1, p.m2)).size(50)
+                        text(p.get_string()).size(50)
                     }
                     None=>{
                         text("Failed to Create Packet").size(50)
@@ -403,6 +414,17 @@ impl PacketManager {
         let mut packet_second_id_ = Vec::<usize>::new();
         packet_second_id_.push(1);
 
+        let mut x_sm = Vec::<bool>::new();
+        x_sm.push(false);
+        let mut y_sm = Vec::<bool>::new();
+        y_sm.push(false);
+        let mut ro_sm = Vec::<bool>::new();
+        ro_sm.push(false);
+        let mut m1_sm = Vec::<bool>::new();
+        m1_sm.push(false);
+        let mut m2_sm = Vec::<bool>::new();
+        m2_sm.push(false);
+
         PacketManager { 
             packet_:none,
             packet_num:1,
@@ -421,7 +443,12 @@ impl PacketManager {
             m2_pow_rate:m2_rate,
             sdm:save_data_manager::SaveDataManager::new(),
             selected_file_name:String::new(),
-            logger:LogManager::new()
+            logger:LogManager::new(),
+            x_smooth : x_sm,
+            y_smooth : y_sm,
+            ro_smooth : ro_sm,
+            m1_smooth : m1_sm,
+            m2_smooth : m2_sm
         }
     }
 
@@ -448,11 +475,16 @@ impl PacketManager {
                                                     Some(m2_)=>{
                                                         self.packet_[id] = Some(Packet {
                                                             id : use_id as u16,
-                                                            x: (x_  *self.x_pow_rate[id] as f32) as i32, 
-                                                            y: (y_  *self.y_pow_rate[id] as f32) as i32, 
-                                                            ro: (ro_  *self.ro_pow_rate[id] as f32) as i32, 
-                                                            m1: (m1_  *self.m1_pow_rate[id] as f32) as i32, 
-                                                            m2: (m2_  *self.m2_pow_rate[id] as f32) as i32});
+                                                            x: (x_  *self.x_pow_rate[id] as f32), 
+                                                            y: (y_  *self.y_pow_rate[id] as f32), 
+                                                            ro: (ro_  *self.ro_pow_rate[id] as f32), 
+                                                            m1: (m1_  *self.m1_pow_rate[id] as f32), 
+                                                            m2: (m2_  *self.m2_pow_rate[id] as f32),
+                                                            x_smooth : self.x_smooth[id],
+                                                            y_smooth : self.y_smooth[id],
+                                                            ro_smooth : self.ro_smooth[id],
+                                                            m1_smooth : self.m1_smooth[id],
+                                                            m2_smooth : self.m2_smooth[id]});
 
                                                     }
                                                     None=>{
@@ -497,6 +529,12 @@ impl PacketManager {
         self.packet_.push(None);
         self.packet_id.push(0);
         self.packet_second.push(1);
+
+        self.x_smooth.push(false);
+        self.y_smooth.push(false);
+        self.ro_smooth.push(false);
+        self.m1_smooth.push(false);
+        self.m2_smooth.push(false);
 
         self.packet_num += 1;
     }

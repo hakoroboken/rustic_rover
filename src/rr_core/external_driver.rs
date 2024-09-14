@@ -1,5 +1,4 @@
 pub mod serial;
-pub mod udp;
 pub mod interface;
 
 use interface::{Packet, SerialMessage};
@@ -21,7 +20,7 @@ pub struct ExternalManager
     pub path_list:Option<ComboBox<String>>,
     pub port_list:Vec<String>,
     pub selected:String,
-    pub smooth_value:i32,
+    pub smooth_value:f32,
     pub logger:LogManager
 }
 
@@ -39,7 +38,7 @@ impl ExternalManager {
 
                 let sm_gain_item = if self.is_smooth
                 {
-                    Some(number_input(self.smooth_value, 20, SerialMessage::SmoothValue).step(1))
+                    Some(number_input(self.smooth_value, 1.0, SerialMessage::SmoothValue).step(0.1))
                 }
                 else
                 {
@@ -163,12 +162,12 @@ impl ExternalManager {
         
         ExternalManager {
             driver_num:0, 
-            is_im920: false,
+            is_im920: true,
             conn: v, 
             path_list : None, 
             selected:String::new(), 
-            smooth_value:1, 
-            is_smooth:false,
+            smooth_value:1.0, 
+            is_smooth: true,
             logger:LogManager::new(),
             port_list: p_list,
             thread_reporter: Vec::<ThreadConnector<bool>>::new()
@@ -201,7 +200,7 @@ impl ExternalManager {
     {
         self.conn.push(ThreadConnector::<Packet>::new());
         self.thread_reporter.push(ThreadConnector::<bool>::new());
-        let mut serial_driver = serial::SerialDriver::new(self.is_im920, self.is_smooth, self.selected.clone());
+        let mut serial_driver = serial::SerialDriver::new(self.is_im920, self.is_smooth, self.selected.clone(), self.smooth_value);
         let selected_index = self.port_list.iter().position(|x| x == &serial_driver.path).unwrap();
 
         let new_reporter = self.thread_reporter[self.driver_num].publisher.clone();

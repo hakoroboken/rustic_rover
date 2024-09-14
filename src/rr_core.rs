@@ -68,8 +68,7 @@ impl iced::Application for RusticRover {
         match message {
             interface::RRMessage::ControllerThreadMessage(ds4)=>{
                 self.game_controller_manager.get_value[0] = ds4;
-                    self.home_manager.conn_viewer[0].set_controller_type(ds4.mode);
-                    self.home_manager.conn_viewer[0].set_controller_name(self.game_controller_manager.controller_names[0]);
+                self.home_manager.conn_viewer[0].set_controller_type(ds4.mode, self.game_controller_manager.controller_names[0], ds4.state);
                 
                 self.packet_creator.create_packet(ds4, 0);
                 for i in 1..self.game_controller_manager.controller_num
@@ -83,8 +82,7 @@ impl iced::Application for RusticRover {
                             controller_driver::interface::Controller::new()
                         }
                     };
-                        self.home_manager.conn_viewer[i].set_controller_type(self.game_controller_manager.get_value[i].mode);
-                        self.home_manager.conn_viewer[i].set_controller_name(self.game_controller_manager.controller_names[i]);
+                        self.home_manager.conn_viewer[i].set_controller_type(self.game_controller_manager.get_value[i].mode, self.game_controller_manager.controller_names[i], self.game_controller_manager.get_value[i].state);
                     self.packet_creator.create_packet(self.game_controller_manager.get_value[i], i);
                 }
 
@@ -110,7 +108,7 @@ impl iced::Application for RusticRover {
                                     Some(p)=>{
                                         if self.home_manager.stop
                                         {
-                                            let _ = self.serial_manager.conn[i].publisher.send(Packet{id:0,x:0, y:0, ro:0, m1:0, m2:0});
+                                            let _ = self.serial_manager.conn[i].publisher.send(Packet{id:0,x:0.0, y:0.0, ro:0.0, m1:0.0, m2:0.0, x_smooth : false, y_smooth : false, ro_smooth : false, m1_smooth : false, m2_smooth : false});
                                         }
                                         else 
                                         {
